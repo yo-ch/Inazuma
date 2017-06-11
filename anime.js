@@ -148,7 +148,7 @@ var self = module.exports = {
         for (i = 0; i < info.length; i++) //Add info to string.
             airing += info[i][0];
 
-        var airingListPromise = msg.channel.send(`\`\`\`${airing}\`\`\``);
+        var airingListPromise = msg.channel.send(`${airing}`, { 'code': true });
         fs.writeFile('airing_anime.json', JSON.stringify(animeJSON)); //Update file.
 
         setTimeout(() => { //Delete airing message after 5 minutes.

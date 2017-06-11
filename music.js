@@ -109,7 +109,7 @@ module.exports = function(client) {
             var queueString = '';
             for (var i = 0; i < queue.length; i++)
                 queueString += `${i+1}. ${queue[i].title}\n`;
-            musicChannel.send(tool.wrap(queueString));
+            musicChannel.send(queueString, { 'code': true });
         }
     }
 

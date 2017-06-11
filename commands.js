@@ -54,12 +54,9 @@ var self = module.exports = {
         }
 
         if (cmd) //Display help for requested command.
-            msg.channel.send(cmd, {
-                'code': true
-            });
+            msg.channel.send(cmd, { 'code': true });
         else //Bring up default help menu.
             msg.channel.send(
-                '```' +
                 'Commands:\n' +
                 '   ~help [command]\n\n' +
 
@@ -76,8 +73,7 @@ var self = module.exports = {
                 '   ~gavquote\n' +
                 '   ~vigne\n\n' +
 
-                '   ~cc <voice channel> <@mention>' +
-                '```'
+                '   ~cc <voice channel> <@mention>', { 'code': true }
             );
     },
 
