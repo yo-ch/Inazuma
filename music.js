@@ -21,6 +21,8 @@ module.exports = function(client) {
                 return skipSong();
             case command('queue'):
                 return printQueue(msg);
+            case command('hime'):
+                return hime(msg);
         }
     });
 
@@ -56,40 +58,40 @@ module.exports = function(client) {
                     voiceConnection = null;
                 }
             }, 300000);
-        }
-
-        //Find the voice channel to play in.
-        new Promise((resolve, reject) => {
-            if (voiceConnection === null && msg.member.voiceChannel)
-                msg.member.voiceChannel.join().then(connection => {
-                    voiceConnection = connection;
+        } else {
+            //Find the voice channel to play in.
+            new Promise((resolve, reject) => {
+                if (voiceConnection === null && msg.member.voiceChannel)
+                    msg.member.voiceChannel.join().then(connection => {
+                        voiceConnection = connection;
+                        resolve();
+                    }).catch(() => {});
+                else if (voiceConnection !== null) {
                     resolve();
+                } else {
+                    reject();
+                }
+            }).then(() => {
+                //Play song.
+                const music = queue[0];
+                musicChannel.send(`**Now playing** ${tool.wrap(music.title.trim())}`).then(() => {
+                    dispatch = voiceConnection.playArbitraryInput(request(music.url));
+
+                    //Wait for errors/end of song, then play the next song.
+                    dispatch.on('error', error => {
+                        queue.shift();
+                        playSong(msg);
+                    });
+
+                    dispatch.on('end', reason => {
+                        queue.shift();
+                        playSong(msg);
+                    });
                 }).catch(() => {});
-            else if (voiceConnection !== null) {
-                resolve();
-            } else {
-                reject();
-            }
-        }).then(() => {
-            //Play song.
-            const music = queue[0];
-            musicChannel.send(`**Now playing** ${tool.wrap(music.title.trim())}`).then(() => {
-                dispatch = voiceConnection.playArbitraryInput(request(music.url));
-
-                //Wait for errors/end of song, then play the next song.
-                dispatch.on('error', error => {
-                    queue.shift();
-                    playSong(msg);
-                });
-
-                dispatch.on('end', reason => {
-                    queue.shift();
-                    playSong(msg);
-                });
-            }).catch(() => {});
-        }).catch(() => {
-            msg.channel.send('You aren\'t in a voice channel! <:inaBaka:301529550783774721>')
-        });
+            }).catch(() => {
+                msg.channel.send('You aren\'t in a voice channel! <:inaBaka:301529550783774721>')
+            });
+        }
     }
 
     /*
@@ -111,6 +113,15 @@ module.exports = function(client) {
                 queueString += `${i+1}. ${queue[i].title}\n`;
             musicChannel.send(queueString, { 'code': true });
         }
+    }
+
+    /*
+    Hime hime.
+    */
+    function hime(msg) {
+        var himeMessage = msg;
+        himeMessage.content = himeMessage.content.split(' ')[0] + ' https://www.youtube.com/watch?v=hPSQ23NRED8';
+        queueSong(himeMessage);
     }
 
     function command(cmd) {
