@@ -61,9 +61,10 @@ module.exports = function(client) {
         } else {
             //Find the voice channel to play in.
             new Promise((resolve, reject) => {
-                if (voiceConnection === null && msg.member.voiceChannel)
+                if ((voiceConnection === null || voiceConnection.members.size === 1) && msg.member.voiceChannel)
                     msg.member.voiceChannel.join().then(connection => {
                         voiceConnection = connection;
+                        msg.channel.send(`Joining **${msg.member.voiceChannel.name}**.`);
                         resolve();
                     }).catch(() => {});
                 else if (voiceConnection !== null) {
@@ -98,20 +99,21 @@ module.exports = function(client) {
     Skips the current song.
     */
     function skipSong() {
-        dispatch.end();
+        if (queue.length > 0) dispatch.end();
+        else musicChannel.send('There\'s nothing to skip! <:inaBaka:301529550783774721>');
     }
 
     /*
     Prints the queue.
     */
     function printQueue(msg) {
-        if (queue.length == 0) {
-            musicChannel.send(`There are no songs in the queue!`);
-        } else {
+        if (queue.length > 0) {
             var queueString = '';
             for (var i = 0; i < queue.length; i++)
                 queueString += `${i+1}. ${queue[i].title}\n`;
             musicChannel.send(queueString, { 'code': true });
+        } else {
+            musicChannel.send(`There are no songs in the queue!`);
         }
     }
 
@@ -119,9 +121,8 @@ module.exports = function(client) {
     Hime hime.
     */
     function hime(msg) {
-        var himeMessage = msg;
-        himeMessage.content = himeMessage.content.split(' ')[0] + ' https://www.youtube.com/watch?v=hPSQ23NRED8';
-        queueSong(himeMessage);
+        msg.content = msg.content.split(' ')[0] + ' https://www.youtube.com/watch?v=hPSQ23NRED8';
+        queueSong(msg);
     }
 
     function command(cmd) {
