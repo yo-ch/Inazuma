@@ -1,24 +1,24 @@
 const commands = {
-    'help': '~help [command]\n   Brings up the command page. Pass a command for further information.',
-    'tasukete': '~tasukete [command]\n   Brings up the command page. Pass a command for further information.',
+    'help': '~help [command]\n    Brings up the command page. Pass a command for further information.',
+    'tasukete': '~tasukete [command]\n    Brings up the command page. Pass a command for further information.',
 
-    'andy': '~andy [@mention]\n   Shut up weeb. Mentions user, if included.',
+    'andy': '~andy [@mention]\n    Shut up weeb. Mentions user, if included.',
 
-    'airing': '~airing [option]\n   Displays the countdowns for anime in the airing list.\n\n   Options:\n       a <anilist anime url> : Adds the given anime to the airing list.\n       r <name in list>      : Removes the anime from the airing list.\n       c                     : Clears the airing list.',
+    'airing': '~airing [option]\n    Displays the countdowns for anime in the airing list.\n\n    Options:\n        a <anilist anime url> : Adds the given anime to the airing list.\n       r <name in list>      : Removes the anime from the airing list.\n        c                     : Clears the airing list.',
 
-    'anilist': '~anilist | ~ani <anime name>\n   Displays an anime\'s data, pulled from Anilist.\n   If multiple choices are given, simply reply with the number.',
+    'anilist': '~anilist | ~ani <anime name>\n    Displays an anime\'s data, pulled from Anilist.\n    If multiple choices are given, simply reply with the number.',
 
-    'cc': '~cc <voice channel> <@mention>\n   Changes the mentioned user\'s voice channel to the given channel.',
+    'cc': '~cc <voice channel> <@mention>\n    Changes the mentioned user\'s voice channel to the given channel.',
 
-    'choose': '~choose <arg1> | [arg2] ...\n   Randomly chooses between the provided choice(s).',
+    'choose': '~choose <arg1> | [arg2] ...\n    Randomly chooses between the provided choice(s).',
 
-    'gavquote': '~gavquote\n   Returns a random Gavin quote.',
+    'gavquote': '~gavquote\n    Returns a random Gavin quote.',
 
-    'roll': '~roll <int1> [int2]\n   Rolls an integer from 1 to int1 inclusive.\n   If int2 is given, rolls an integer between int1 and int2 inclusive.',
+    'roll': '~roll <int1> [int2]\n    Rolls an integer from 1 to int1 inclusive.\n    If int2 is given, rolls an integer between int1 and int2 inclusive.',
 
-    'vigne': '~vigne\n   Returns a random picture of Vigne.',
+    'vigne': '~vigne\n    Returns a random picture of Vigne.',
 
-    'music': '~music | ~m <option>\n   Options:\n       p | play <url>  : Adds the song to the queue.\n       s | skip        : Skips the current song.\n       q | queue       : Displays the song queue.\n      v | vol <0-100> : Sets volume.',
+    'music': '~music | ~m <option>\n    Options:\n        p | play <url> : Adds the song to the queue.\n        s | skip       : Skips the current song.\n        q | queue      : Displays the song queue.',
 }
 
 const config = require('./config.json');
@@ -32,7 +32,7 @@ var anilistSearch = false;
 var searchChoices = 0;
 var searchClient = '';
 
-module.exports = {
+var self = module.exports = {
     /*
     COMMANDS
     */
@@ -54,22 +54,20 @@ module.exports = {
         else //Bring up default help menu.
             msg.channel.send(
                 'Commands:\n' +
-                '   ~help [command]\n\n' +
+                '    ~help [command]\n\n' +
 
-                '   ~airing [options]\n' +
-                '   ~anilist <anime name>\n' +
-                '   ~choose <arg1> | [arg2] ...\n' +
-                '   ~roll <int1> [int2]\n\n' +
+                '    ~airing [options]\n' +
+                '    ~anilist <anime name>\n' +
+                '    ~choose <arg1> | [arg2] ...\n' +
+                '    ~roll <int1> [int2]\n\n' +
 
-                '   ~music <option> \n\n' +
+                '    ~music <option>\n\n' +
 
-                '   ~andy [@mention]\n' +
-                '   ~gavquote\n' +
-                '   ~vigne\n\n' +
+                '    ~andy [@mention]\n' +
+                '    ~gavquote\n' +
+                '    ~vigne\n\n' +
 
-                '   ~cc <voice channel> <@mention>\n\n' +
-
-                '[] = optional, <> = required', { 'code': true }
+                '    ~cc <voice channel> <@mention>', { 'code': true }
             );
     },
 
