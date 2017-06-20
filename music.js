@@ -43,7 +43,7 @@ module.exports = function(client) {
     Queues the song at the given URL.
     */
     function queueSong(msg) {
-        var url = msg.content.split(' ')[1];
+        var url = msg.content.split(' ')[2];
 
         ytdl.getInfo(url, (err, info) => {
             if (err || info.format_id === undefined)
