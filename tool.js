@@ -1,4 +1,4 @@
-var self = module.exports = {
+module.exports = {
     /*
     Generates a random integer from 0 to upper exclusive.
     */
@@ -20,5 +20,4 @@ var self = module.exports = {
 
     inaBaka: '<:inaBaka:301529550783774721>',
     inaHappy: '<:inaHappy:301529610754195456>',
-
 }
