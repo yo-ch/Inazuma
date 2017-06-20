@@ -40,14 +40,13 @@ Includes anime lookup and a music player.
 <h3> Music </h3>
 
 ```
-~play <url>   
-    Adds the song to the queue.
-
-~skip
-    Skips the current song.
-
-~queue
-    Displays the song queue.
+~music | ~m <option>
+   Options:
+       p | play <url> : Adds the song to the queue.
+       s | skip       : Skips the current song.
+       q | queue      : Displays the song queue.
+       
+   Supports all  sites that youtube-dl supports.
 ```
 
 <h3> Etc. </h3>
