@@ -6,7 +6,7 @@ const commands = {
 
     'airing': '~airing [option]\n   Displays the countdowns for anime in the airing list.\n\n   Options:\n       a <anilist anime url> : Adds the given anime to the airing list.\n       r <name in list>      : Removes the anime from the airing list.\n       c                     : Clears the airing list.',
 
-    'anilist': '~anilist | ~ani <anime name>\n   Displays an anime\'s data, pulled from Anilist. If multiple choices are given, simply reply with the number.',
+    'anilist': '~anilist | ~ani <anime name>\n   Displays an anime\'s data, pulled from Anilist.\n   If multiple choices are given, simply reply with the number.',
 
     'cc': '~cc <voice channel> <@mention>\n   Changes the mentioned user\'s voice channel to the given channel.',
 
