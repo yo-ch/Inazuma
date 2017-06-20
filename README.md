@@ -11,7 +11,7 @@ Includes anime lookup and a music player.
     Brings up the command page. Pass a command for further information.
 ```
 
-<h2> Utility </h2>
+<h3> Utility </h3>
 
 ```
 ~airing [options]   
@@ -37,7 +37,7 @@ Includes anime lookup and a music player.
     If int2 is given, rolls an integer between int1 and int2 inclusive.
 ```
 
-<h2> Music </h2>
+<h3> Music </h3>
 
 ```
 ~play <url>   
@@ -50,7 +50,7 @@ Includes anime lookup and a music player.
     Displays the song queue.
 ```
 
-<h2> Etc. </h2>
+<h3> Etc. </h3>
 
 ```
 ~andy [@mention]   
