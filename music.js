@@ -29,6 +29,9 @@ module.exports = function(client) {
             case 'queue':
             case 'q':
                 return printQueue();
+            case 'vol':
+            case 'v':
+                return setVolume(msg);
             case 'hime':
                 return hime(msg);
             default:
@@ -66,6 +69,7 @@ module.exports = function(client) {
                 if (queue.length === 0) {
                     if (voiceConnection !== null && voiceConnection) voiceConnection.disconnect();
                     voiceConnection = null;
+                    musicChannel.send(':no_entry_sign: Leaving voice channel due to inactivity.');
                 }
             }, 300000);
         } else {
@@ -85,7 +89,7 @@ module.exports = function(client) {
             }).then(() => {
                 //Play song.
                 const music = queue[0];
-                musicChannel.send(`**Now playing** ${tool.wrap(music.title.trim())}`).then(() => {
+                musicChannel.send(`:notes: Now playing ${tool.wrap(music.title.trim())}`).then(() => {
                     dispatch = voiceConnection.playArbitraryInput(request(music.url));
 
                     //Wait for errors/end of song, then play the next song.
@@ -127,12 +131,14 @@ module.exports = function(client) {
         }
     }
 
-    function setVolume() {
-        var vol = parseInt(msg.content.split(' ')[2] / 100);
-        if (vol >= 0 && vol <= 1)
-            dispatch.setVolume(vol);
-        else
+    function setVolume(msg) {
+        var vol = parseInt(msg.content.split(' ')[2]) / 100;
+        if (vol >= 0 && vol <= 1) {
+            dispatch.setVolumeLogarithmic(vol);
+            musicChannel.send(`Volume set to ${tool.wrap(vol*100)}`);
+        } else {
             musicChannel.send(`Use a number between 0 and 100! ${tool.inaBaka}`);
+        }
     }
 
     /*

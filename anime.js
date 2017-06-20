@@ -6,7 +6,7 @@ var searchClient = '';
 const config = require('./config.json');
 const tool = require('./tool.js')
 
-var self = module.exports = {
+module.exports = {
     /*
     Request an API access token from the Anilist API.
     */
@@ -34,7 +34,7 @@ var self = module.exports = {
     */
     retrieveAnilistData: function(msg) {
         if (config.anilist_token_expires_in === 0) { //Request new token if current token is expired.
-            self.requestAccessToken(msg, self.retrieveAnilistData);
+            this.requestAccessToken(msg, this.retrieveAnilistData);
             return;
         }
 
@@ -50,7 +50,7 @@ var self = module.exports = {
                     var results = JSON.parse(body);
 
                     if (results.length == 1) { //Send results.
-                        var ais = self.animeInfoString(results[0].title_romaji, results[0].average_score, results[0].type, results[0].total_episodes, results[0].description, `https://anilist.co/anime/${results[0].id}/`);
+                        var ais = this.animeInfoString(results[0].title_romaji, results[0].average_score, results[0].type, results[0].total_episodes, results[0].description, `https://anilist.co/anime/${results[0].id}/`);
                         msg.channel.send(ais);
                     } else if (results.length >= 2) { //Store results to retrieve when user replies with a choice.
                         searchData = body;
@@ -62,7 +62,7 @@ var self = module.exports = {
 
                         var i;
                         for (i = 0; i < results.length; i++)
-                            choiceString += `${tool.wrap(`${i+1} - ${results[i].title_romaji}`)}\n`;
+                            choiceString += `\`\`${i+1} - ${results[i].title_romaji}\`\`\n`;
 
                         msg.channel.send(choiceString);
                     } else
@@ -71,7 +71,7 @@ var self = module.exports = {
             }
             request(options, callback);
         } else
-            msg.channel.send(`Give me an anime to search for, ${self.tsunNoun()}!`);
+            msg.channel.send(`Give me an anime to search for, ${this.tsunNoun()}!`);
     },
 
     /*
@@ -83,7 +83,7 @@ var self = module.exports = {
             var results = JSON.parse(searchData);
             var anime = results[choice - 1];
 
-            var ais = self.animeInfoString(anime.title_romaji, anime.average_score, anime.type, results[0].total_episodes, anime.description, `https://anilist.co/anime/${anime.id}/`);
+            var ais = this.animeInfoString(anime.title_romaji, anime.average_score, anime.type, results[0].total_episodes, anime.description, `https://anilist.co/anime/${anime.id}/`);
             msg.channel.send(ais);
 
             anilistSearch = false;
@@ -117,7 +117,7 @@ var self = module.exports = {
 
         var anime, animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
         if (animeJSON.anime.length == 0) {
-            msg.channel.send(`There aren\'t any anime in the airing list, ${self.tsunNoun()}.`);
+            msg.channel.send(`There aren\'t any anime in the airing list, ${this.tsunNoun()}.`);
             return;
         }
 
@@ -134,7 +134,7 @@ var self = module.exports = {
             if (anime.totalEps < anime.nextEp)
                 info.push([sprintf('%-50s DONE AIRING\n', title), Infinity]);
             else
-                info.push([sprintf('%-50s Ep %-3i in %s\n', title, anime.nextEp, self.secondsToCountdown(countdown)), countdown]);
+                info.push([sprintf('%-50s Ep %-3i in %s\n', title, anime.nextEp, this.secondsToCountdown(countdown)), countdown]);
         }
 
         info.sort(function(a, b) { //Sorts, starting with anime closest to airing.
@@ -143,7 +143,7 @@ var self = module.exports = {
 
         var i;
         var airing = '';
-        for (i = 0; i < info.length; i++) //Add airing info of each anime to airing string.
+        for (i = 0; i < info.length; i++) //Add info to airing string.
             airing += info[i][0];
 
         var airingListPromise = msg.channel.send(`${airing}`, { 'code': true });
@@ -162,7 +162,7 @@ var self = module.exports = {
     */
     addAiringAnime: function(msg) {
         if (config.anilist_token_expires_in === 0) { //Request new token if current token is expired.
-            self.requestAccessToken(msg, self.addAiringAnime);
+            this.requestAccessToken(msg, this.addAiringAnime);
             return;
         }
 
@@ -177,7 +177,7 @@ var self = module.exports = {
         var id = animeToAdd.match(/\/\d+\//g);
         if (!id) //No matches in regex.
         {
-            msg.channel.send(`Invalid link, ${self.tsunNoun()}!`);
+            msg.channel.send(`Invalid link, ${this.tsunNoun()}!`);
             return;
         }
         id = id[0].slice(1, id[0].length - 1); //Extract match.
@@ -197,13 +197,13 @@ var self = module.exports = {
             totalEps = results.total_episodes;
 
             if (results.airing_status != 'currently airing') {
-                msg.channel.send(`**${title}** isn't currently airing, ${self.tsunNoun()}!`);
+                msg.channel.send(`**${title}** isn't currently airing, ${this.tsunNoun()}!`);
                 return;
             }
 
             for (var anime of animeJSON.anime) { //Check if anime is already in the list.
                 if (anime.title == title) {
-                    msg.channel.send(`**${title}** is already in the airing list, ${self.tsunNoun()}!`);
+                    msg.channel.send(`**${title}** is already in the airing list, ${this.tsunNoun()}!`);
                     return;
                 }
             }
@@ -237,14 +237,14 @@ var self = module.exports = {
 
                 animeJSON.anime.push(anime);
                 fs.writeFile('airing_anime.json', JSON.stringify(animeJSON));
-                msg.channel.send(`**${title}** has been added to the airing list! ${tool.inaHappy}`);
+                msg.channel.send(`**${title}** has been added to the airing list! <:inaHappy:301529610754195456>`);
             }).catch(err => {
                 console.log('Failed to retrieve airing times.');
-                msg.channel.send(`Gomen, there was a problem adding your anime to the list.`);
+                msg.channel.send(`There was a problem adding your anime to the list.`);
             });
         }).catch(err => {
             console.log('Failed to retrieve title of anime.');
-            msg.channel.send(`Gomen, there was a problem adding your anime to the list.`);
+            msg.channel.send(`There was a problem adding your anime to the list.`);
         });
     },
 
@@ -267,12 +267,12 @@ var self = module.exports = {
             if (animeJSON.anime[i].title.trim().substring(0, 44) == animeToRemove) {
                 animeJSON.anime.splice(i, 1);
                 fs.writeFile('airing_anime.json', JSON.stringify(animeJSON));
-                msg.channel.send(`**${animeToRemove}** has been removed from the airing list! ${tool.inaHappy}`);
+                msg.channel.send(`**${animeToRemove}** has been removed from the airing list! <:inaHappy:301529610754195456>`);
                 return;
             }
         }
 
-        msg.channel.send(`**${animeToRemove}** isn't in the airing list, ${self.tsunNoun()}!`);
+        msg.channel.send(`**${animeToRemove}** isn't in the airing list, ${this.tsunNoun()}!`);
     },
 
     /*
@@ -315,7 +315,7 @@ var self = module.exports = {
     Returns a random tsundere noun.
     */
     tsunNoun: function() {
-        let nouns = ['b-baka', 's-stupid', 'd-dummy', 'baaaka', `${tool.inaBaka}`, 'dummy'];
+        let nouns = ['b-baka', 's-stupid', 'd-dummy', 'baaaka', '<:inaBaka:301529550783774721>', 'dummy'];
         return nouns[tool.randint(nouns.length)];
     }
 
