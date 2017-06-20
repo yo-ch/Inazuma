@@ -11,6 +11,8 @@ Includes anime lookup and a music player.
     Brings up the command page. Pass a command for further information.
 ```
 
+<h2> Utility </h2>
+
 ```
 ~airing [options]   
     Displays the countdowns for anime in the airing list.  
@@ -35,6 +37,8 @@ Includes anime lookup and a music player.
     If int2 is given, rolls an integer between int1 and int2 inclusive.
 ```
 
+<h2> Music </h2>
+
 ```
 ~play <url>   
     Adds the song to the queue.
@@ -45,6 +49,8 @@ Includes anime lookup and a music player.
 ~queue
     Displays the song queue.
 ```
+
+<h2> Etc. </h2>
 
 ```
 ~andy [@mention]   
