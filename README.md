@@ -45,7 +45,7 @@ Includes anime lookup and a music player.
                   s | skip       : Skips the current song.
                   q | queue      : Displays the song queue.
        
-   Supports all  sites that youtube-dl supports.
+   Supports all sites that youtube-dl supports.
 ```
 
 <h3> Etc. </h3>
