@@ -16,5 +16,9 @@ var self = module.exports = {
     */
     wrap: function(content) {
         return '``' + content + '``';
-    }
+    },
+
+    inaBaka: '<:inaBaka:301529550783774721>',
+    inaHappy: '<:inaHappy:301529610754195456>',
+
 }

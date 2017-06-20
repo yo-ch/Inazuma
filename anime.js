@@ -62,7 +62,7 @@ var self = module.exports = {
 
                         var i;
                         for (i = 0; i < results.length; i++)
-                            choiceString += `\`\`${i+1} - ${results[i].title_romaji}\`\`\n`;
+                            choiceString += `${tool.wrap(`${i+1} - ${results[i].title_romaji}`)}\n`;
 
                         msg.channel.send(choiceString);
                     } else
@@ -143,7 +143,7 @@ var self = module.exports = {
 
         var i;
         var airing = '';
-        for (i = 0; i < info.length; i++) //Add info to airing string.
+        for (i = 0; i < info.length; i++) //Add airing info of each anime to airing string.
             airing += info[i][0];
 
         var airingListPromise = msg.channel.send(`${airing}`, { 'code': true });
@@ -237,14 +237,14 @@ var self = module.exports = {
 
                 animeJSON.anime.push(anime);
                 fs.writeFile('airing_anime.json', JSON.stringify(animeJSON));
-                msg.channel.send(`**${title}** has been added to the airing list! <:inaHappy:301529610754195456>`);
+                msg.channel.send(`**${title}** has been added to the airing list! ${tool.inaHappy}`);
             }).catch(err => {
                 console.log('Failed to retrieve airing times.');
-                msg.channel.send(`There was a problem adding your anime to the list.`);
+                msg.channel.send(`Gomen, there was a problem adding your anime to the list.`);
             });
         }).catch(err => {
             console.log('Failed to retrieve title of anime.');
-            msg.channel.send(`There was a problem adding your anime to the list.`);
+            msg.channel.send(`Gomen, there was a problem adding your anime to the list.`);
         });
     },
 
@@ -267,7 +267,7 @@ var self = module.exports = {
             if (animeJSON.anime[i].title.trim().substring(0, 44) == animeToRemove) {
                 animeJSON.anime.splice(i, 1);
                 fs.writeFile('airing_anime.json', JSON.stringify(animeJSON));
-                msg.channel.send(`**${animeToRemove}** has been removed from the airing list! <:inaHappy:301529610754195456>`);
+                msg.channel.send(`**${animeToRemove}** has been removed from the airing list! ${tool.inaHappy}`);
                 return;
             }
         }
@@ -315,7 +315,7 @@ var self = module.exports = {
     Returns a random tsundere noun.
     */
     tsunNoun: function() {
-        let nouns = ['b-baka', 's-stupid', 'd-dummy', 'baaaka', '<:inaBaka:301529550783774721>', 'dummy'];
+        let nouns = ['b-baka', 's-stupid', 'd-dummy', 'baaaka', `${tool.inaBaka}`, 'dummy'];
         return nouns[tool.randint(nouns.length)];
     }
 

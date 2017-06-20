@@ -28,7 +28,7 @@ module.exports = function(client) {
                 return skipSong();
             case 'queue':
             case 'q':
-                return printQueue(msg);
+                return printQueue();
             case 'hime':
                 return hime(msg);
             default:
@@ -43,10 +43,10 @@ module.exports = function(client) {
         var url = msg.content.split(' ')[1];
 
         ytdl.getInfo(url, (err, info) => {
-            if (err || info.format_id === undefined) {
+            if (err || info.format_id === undefined)
                 return musicChannel.send(`Invalid video, ${ani.tsunNoun()}!`);
-            }
-            musicChannel.send(`Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} <:inaHappy:301529610754195456>`).then(() => {
+
+            musicChannel.send(`Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`).then(() => {
                 msg.delete();
                 queue.push(info);
                 if (queue.length === 1) playSong(msg); //Play song since its the only one in the queue.
@@ -74,7 +74,7 @@ module.exports = function(client) {
                 if ((voiceConnection === null || voiceConnection.members.size === 1) && msg.member.voiceChannel)
                     msg.member.voiceChannel.join().then(connection => {
                         voiceConnection = connection;
-                        msg.channel.send(`Joining **${msg.member.voiceChannel.name}**.`);
+                        musicChannel.send(`Joining **${msg.member.voiceChannel.name}**.`);
                         resolve();
                     }).catch(() => {});
                 else if (voiceConnection !== null) {
@@ -100,7 +100,7 @@ module.exports = function(client) {
                     });
                 }).catch(() => {});
             }).catch(() => {
-                msg.channel.send('You aren\'t in a voice channel! <:inaBaka:301529550783774721>')
+                msg.channel.send(`You aren\'t in a voice channel! ${tool.inaBaka}`)
             });
         }
     }
@@ -110,13 +110,13 @@ module.exports = function(client) {
     */
     function skipSong() {
         if (queue.length > 0) dispatch.end();
-        else musicChannel.send('There\'s nothing to skip! <:inaBaka:301529550783774721>');
+        else musicChannel.send(`There\'s nothing to skip! ${tool.inaBaka}`);
     }
 
     /*
     Prints the queue.
     */
-    function printQueue(msg) {
+    function printQueue() {
         if (queue.length > 0) {
             var queueString = '';
             for (var i = 0; i < queue.length; i++)
@@ -125,6 +125,14 @@ module.exports = function(client) {
         } else {
             musicChannel.send(`There are no songs in the queue!`);
         }
+    }
+
+    function setVolume() {
+        var vol = parseInt(msg.content.split(' ')[2] / 100);
+        if (vol >= 0 && vol <= 1)
+            dispatch.setVolume(vol);
+        else
+            musicChannel.send(`Use a number between 0 and 100! ${tool.inaBaka}`);
     }
 
     /*
