@@ -41,9 +41,10 @@ Includes anime lookup and a music player.
 
 ```
 ~music | ~m <option>
-   Options:       p | play <url> : Adds the song to the queue.
-                  s | skip       : Skips the current song.
-                  q | queue      : Displays the song queue.
+   Options:       p | play <url>  : Adds the song to the queue.
+                  s | skip        : Skips the current song.
+                  q | queue       : Displays the song queue.
+                  v | vol <0-100> : Sets volume.
        
    Supports all sites that youtube-dl supports.
 ```
