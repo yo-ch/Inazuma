@@ -20,4 +20,5 @@ module.exports = {
 
     inaBaka: '<:inaBaka:301529550783774721>',
     inaHappy: '<:inaHappy:301529610754195456>',
+    inaAngry: '<:inaAngry:302886932164116480>'
 }

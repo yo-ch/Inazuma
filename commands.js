@@ -18,7 +18,7 @@ const commands = {
 
     'vigne': '~vigne\n   Returns a random picture of Vigne.',
 
-    'music': '~music | ~m <option>\n   Options:\n       p | play <url>  : Adds the song to the queue.\n       s | skip        : Skips the current song.\n       q | queue       : Displays the song queue.\n      v | vol <0-100> : Sets volume.',
+    'music': '~music | ~m <option>\n   Options:\n       p | play <url>  : Adds the song to the queue.\n       s | skip        : Skips the current song.\n       q | queue       : Displays the song queue.\n       v | vol <0-100> : Sets volume.',
 }
 
 const config = require('./config.json');
@@ -142,7 +142,7 @@ module.exports = {
         if (choices.length >= 1)
             msg.channel.send(choices[tool.randint(choices.length)]);
         else
-            msg.channel.send(`I can\'t choose if you don\'t give me any choices! <:inaAngry:302886932164116480>`);
+            msg.channel.send(`I can\'t choose if you don\'t give me any choices! ${tool.inaAngry}`);
     },
 
     /*
@@ -219,7 +219,7 @@ module.exports = {
             `Kimochi warui. <:vigneKuzu:270818397380411393>`,
             `Baka janaino?`,
             `Doushitano?`,
-            `<:inaAngry:302886932164116480>`
+            `${tool.inaAngry}`
         ];
         msg.channel.send(replies[tool.randint(replies.length)]);
     }

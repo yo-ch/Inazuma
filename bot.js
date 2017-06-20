@@ -22,7 +22,7 @@ bot.on('message', message => {
     else if (message.content.toLowerCase().search('inazuma') >= 0) //Tehe~.
         message.channel.send('<:inaTehe:301555244330909697>');
     else if (message.content.search(':inaGanbare:') >= 0)
-        message.channel.send('Arigato! <:inaHappy:301529610754195456>');
+        message.channel.send(`Arigato! ${tool.inaHappy}`);
     else if (message.content.search('299400284906717186') >= 0) //Random reply when bot is mentioned.
         cmds.reply(message);
     else if (message.content.split(' ').length == 1 && isInt(parseInt(message.content))) //Could be input for the Anilist search function.

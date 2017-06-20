@@ -133,9 +133,13 @@ module.exports = function(client) {
 
     function setVolume(msg) {
         var vol = parseInt(msg.content.split(' ')[2]) / 100;
-        if (vol >= 0 && vol <= 1) {
-            dispatch.setVolumeLogarithmic(vol);
-            musicChannel.send(`Volume set to ${tool.wrap(vol*100)}`);
+        if (vol && (vol >= 0 && vol <= 1)) {
+            if (dispatch) {
+                dispatch.setVolumeLogarithmic(vol);
+                musicChannel.send(`Volume set to ${tool.wrap(vol*100)}`);
+            } else {
+                musicChannel.send(`Nothing's playing right now. ${tool.inaAngry}`);
+            }
         } else {
             musicChannel.send(`Use a number between 0 and 100! ${tool.inaBaka}`);
         }
