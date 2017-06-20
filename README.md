@@ -17,9 +17,9 @@ Includes anime lookup and a music player.
 ~airing [options]   
     Displays the countdowns for anime in the airing list.  
     
-    Options:      -a <anilist anime url> : Adds the given anime to the airing list.      
-                  -r <name in list>      : Removes the anime from the airing list.     
-                  -c                     : Clears the airing list.
+    Options:       a <anilist anime url> : Adds the given anime to the airing list.      
+                   r <name in list>      : Removes the anime from the airing list.     
+                   c                     : Clears the airing list.
 
 ~anilist <anime name>   
     Displays an anime's data, pulled from Anilist. 
@@ -41,10 +41,9 @@ Includes anime lookup and a music player.
 
 ```
 ~music | ~m <option>
-   Options:
-       p | play <url> : Adds the song to the queue.
-       s | skip       : Skips the current song.
-       q | queue      : Displays the song queue.
+   Options:       p | play <url> : Adds the song to the queue.
+                  s | skip       : Skips the current song.
+                  q | queue      : Displays the song queue.
        
    Supports all  sites that youtube-dl supports.
 ```
