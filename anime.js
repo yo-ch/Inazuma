@@ -115,29 +115,26 @@ var self = module.exports = {
         var sprintf = require('sprintf-js').sprintf;
         var fs = require('fs');
 
-
-
         var anime, animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
         if (animeJSON.anime.length == 0) {
             msg.channel.send(`There aren\'t any anime in the airing list, ${self.tsunNoun()}.`);
             return;
         }
 
-        var airing = '';
         var info = [];
         for (anime of animeJSON.anime) {
-
             var unixts = Math.round((new Date()).getTime() / 1000);
 
             while (anime.countdowns[anime.nextEp - 1] < unixts && anime.countdowns.length > anime.nextEp) //Episode has aired, increment next ep.
                 anime.nextEp += 1;
 
-            if (anime.countdowns.length < anime.nextEp) continue; //Skip this anime, it's done airing.
-
             var countdown = anime.countdowns[anime.nextEp - 1] - unixts;
             var title = anime.title.length > 43 ? `${anime.title.substring(0,43)}...` : anime.title;
 
-            info.push([sprintf('%-50s Ep %-3i in %s\n', title, anime.nextEp, self.secondsToCountdown(countdown)), countdown]);
+            if (anime.totalEps < anime.nextEp)
+                info.push([sprintf('%-50s DONE AIRING\n', title), Infinity]);
+            else
+                info.push([sprintf('%-50s Ep %-3i in %s\n', title, anime.nextEp, self.secondsToCountdown(countdown)), countdown]);
         }
 
         info.sort(function(a, b) { //Sorts, starting with anime closest to airing.
@@ -145,7 +142,8 @@ var self = module.exports = {
         });
 
         var i;
-        for (i = 0; i < info.length; i++) //Add info to string.
+        var airing = '';
+        for (i = 0; i < info.length; i++) //Add info to airing string.
             airing += info[i][0];
 
         var airingListPromise = msg.channel.send(`${airing}`, { 'code': true });
@@ -186,15 +184,17 @@ var self = module.exports = {
 
         var countdowns = []; //Data to write to JSON file.
         var title = '';
-        var nextEp;
+        var nextEp = null;
+        var totalEps;
 
         var options = {
             url: `https://anilist.co/api/anime/${id}?access_token=${config.anilist_token}`
         }
 
         rp(options).then(body => { //Retrieve title of anime.
-            var results = JSON.parse(body);
+            results = JSON.parse(body);
             title = results.title_romaji;
+            totalEps = results.total_episodes;
 
             if (results.airing_status != 'currently airing') {
                 msg.channel.send(`**${title}** isn't currently airing, ${self.tsunNoun()}!`);
@@ -208,6 +208,10 @@ var self = module.exports = {
                 }
             }
 
+            options = {
+                url: `https://anilist.co/api/anime/${id}/airing?access_token=${config.anilist_token}`
+            }
+
             rp(options).then(body => { //Retrieve airing times for each episode of the anime.
                 var results = JSON.parse(body);
                 var ep;
@@ -218,14 +222,16 @@ var self = module.exports = {
                 var unixts = Math.round((new Date()).getTime() / 1000); //Get current unix time.
                 for (var i = 0; i < countdowns.length; i++) { //Get next ep number.
                     if (countdowns[i] > unixts) {
-                        nextEp = i + 1; //Add 1 because we started at 'ep 0'.
+                        nextEp = i + 1; //Add 1 because we started at 'ep 0' technically.
                         break;
                     }
                 }
+                if (nextEp === null) nextEp = totalEps + 1;
 
                 var anime = {
                     'title': title.trim(),
                     'countdowns': countdowns,
+                    'totalEps': totalEps,
                     'nextEp': nextEp
                 }
 
@@ -240,10 +246,6 @@ var self = module.exports = {
             console.log('Failed to retrieve title of anime.');
             msg.channel.send(`There was a problem adding your anime to the list.`);
         });
-        options = {
-            url: `https://anilist.co/api/anime/${id}/airing?access_token=${config.anilist_token}`
-        }
-
     },
 
     /*

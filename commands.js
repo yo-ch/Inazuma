@@ -4,9 +4,9 @@ const commands = {
 
     'andy': '~andy [@mention]\n   Shut up weeb. Mentions user, if included.',
 
-    'airing': '~airing [options]\n   Displays the countdowns for anime in the airing list.\n\n   Options:\n      -a <anilist anime url> : Adds the given anime to the airing list.\n      -r <name in list>      : Removes the anime from the airing list.\n      -c                     : Clears the airing list.',
+    'airing': '~airing [option]\n   Displays the countdowns for anime in the airing list.\n\n   Options:\n       a <anilist anime url> : Adds the given anime to the airing list.\n       r <name in list>      : Removes the anime from the airing list.\n       c                     : Clears the airing list.',
 
-    'anilist': '~anilist <anime name>\n   Displays an anime\'s data, pulled from Anilist. If multiple choices are given, simply reply with the number.\n\n   alt: ~ani',
+    'anilist': '~anilist | ~ani <anime name>\n   Displays an anime\'s data, pulled from Anilist. If multiple choices are given, simply reply with the number.',
 
     'cc': '~cc <voice channel> <@mention>\n   Changes the mentioned user\'s voice channel to the given channel.',
 
@@ -18,11 +18,7 @@ const commands = {
 
     'vigne': '~vigne\n   Returns a random picture of Vigne.',
 
-    'play': '~play <url>\n   Adds the song to the queue.',
-
-    'skip': '~skip\n   Skips the current song.',
-
-    'queue': '~queue\n   Displays the song queue.'
+    'music': '~music | ~m <option>\n   Options:\n       p | play <url> : Adds the song to the queue.\n       s | skip       : Skips the current song.\n       q | queue      : Displays the song queue.',
 }
 
 const config = require('./config.json');
@@ -95,9 +91,9 @@ var self = module.exports = {
     airing: function(msg) {
         var args = msg.content.split(' ');
         if (!args[1]) ani.retrieveAiringData(msg);
-        else if (args[1] == '-a') ani.addAiringAnime(msg);
-        else if (args[1] == '-r') ani.removeAiringAnime(msg);
-        else if (args[1] == '-c') ani.clearAiringList(msg);
+        else if (args[1] == 'a') ani.addAiringAnime(msg);
+        else if (args[1] == 'r') ani.removeAiringAnime(msg);
+        else if (args[1] == 'c') ani.clearAiringList(msg);
     },
 
     /*

@@ -11,18 +11,28 @@ var dispatch = null;
 
 module.exports = function(client) {
     client.on('message', msg => { //Respond to music requests.
-        if (msg.author.bot || !msg.guild) return; //Do not respond to messages from bots, and requests that don't come from guilds.
+        var args = msg.content.split(' ');
+
+        //Do not respond to messages from bots, requests that don't come from guilds and messages that don't call the music command.
+        if (msg.author.bot || !msg.guild) return;
+        if (args[0] !== command('music') && args[0] !== command('m')) return;
+
         musicChannel = client.channels.find('name', 'music');
 
-        switch (msg.content.split(' ')[0]) {
-            case command('play'):
+        switch (args[1]) {
+            case 'play':
+            case 'p':
                 return queueSong(msg);
-            case command('skip'):
+            case 'skip':
+            case 's':
                 return skipSong();
-            case command('queue'):
+            case 'queue':
+            case 'q':
                 return printQueue(msg);
-            case command('hime'):
+            case 'hime':
                 return hime(msg);
+            default:
+                msg.channel.send(`Include an argument onegai, or refer to ${tool.wrap('~help music')}.`);
         }
     });
 
