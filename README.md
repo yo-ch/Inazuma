@@ -11,6 +11,10 @@ Includes anime lookup and a music player.
     Brings up the command page. Pass a command for further information.
 ```
 
+```
+[] = optional, <> = required
+```
+
 <h3> Utility </h3>
 
 ```
