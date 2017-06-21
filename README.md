@@ -18,7 +18,7 @@ Includes anime lookup and a music player.
 <h3> Utility </h3>
 
 ```
-~airing [options]   
+~airing [option]   
     Displays the countdowns for anime in the airing list.  
     
     Options:       a <anilist anime url> : Adds the given anime to the airing list.      
