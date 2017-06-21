@@ -11,21 +11,23 @@ Includes anime lookup and a music player.
     Brings up the command page. Pass a command for further information.
 ```
 
+```
+[] = optional, <> = required
+```
+
 <h3> Utility </h3>
 
 ```
-~airing [options]   
+~airing [option]   
     Displays the countdowns for anime in the airing list.  
     
     Options:       a <anilist anime url> : Adds the given anime to the airing list.      
                    r <name in list>      : Removes the anime from the airing list.     
                    c                     : Clears the airing list.
 
-~anilist <anime name>   
+~anilist | ~ani <anime name>   
     Displays an anime's data, pulled from Anilist. 
     If multiple choices are given, simply reply with the number.
-      
-    alt: ~ani
 ```
 
 ```
@@ -65,6 +67,37 @@ Includes anime lookup and a music player.
 ```
 ~cc <voice channel> <@mention>
     Changes the mentioned user's voice channel to the given channel.
+```
+
+# JSON Sample Files
+<h3> config.json</h3>
+
+```
+{
+    "token": "Discord Token",
+    "prefix": "~",
+    "imgur_id": "Imgur ID",
+    "anilist_id": "Anilist ID",
+    "anilist_secret": "Anilist Secret",
+    "anilist_token": "temp",
+    "anilist_token_expires_in": 0
+}
+```
+
+<h3> airing_anime.json </h3>
+
+```
+{
+    "anime": []
+}
+```
+
+<h3> gavquotes.json </h3>
+
+```
+{
+    "quotes": []
+}
 ```
 
 
