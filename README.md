@@ -21,11 +21,9 @@ Includes anime lookup and a music player.
                    r <name in list>      : Removes the anime from the airing list.     
                    c                     : Clears the airing list.
 
-~anilist <anime name>   
+~anilist | ~ani <anime name>   
     Displays an anime's data, pulled from Anilist. 
     If multiple choices are given, simply reply with the number.
-      
-    alt: ~ani
 ```
 
 ```
