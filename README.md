@@ -69,5 +69,36 @@ Includes anime lookup and a music player.
     Changes the mentioned user's voice channel to the given channel.
 ```
 
+# JSON Sample Files
+<h3> config.json</h3>
+
+```
+{
+    "token": "Discord Token",
+    "prefix": "~",
+    "imgur_id": "Imgur ID",
+    "anilist_id": "Anilist ID",
+    "anilist_secret": "Anilist Secret",
+    "anilist_token": "temp",
+    "anilist_token_expires_in": 0
+}
+```
+
+<h3> airing_anime.json </h3>
+
+```
+{
+    "anime": []
+}
+```
+
+<h3> gavquotes.json </h3>
+
+```
+{
+    "quotes": []
+}
+```
+
 
 
