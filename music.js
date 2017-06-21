@@ -154,7 +154,7 @@ module.exports = function(client) {
     Hime hime.
     */
     function hime(msg) {
-        msg.content = msg.content.split(' ')[0] + ' https://www.youtube.com/watch?v=hPSQ23NRED8';
+        msg.content = '~m p https://www.youtube.com/watch?v=hPSQ23NRED8';
         queueSong(msg);
     }
 
