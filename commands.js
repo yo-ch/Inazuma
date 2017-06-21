@@ -69,7 +69,7 @@ module.exports = {
 
                 '   ~cc <voice channel> <@mention>\n\n' +
 
-                '[] = optional, <> = required', { 'code': true }
+                '[] = optional, <> = required, | = or', { 'code': true }
             );
     },
 

@@ -264,10 +264,11 @@ module.exports = {
         var animeToRemove = msg.content.substring(11).trim();
 
         for (var i = 0; i < animeJSON.anime.length; i++) {
-            if (animeJSON.anime[i].title.trim().substring(0, 44) == animeToRemove) {
+            var currAnimeTitle = animeJSON.anime[i].title.trim()
+            if (currAnimeTitle.startsWith(animeToRemove)) {
                 animeJSON.anime.splice(i, 1);
                 fs.writeFile('airing_anime.json', JSON.stringify(animeJSON));
-                msg.channel.send(`**${animeToRemove}** has been removed from the airing list! <:inaHappy:301529610754195456>`);
+                msg.channel.send(`**${currAnimeTitle}** has been removed from the airing list! <:inaHappy:301529610754195456>`);
                 return;
             }
         }

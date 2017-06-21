@@ -67,9 +67,11 @@ module.exports = function(client) {
             //Leave channel after 5 minutes of inactivity
             setTimeout(() => {
                 if (queue.length === 0) {
-                    if (voiceConnection !== null && voiceConnection) voiceConnection.disconnect();
-                    voiceConnection = null;
-                    musicChannel.send(':no_entry_sign: Leaving voice channel due to inactivity.');
+                    if (voiceConnection !== null && voiceConnection) {
+                        voiceConnection.disconnect();
+                        voiceConnection = null;
+                        musicChannel.send(':no_entry_sign: Leaving voice channel due to inactivity.');
+                    }
                 }
             }, 300000);
         } else {
@@ -131,6 +133,9 @@ module.exports = function(client) {
         }
     }
 
+    /*
+    Sets the volume of the stream.
+    */
     function setVolume(msg) {
         var vol = parseInt(msg.content.split(' ')[2]) / 100;
         if (vol && (vol >= 0 && vol <= 1)) {
