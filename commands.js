@@ -37,10 +37,7 @@ module.exports = {
     COMMANDS
     */
     help: function(msg) {
-        var args = msg.content.split(' ').slice(1);
-        args = args.filter((arg) => { //Filter out empty/whitespace args, and trim args.
-            return arg.trim();
-        });
+        var args = msg.content.split(/\s+/).slice(1);
 
         var cmd;
         if (args.length == 1) { //User requested help for a specific command.
@@ -89,7 +86,7 @@ module.exports = {
       -c        : Clears the airing list.
     */
     airing: function(msg) {
-        var args = msg.content.split(' ');
+        var args = msg.content.split(/\s+/);
         if (!args[1]) ani.retrieveAiringData(msg);
         else if (args[1] == 'a') ani.addAiringAnime(msg);
         else if (args[1] == 'r') ani.removeAiringAnime(msg);
@@ -114,7 +111,7 @@ module.exports = {
             return;
         }
 
-        var args = msg.content.split(' ').slice(1);
+        var args = msg.content.split(/\s+/).slice(1);
         var length = args.length;
         var channel = '';
         var i;
@@ -157,7 +154,7 @@ module.exports = {
     Rolls a number between 1 and num1 or num1 and num2 inclusive.
     */
     roll: function(msg) {
-        var args = msg.content.split(' ').slice(1);
+        var args = msg.content.split(/\s+/).slice(1);
 
         if (args.length > 2) return;
 

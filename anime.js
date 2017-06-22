@@ -38,7 +38,7 @@ module.exports = {
             return;
         }
 
-        var search = msg.content.split(' ').slice(1);
+        var search = msg.content.split(/\s+/).slice(1);
         if (search.length >= 1) { //A search query was given.
             var request = require('request');
             var options = {
@@ -62,7 +62,7 @@ module.exports = {
 
                         var i;
                         for (i = 0; i < results.length; i++)
-                            choiceString += `\`\`${i+1} - ${results[i].title_romaji}\`\`\n`;
+                            choiceString += `${tool.wrap(`${i+1} - ${results[i].title_romaji}`)}\n`;
 
                         msg.channel.send(choiceString);
                     } else
@@ -171,7 +171,7 @@ module.exports = {
 
         var animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
 
-        var animeToAdd = msg.content.split(' ')[2];
+        var animeToAdd = msg.content.split(/\s+/)[2];
         if (!animeToAdd) return;
 
         var id = animeToAdd.match(/\/\d+\//g);

@@ -32,7 +32,7 @@ bot.on('message', message => {
     if (!message.content.startsWith(config.prefix)) return; //Not a command.
 
     //Commands.
-    switch (message.content.split(' ')[0]) {
+    switch (message.content.split(/\s+/)[0]) {
         case command('help'):
         case command('tasukete'):
             return cmds.help(message);
@@ -57,8 +57,7 @@ bot.on('message', message => {
 });
 
 bot.on('guildMemberAdd', member => {
-    member.guild.defaultChannel.send(`I-It's not like I wanted you to join
-     this server or anything, ${ani.tsunNoun()}. ${member.user}`);
+    member.guild.defaultChannel.send(`I-It's not like I wanted you to join this server or anything, ${ani.tsunNoun()}. ${member.user}`);
 });
 
 bot.on('guildMemberRemove', member => {
@@ -73,12 +72,13 @@ bot.on('guildMemberRemove', member => {
 // log our bot in
 bot.login(config.token);
 
-var counter = setInterval(timer, 1000);
+
 
 function timer() {
     if (config.anilist_token_expires_in == 1) console.log('Anilist access token has expired.');
     if (config.anilist_token_expires_in > 0) config.anilist_token_expires_in -= 1;
 }
+setInterval(timer, 1000);
 
 function command(cmd) {
     return config.prefix + cmd;
