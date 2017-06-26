@@ -59,7 +59,12 @@ Includes anime lookup and a music player.
 
 ~gavquote
     Returns a random Gavin quote.
+```
 
+```
+~aoba
+    Returns a random picture of Aoba.
+    
 ~vigne   
     Returns a random picture of Vigne.
 ```
@@ -96,7 +101,9 @@ Includes anime lookup and a music player.
 
 ```
 {
-    "quotes": []
+    "quotes": [
+    "Quote 1", 
+    "Quote 2" ]
 }
 ```
 
