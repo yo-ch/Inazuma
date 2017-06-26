@@ -53,6 +53,8 @@ bot.on('message', message => {
             return cmds.roll(message);
         case command('vigne'):
             return cmds.vigne(message);
+        case command('aoba'):
+            return cmds.aoba(message);
     }
 });
 

@@ -4,6 +4,8 @@ const commands = {
 
     'andy': '~andy [@mention]\n   Shut up weeb. Mentions user, if included.',
 
+    'aoba': '~aoba\n   Returns a random picture of Aoba.',
+
     'airing': '~airing [option]\n   Displays the countdowns for anime in the airing list.\n\n   Options:\n       a <anilist anime url> : Adds the given anime to the airing list.\n       r <name in list>      : Removes the anime from the airing list.\n       c                     : Clears the airing list.',
 
     'anilist': '~anilist | ~ani <anime name>\n   Displays an anime\'s data, pulled from Anilist.\n   If multiple choices are given, simply reply with the number.',
@@ -61,7 +63,9 @@ module.exports = {
                 '   ~music <option> \n\n' +
 
                 '   ~andy [@mention]\n' +
-                '   ~gavquote\n' +
+                '   ~gavquote\n\n' +
+
+                '   ~aoba\n' +
                 '   ~vigne\n\n' +
 
                 '   ~cc <voice channel> <@mention>\n\n' +
@@ -182,6 +186,29 @@ module.exports = {
     /*
     Interacts with the imgur API to pull a random image link from an album.
     */
+    aoba: function(msg) {
+        //Create a http request.
+        var request = require('request');
+
+        //api url + authorization header
+        var options = {
+            url: 'https://api.imgur.com/3/album/4e3Dd/images',
+            headers: {
+                'Authorization': `Client-ID ${config.imgur_id}`
+            }
+        };
+
+        //Callback funct.
+        function callback(error, response, body) {
+            if (!error && response.statusCode == 200) {
+                var info = JSON.parse(body);
+                msg.channel.send(info.data[tool.randint(info.data.length)].link);
+            }
+        }
+
+        request(options, callback);
+    },
+
     vigne: function(msg) {
         //Create a http request.
         var request = require('request');
