@@ -12,7 +12,7 @@ Includes anime lookup and a music player.
 ```
 
 ```
-[] = optional, <> = required
+[] = optional, <> = required, | = or
 ```
 
 <h3> Utility </h3>
