@@ -6,7 +6,7 @@ var searchClient = '';
 const config = require('./config.json');
 const tool = require('./tool.js')
 
-module.exports = {
+var self = module.exports = {
     /*
     Request an API access token from the Anilist API.
     */
@@ -34,7 +34,7 @@ module.exports = {
     */
     retrieveAnilistData: function(msg) {
         if (config.anilist_token_expires_in === 0) { //Request new token if current token is expired.
-            this.requestAccessToken(msg, this.retrieveAnilistData);
+            self.requestAccessToken(msg, self.retrieveAnilistData);
             return;
         }
 
@@ -50,7 +50,7 @@ module.exports = {
                     var results = JSON.parse(body);
 
                     if (results.length == 1) { //Send results.
-                        var ais = this.animeInfoString(results[0].title_romaji, results[0].average_score, results[0].type, results[0].total_episodes, results[0].description, `https://anilist.co/anime/${results[0].id}/`);
+                        var ais = self.animeInfoString(results[0].title_romaji, results[0].average_score, results[0].type, results[0].total_episodes, results[0].description, `https://anilist.co/anime/${results[0].id}/`);
                         msg.channel.send(ais);
                     } else if (results.length >= 2) { //Store results to retrieve when user replies with a choice.
                         searchData = body;
@@ -71,7 +71,7 @@ module.exports = {
             }
             request(options, callback);
         } else
-            msg.channel.send(`Give me an anime to search for, ${this.tsunNoun()}!`);
+            msg.channel.send(`Give me an anime to search for, ${self.tsunNoun()}!`);
     },
 
     /*
@@ -83,7 +83,7 @@ module.exports = {
             var results = JSON.parse(searchData);
             var anime = results[choice - 1];
 
-            var ais = this.animeInfoString(anime.title_romaji, anime.average_score, anime.type, results[0].total_episodes, anime.description, `https://anilist.co/anime/${anime.id}/`);
+            var ais = self.animeInfoString(anime.title_romaji, anime.average_score, anime.type, results[0].total_episodes, anime.description, `https://anilist.co/anime/${anime.id}/`);
             msg.channel.send(ais);
 
             anilistSearch = false;
@@ -117,7 +117,7 @@ module.exports = {
 
         var anime, animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
         if (animeJSON.anime.length == 0) {
-            msg.channel.send(`There aren\'t any anime in the airing list, ${this.tsunNoun()}.`);
+            msg.channel.send(`There aren\'t any anime in the airing list, ${self.tsunNoun()}.`);
             return;
         }
 
@@ -134,7 +134,7 @@ module.exports = {
             if (anime.totalEps < anime.nextEp)
                 info.push([sprintf('%-50s DONE AIRING\n', title), Infinity]);
             else
-                info.push([sprintf('%-50s Ep %-3i in %s\n', title, anime.nextEp, this.secondsToCountdown(countdown)), countdown]);
+                info.push([sprintf('%-50s Ep %-3i in %s\n', title, anime.nextEp, self.secondsToCountdown(countdown)), countdown]);
         }
 
         info.sort(function(a, b) { //Sorts, starting with anime closest to airing.
@@ -162,7 +162,7 @@ module.exports = {
     */
     addAiringAnime: function(msg) {
         if (config.anilist_token_expires_in === 0) { //Request new token if current token is expired.
-            this.requestAccessToken(msg, this.addAiringAnime);
+            self.requestAccessToken(msg, self.addAiringAnime);
             return;
         }
 
@@ -177,7 +177,7 @@ module.exports = {
         var id = animeToAdd.match(/\/\d+\//g);
         if (!id) //No matches in regex.
         {
-            msg.channel.send(`Invalid link, ${this.tsunNoun()}!`);
+            msg.channel.send(`Invalid link, ${self.tsunNoun()}!`);
             return;
         }
         id = id[0].slice(1, id[0].length - 1); //Extract match.
@@ -197,13 +197,13 @@ module.exports = {
             totalEps = results.total_episodes;
 
             if (results.airing_status != 'currently airing') {
-                msg.channel.send(`**${title}** isn't currently airing, ${this.tsunNoun()}!`);
+                msg.channel.send(`**${title}** isn't currently airing, ${self.tsunNoun()}!`);
                 return;
             }
 
             for (var anime of animeJSON.anime) { //Check if anime is already in the list.
                 if (anime.title == title) {
-                    msg.channel.send(`**${title}** is already in the airing list, ${this.tsunNoun()}!`);
+                    msg.channel.send(`**${title}** is already in the airing list, ${self.tsunNoun()}!`);
                     return;
                 }
             }
@@ -273,7 +273,7 @@ module.exports = {
             }
         }
 
-        msg.channel.send(`**${animeToRemove}** isn't in the airing list, ${this.tsunNoun()}!`);
+        msg.channel.send(`**${animeToRemove}** isn't in the airing list, ${self.tsunNoun()}!`);
     },
 
     /*
