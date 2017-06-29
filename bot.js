@@ -16,9 +16,9 @@ bot.on('message', message => {
     if (message.author.bot) return; //Do not respond to messages from bots.
 
     //Replies to non-commands.
-    if (message.content.toLowerCase().match('ay{2,}$')) //Ayy lmao.
+    if (message.content.toLowerCase().startsWith(/ay{2,}$/)) //Ayy lmao.
         message.channel.send('lmao');
-    else if (message.content.toLowerCase().match('same$')) //same.
+    else if (message.content.toLowerCase().startsWith('same')) //same.
         message.channel.send('same');
     else if (message.content.toLowerCase().search('inazuma') >= 0) //Tehe~.
         message.channel.send('<:inaTehe:301555244330909697>');

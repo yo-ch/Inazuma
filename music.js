@@ -151,7 +151,7 @@ function setVolume(msg) {
 Hime hime.
 */
 function hime(msg) {
-    msg.content = '~m p https://www.youtube.com/watch?v=hPSQ23NRED8';
+    msg.content = '~m p https://soundcloud.com/shiinub/namirin-koi-no-hime-hime-pettanko';
     queueSong(msg);
 }
 
