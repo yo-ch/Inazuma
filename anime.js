@@ -131,7 +131,7 @@ var self = module.exports = {
             var countdown = anime.countdowns[anime.nextEp - 1] - unixts;
             var title = anime.title.length > 43 ? `${anime.title.substring(0,43)}...` : anime.title;
 
-            if (anime.totalEps < anime.nextEp)
+            if (anime.totalEps < anime.nextEp || countdown < 0)
                 info.push([sprintf('%-50s DONE AIRING\n', title), Infinity]);
             else
                 info.push([sprintf('%-50s Ep %-3i in %s\n', title, anime.nextEp, self.secondsToCountdown(countdown)), countdown]);
@@ -219,6 +219,11 @@ var self = module.exports = {
                     countdowns.push(results[ep]);
                 }
 
+                if (countdowns.length == 0) {
+                    msg.channel.send(`Gomen, airing times for **${title}** are not available yet.`);
+                    return;
+                }
+
                 var unixts = Math.round((new Date()).getTime() / 1000); //Get current unix time.
                 for (var i = 0; i < countdowns.length; i++) { //Get next ep number.
                     if (countdowns[i] > unixts) {
@@ -226,7 +231,7 @@ var self = module.exports = {
                         break;
                     }
                 }
-                if (nextEp === null) nextEp = totalEps + 1;
+                if (!nextEp) nextEp = totalEps + 1;
 
                 var anime = {
                     'title': title.trim(),
@@ -261,11 +266,16 @@ var self = module.exports = {
 
         var fs = require('fs');
         var animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
-        var animeToRemove = msg.content.substring(11).trim();
+        var animeToRemove = msg.content.substring(10).trim().toLowerCase();
+
+        if (animeToRemove.length < 4) {
+            msg.channel.send('Gomen, include at least the first 4 letters of the anime\'s title.');
+            return;
+        }
 
         for (var i = 0; i < animeJSON.anime.length; i++) {
             var currAnimeTitle = animeJSON.anime[i].title.trim()
-            if (currAnimeTitle.startsWith(animeToRemove)) {
+            if (currAnimeTitle.toLowerCase().startsWith(animeToRemove)) {
                 animeJSON.anime.splice(i, 1);
                 fs.writeFile('airing_anime.json', JSON.stringify(animeJSON));
                 msg.channel.send(`**${currAnimeTitle}** has been removed from the airing list! <:inaHappy:301529610754195456>`);
