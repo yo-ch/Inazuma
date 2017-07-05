@@ -131,7 +131,7 @@ var self = module.exports = {
             var countdown = anime.countdowns[anime.nextEp - 1] - unixts;
             var title = anime.title.length > 43 ? `${anime.title.substring(0,43)}...` : anime.title;
 
-            if ((anime.totalEps < anime.nextEp && anime.totalEps > 0) || anime.countdowns.length < anime.nextEp || countdown < 0)
+            if (anime.totalEps < anime.nextEp || countdown < 0)
                 info.push([sprintf('%-50s DONE AIRING\n', title), Infinity]);
             else
                 info.push([sprintf('%-50s Ep %-3i in %s\n', title, anime.nextEp, self.secondsToCountdown(countdown)), countdown]);
@@ -171,91 +171,86 @@ var self = module.exports = {
 
         var animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
 
-        var animeToAdd = msg.content.split(/\s+/).slice(2);
-
+        var animeToAdd = msg.content.split(/\s+/)[2];
         if (!animeToAdd) return;
 
-        for (var i = 0; i < animeToAdd.length; i++) {
+        var id = animeToAdd.match(/\/\d+\//g);
+        if (!id) //No matches in regex.
+        {
+            msg.channel.send(`Invalid link, ${self.tsunNoun()}!`);
+            return;
+        }
+        id = id[0].slice(1, id[0].length - 1); //Extract match.
 
-            var id = animeToAdd[i].match(/\/\d+\//g);
-            if (!id) //No matches in regex.
-            {
-                msg.channel.send(`Invalid link, ${self.tsunNoun()}!`);
-                continue;
+        var countdowns = []; //Data to write to JSON file.
+        var title = '';
+        var nextEp = null;
+        var totalEps;
+
+        var options = {
+            url: `https://anilist.co/api/anime/${id}?access_token=${config.anilist_token}`
+        }
+
+        rp(options).then(body => { //Retrieve title of anime.
+            results = JSON.parse(body);
+            title = results.title_romaji;
+            totalEps = results.total_episodes;
+
+            if (results.airing_status != 'currently airing') {
+                msg.channel.send(`**${title}** isn't currently airing, ${self.tsunNoun()}!`);
+                return;
             }
-            id = id[0].slice(1, id[0].length - 1); //Extract id.
 
-            var options = {
-                url: `https://anilist.co/api/anime/${id}?access_token=${config.anilist_token}`
+            for (var anime of animeJSON.anime) { //Check if anime is already in the list.
+                if (anime.title == title) {
+                    msg.channel.send(`**${title}** is already in the airing list, ${self.tsunNoun()}!`);
+                    return;
+                }
             }
 
-            rp(options).then(body => { //Retrieve title of anime.
+            options = {
+                url: `https://anilist.co/api/anime/${id}/airing?access_token=${config.anilist_token}`
+            }
+
+            rp(options).then(body => { //Retrieve airing times for each episode of the anime.
                 var results = JSON.parse(body);
+                var ep;
+                for (ep in results) {
+                    countdowns.push(results[ep]);
+                }
 
-                var countdowns = []; //Data to write to JSON file.
-                var title = '';
-                var nextEp = null;
-                var totalEps;
-
-                title = results.title_romaji;
-                totalEps = results.total_episodes;
-                console.log(title);
-                if (results.airing_status != 'currently airing') {
-                    msg.channel.send(`**${title}** isn't currently airing, ${self.tsunNoun()}!`);
+                if (countdowns.length == 0) {
+                    msg.channel.send(`Gomen, airing times for **${title}** are not available yet.`);
                     return;
                 }
 
-                for (var anime of animeJSON.anime) { //Check if anime is already in the list.
-                    if (anime.title == title) {
-                        msg.channel.send(`**${title}** is already in the airing list, ${self.tsunNoun()}!`);
-                        return;
+                var unixts = Math.round((new Date()).getTime() / 1000); //Get current unix time.
+                for (var i = 0; i < countdowns.length; i++) { //Get next ep number.
+                    if (countdowns[i] > unixts) {
+                        nextEp = i + 1; //Add 1 because we started at 'ep 0' technically.
+                        break;
                     }
                 }
+                if (!nextEp) nextEp = totalEps + 1;
 
-                options = {
-                    url: `https://anilist.co/api/anime/${id}/airing?access_token=${config.anilist_token}`
+                var anime = {
+                    'title': title.trim(),
+                    'countdowns': countdowns,
+                    'totalEps': totalEps,
+                    'nextEp': nextEp
                 }
 
-                rp(options).then(body => { //Retrieve airing times for each episode of the anime.
-                    results = JSON.parse(body);
-                    var ep;
-                    for (ep in results) {
-                        countdowns.push(results[ep]);
-                    }
-
-                    if (countdowns.length == 0) {
-                        msg.channel.send(`Gomen, airing times for **${title}** are not available yet.`);
-                        return;
-                    }
-
-                    var unixts = Math.round((new Date()).getTime() / 1000); //Get current unix time.
-                    for (var i = 0; i < countdowns.length; i++) { //Get next ep number.
-                        if (countdowns[i] > unixts) {
-                            nextEp = i + 1; //Add 1 because we started at 'ep 0' technically.
-                            break;
-                        }
-                    }
-                    if (!nextEp) nextEp = totalEps + 1;
-
-                    var anime = {
-                        'title': title.trim(),
-                        'countdowns': countdowns,
-                        'totalEps': totalEps,
-                        'nextEp': nextEp
-                    }
-
-                    animeJSON.anime.push(anime);
-                    fs.writeFile('airing_anime.json', JSON.stringify(animeJSON));
-                    msg.channel.send(`**${title}** has been added to the airing list! <:inaHappy:301529610754195456>`);
-                }).catch(err => {
-                    console.log('Failed to retrieve airing times.');
-                    msg.channel.send(`There was a problem adding your anime to the list.`);
-                });
+                animeJSON.anime.push(anime);
+                fs.writeFile('airing_anime.json', JSON.stringify(animeJSON));
+                msg.channel.send(`**${title}** has been added to the airing list! <:inaHappy:301529610754195456>`);
             }).catch(err => {
-                console.log('Failed to retrieve title of anime.');
+                console.log('Failed to retrieve airing times.');
                 msg.channel.send(`There was a problem adding your anime to the list.`);
             });
-        }
+        }).catch(err => {
+            console.log('Failed to retrieve title of anime.');
+            msg.channel.send(`There was a problem adding your anime to the list.`);
+        });
     },
 
     /*
