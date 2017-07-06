@@ -74,13 +74,11 @@ bot.on('guildMemberRemove', member => {
 // log our bot in
 bot.login(config.token);
 
-
-
 function timer() {
-    if (config.anilist_token_expires_in == 1) console.log('Anilist access token has expired.');
-    if (config.anilist_token_expires_in > 0) config.anilist_token_expires_in -= 1;
+    if (config.anilist_token_expires_in <= 10) console.log('Anilist access token has expired.');
+    if (config.anilist_token_expires_in > 0) config.anilist_token_expires_in -= 10;
 }
-setInterval(timer, 1000);
+setInterval(timer, 10000);
 
 function command(cmd) {
     return config.prefix + cmd;
