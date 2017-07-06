@@ -21,7 +21,7 @@ Includes anime lookup and a music player.
 ~airing [option]   
     Displays countdowns until the next episode for each anime in the airing list.  
     
-    Options:       a <anilist url>       : Adds the given anime to the airing list.      
+    Options:       a <anilist urls>      : Adds the given anime to the airing list.      
                    r <name in list>      : Removes the anime from the airing list.     
                    c                     : Clears the airing list.
 
