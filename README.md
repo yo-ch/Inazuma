@@ -2,7 +2,7 @@
 
 A personal Discord bot written using discord.js.
 
-Includes anime lookup and a music player.
+Includes anime lookup (Anilist) and a music player.
 
 # Commands
 
@@ -49,6 +49,7 @@ Includes anime lookup and a music player.
                   v | vol <0-100> : Sets volume.
        
    Supports all sites that youtube-dl supports.
+   Requires a ``#music`` channel.
 ```
 
 <h3> Etc. </h3>
