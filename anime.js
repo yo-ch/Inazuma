@@ -131,7 +131,7 @@ var self = module.exports = {
             var countdown = anime.countdowns[anime.nextEp - 1] - unixts;
             var title = anime.title.length > 43 ? `${anime.title.substring(0,43)}...` : anime.title;
 
-            if (anime.totalEps < anime.nextEp || countdown < 0)
+            if ((anime.totalEps < anime.nextEp && anime.totalEps > 0) || countdown < 0)
                 info.push([sprintf('%-50s DONE AIRING\n', title), Infinity]);
             else
                 info.push([sprintf('%-50s Ep %-3i in %s\n', title, anime.nextEp, self.secondsToCountdown(countdown)), countdown]);
@@ -158,7 +158,7 @@ var self = module.exports = {
     },
 
     /*
-    Adds an anime to the airing list using it's URL.
+    Adds anime to the airing list using its URL.
     */
     addAiringAnime: function(msg) {
         if (config.anilist_token_expires_in === 0) { //Request new token if current token is expired.
@@ -166,21 +166,28 @@ var self = module.exports = {
             return;
         }
 
-        var rp = require('request-promise');
-        var fs = require('fs');
-
-        var animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
-
-        var animeToAdd = msg.content.split(/\s+/)[2];
+        var animeToAdd = msg.content.split(/\s+/).slice(2);
         if (!animeToAdd) return;
 
-        var id = animeToAdd.match(/\/\d+\//g);
-        if (!id) //No matches in regex.
-        {
-            msg.channel.send(`Invalid link, ${self.tsunNoun()}!`);
-            return;
+        var ids = [];
+        for (var i = 0; i < animeToAdd.length; i++) {
+            var id = animeToAdd[i].match(/\/\d+\//g);
+            if (!id) { //No matches in regex.
+                msg.channel.send(`Invalid link, ${self.tsunNoun()}!`);
+                continue;
+            }
+            ids.push(id[0].slice(1, id[0].length - 1));
         }
-        id = id[0].slice(1, id[0].length - 1); //Extract match.
+
+        self.addAiringInner(msg, ids);
+    },
+
+    /*
+    Recursive function that adds each anime given by their IDs to the airing list.
+    */
+    addAiringInner: function(msg, ids) {
+        var rp = require('request-promise');
+        var fs = require('fs');
 
         var countdowns = []; //Data to write to JSON file.
         var title = '';
@@ -188,7 +195,7 @@ var self = module.exports = {
         var totalEps;
 
         var options = {
-            url: `https://anilist.co/api/anime/${id}?access_token=${config.anilist_token}`
+            url: `https://anilist.co/api/anime/${ids[0]}?access_token=${config.anilist_token}`
         }
 
         rp(options).then(body => { //Retrieve title of anime.
@@ -201,15 +208,8 @@ var self = module.exports = {
                 return;
             }
 
-            for (var anime of animeJSON.anime) { //Check if anime is already in the list.
-                if (anime.title == title) {
-                    msg.channel.send(`**${title}** is already in the airing list, ${self.tsunNoun()}!`);
-                    return;
-                }
-            }
-
             options = {
-                url: `https://anilist.co/api/anime/${id}/airing?access_token=${config.anilist_token}`
+                url: `https://anilist.co/api/anime/${ids[0]}/airing?access_token=${config.anilist_token}`
             }
 
             rp(options).then(body => { //Retrieve airing times for each episode of the anime.
@@ -236,20 +236,34 @@ var self = module.exports = {
                 var anime = {
                     'title': title.trim(),
                     'countdowns': countdowns,
-                    'totalEps': totalEps,
+                    'totalEps': totalEps == 0 ? countdowns.length : totalEps,
                     'nextEp': nextEp
                 }
 
+                var animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
                 animeJSON.anime.push(anime);
                 fs.writeFile('airing_anime.json', JSON.stringify(animeJSON));
-                msg.channel.send(`**${title}** has been added to the airing list! <:inaHappy:301529610754195456>`);
+                msg.channel.send(`**${anime.title}** has been added to the airing list! <:inaHappy:301529610754195456>`);
+
+                ids.shift();
+                if (ids.length > 0)
+                    self.addAiringInner(msg, ids);
             }).catch(err => {
                 console.log('Failed to retrieve airing times.');
                 msg.channel.send(`There was a problem adding your anime to the list.`);
+
+                ids.shift();
+                if (ids.length > 0)
+                    self.addAiringInner(msg, ids);
             });
         }).catch(err => {
+            console.log(err);
             console.log('Failed to retrieve title of anime.');
             msg.channel.send(`There was a problem adding your anime to the list.`);
+
+            ids.shift();
+            if (ids.length > 0)
+                self.addAiringInner(msg, ids);
         });
     },
 

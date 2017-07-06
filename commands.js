@@ -6,7 +6,7 @@ const commands = {
 
     'aoba': '~aoba\n   Returns a random picture of Aoba.',
 
-    'airing': '~airing [option]\n   Displays countdowns until the next episode for each anime in the airing list.\n\n   Options:\n       a <anilist anime url> : Adds the given anime to the airing list.\n       r <name in list>      : Removes the anime from the airing list.\n       c                     : Clears the airing list.',
+    'airing': '~airing [option]\n   Displays countdowns until the next episode for each anime in the airing list.\n\n   Options:\n       a <anilist urls> : Adds the given anime to the airing list.\n       r <name in list> : Removes the anime from the airing list.\n       c                : Clears the airing list.',
 
     'anilist': '~anilist | ~ani <anime name>\n   Displays an anime\'s data, pulled from Anilist.\n   If multiple choices are given, simply reply with the number.',
 
