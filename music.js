@@ -20,7 +20,7 @@ module.exports = function(client) {
             "musicChannel": msg.guild.channels.find('name', 'music'),
             "voiceConnection": null,
             "dispatch": null,
-            "status": 'offline',
+            "status": 'offline', //States: offline, playing, stopped
             "inactivityTimer": 300
         };
 
@@ -29,7 +29,8 @@ module.exports = function(client) {
         if (!guild.musicChannel) {
             guild.musicChannel = msg.guild.channels.find('name', 'music');
             if (!guild.musicChannel) {
-                msg.channel.send(`Please create a ${tool.wrap('#music')} channel!`);
+                msg.channel.send(
+                    `Please create a ${tool.wrap('#music')} channel!`);
                 return;
             }
         }
@@ -56,7 +57,9 @@ module.exports = function(client) {
             case 'hime':
                 return hime(msg, guild);
             default:
-                msg.channel.send(`Include an argument onegai, or refer to ${tool.wrap('~help music')}.`);
+                msg.channel.send(
+                    `Include an argument onegai, or refer to ${tool.wrap('~help music')}.`
+                );
         }
     });
 }
@@ -71,7 +74,9 @@ function queueSong(msg, guild) {
         if (err || info.format_id === undefined)
             return guild.musicChannel.send(`Invalid video, ${ani.tsunNoun()}!`);
 
-        guild.musicChannel.send(`Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`).then(() => {
+        guild.musicChannel.send(
+            `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+        ).then(() => {
             msg.delete();
             guild.queue.push(info);
             if (guild.queue.length === 1) playSong(msg, guild);
@@ -83,47 +88,49 @@ function queueSong(msg, guild) {
 Plays the first song in the queue.
 */
 function playSong(msg, guild) {
-
     if (guild.queue.length === 0) {
         guild.musicChannel.send('Queue complete.');
-        status = 'stopped';
+        changeStatus(guild, 'stopped');
     } else {
         //Find the voice channel to play in.
         new Promise((resolve, reject) => {
             if (guild.voiceConnection)
                 resolve();
-            else if ((!guild.voiceConnection || guild.voiceConnection.members.size === 1) && msg.member.voiceChannel) {
-
+            else if ((!guild.voiceConnection || guild.voiceConnection.members.size ===
+                    1) && msg.member.voiceChannel) {
                 msg.member.voiceChannel.join().then(connection => {
                     guild.voiceConnection = connection;
-                    guild.musicChannel.send(`Joining **${msg.member.voiceChannel.name}**.`);
+                    guild.musicChannel.send(
+                        `Joining **${msg.member.voiceChannel.name}**.`
+                    );
                     resolve();
                 }).catch(() => {});
             } else {
                 reject();
-                console.log('playing');
             }
 
         }).then(() => {
             //Play song.
-            guild.status = 'playing';
-            guild.inactivityTimer = 300;
+            changeStatus(guild, 'playing');
 
             const music = guild.queue[0];
-            guild.musicChannel.send(`:notes: Now playing ${tool.wrap(music.title.trim())}`).then(() => {
-                guild.dispatch = guild.voiceConnection.playArbitraryInput(request(music.url));
+            guild.musicChannel.send(
+                `:notes: Now playing ${tool.wrap(music.title.trim())}`).then(
+                () => {
+                    guild.dispatch = guild.voiceConnection.playArbitraryInput(
+                        request(music.url));
 
-                //Wait for errors/end of song, then play the next song.
-                guild.dispatch.on('error', error => {
-                    guild.queue.shift();
-                    playSong(msg, guild);
-                });
+                    //Wait for errors/end of song, then play the next song.
+                    guild.dispatch.on('error', error => {
+                        guild.queue.shift();
+                        playSong(msg, guild);
+                    });
 
-                guild.dispatch.on('end', reason => {
-                    guild.queue.shift();
-                    playSong(msg, guild);
-                });
-            }).catch(() => {});
+                    guild.dispatch.on('end', reason => {
+                        guild.queue.shift();
+                        playSong(msg, guild);
+                    });
+                }).catch(() => {});
         }).catch(() => {
             msg.channel.send(`You aren\'t in a voice channel! ${tool.inaBaka}`)
         });
@@ -134,24 +141,34 @@ function playSong(msg, guild) {
 Skips the current song.
 */
 function skipSong(guild) {
-    if (guild.dispatch) guild.dispatch.end();
-    else guild.musicChannel.send(`There\'s nothing to skip! ${tool.inaBaka}`);
+    if (guild.dispatch)
+        guild.dispatch.end();
+    else
+        guild.musicChannel.send(`There\'s nothing to skip! ${tool.inaBaka}`);
 }
 
 /*
 Pauses the stream.
 */
 function pauseSong(guild) {
-    if (guild.dispatch) guild.dispatch.pause();
-    else guild.musicChannel.send(`Nothing is playing right now. ${tool.inaBaka}`);
+    if (guild.dispatch) {
+        guild.dispatch.pause();
+        changeStatus(guild, 'stopped')
+    } else {
+        guild.musicChannel.send(`Nothing is playing right now. ${tool.inaBaka}`);
+    }
 }
 
 /*
 Resumes the stream.
 */
 function resumeSong(guild) {
-    if (guild.dispatch) guild.dispatch.resume();
-    else guild.musicChannel.send(`Nothing is playing right now. ${tool.inaBaka}`);
+    if (guild.dispatch) {
+        guild.dispatch.resume();
+        changeStatus(guild, 'playing');
+    } else {
+        guild.musicChannel.send(`Nothing is playing right now. ${tool.inaBaka}`);
+    }
 }
 
 /*
@@ -201,8 +218,9 @@ function hime(msg, guild) {
     queueSong(msg, guild);
 }
 
-function command(cmd) {
-    return config.prefix + cmd;
+function changeStatus(guild, status) {
+    guild.status = status;
+    guild.inactivityTimer = 300;
 }
 
 /*
@@ -215,12 +233,16 @@ function timer() {
             if (guild.voiceConnection) {
                 guild.voiceConnection.disconnect();
                 guild.voiceConnection = null;
-                guild.musicChannel.send(':no_entry_sign: Leaving voice channel due to inactivity.');
+                guild.musicChannel.send(
+                    ':no_entry_sign: Leaving voice channel due to inactivity.');
 
-                guild.status = 'offline';
-                guild.inactivityTimer = 300;
+                changeStatus(guild, 'offline');
             }
         }
     }
 }
 setInterval(timer, 10000);
+
+function command(cmd) {
+    return config.prefix + cmd;
+}
