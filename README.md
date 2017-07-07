@@ -49,6 +49,7 @@ Includes anime lookup (Anilist) and a music player.
                   resume          : Resumes the song.
                   queue | q       : Displays the song queue.
                   np              : Displays the title of the current song.
+                  summon          : Summons Inazuma to your voice channel.
                   vol | v <0-100> : Sets volume.
        
    Supports all sites that youtube-dl supports.
