@@ -51,14 +51,17 @@ module.exports = function(client) {
                 return printQueue(guild);
             case 'np':
                 return nowPlaying(msg, guild);
+            case 'summon':
+                return summonBot(msg, guild);
             case 'vol':
             case 'v':
                 return setVolume(msg, guild);
+
             case 'hime':
                 return hime(msg, guild);
             default:
                 msg.channel.send(
-                    `Include an argument onegai, or refer to ${tool.wrap('~help music')}.`
+                    `Please refer to ${tool.wrap('~help music')}.`
                 );
         }
     });
@@ -70,18 +73,19 @@ Queues the song at the given URL.
 function queueSong(msg, guild) {
     var url = msg.content.split(/\s+/)[2];
 
-    ytdl.getInfo(url, (err, info) => {
-        if (err || info.format_id === undefined)
-            return guild.musicChannel.send(`Invalid video, ${ani.tsunNoun()}!`);
+    if (url)
+        ytdl.getInfo(url, (err, info) => {
+            if (err || info.format_id === undefined)
+                return guild.musicChannel.send(`Invalid video, ${ani.tsunNoun()}!`);
 
-        guild.musicChannel.send(
-            `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
-        ).then(() => {
-            msg.delete();
-            guild.queue.push(info);
-            if (guild.queue.length === 1) playSong(msg, guild);
-        }).catch(() => {});
-    });
+            guild.musicChannel.send(
+                `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+            ).then(() => {
+                msg.delete();
+                guild.queue.push(info);
+                if (guild.queue.length === 1) playSong(msg, guild);
+            }).catch(() => {});
+        });
 }
 
 /*
@@ -190,7 +194,10 @@ Displays the currently playing song.
 */
 function nowPlaying(msg, guild) {
     msg.delete();
-    guild.musicChannel.send(`Now playing ${tool.wrap(guild.queue[0].title)}.`);
+    if (guild.queue.length > 0)
+        guild.musicChannel.send(`Now playing ${tool.wrap(guild.queue[0].title)}.`);
+    else
+        guild.musicChannel.send('Nothing is playing right now.');
 }
 
 /*
@@ -207,6 +214,23 @@ function setVolume(msg, guild) {
         }
     } else {
         guild.musicChannel.send(`Use a number between 0 and 100! ${tool.inaBaka}`);
+    }
+}
+
+/*
+Summons the bot to the user's voice channel.
+*/
+function summonBot(msg, guild) {
+    if (msg.member.voiceChannel) {
+        msg.member.voiceChannel.join().then(connection => {
+            guild.voiceConnection = connection;
+            guild.musicChannel.send(
+                `Joining **${msg.member.voiceChannel.name}**.`
+            );
+            if (guild.queue.length > 0) playSong(msg, guild);
+        })
+    } else {
+        msg.channel.send(`You\'re not in a voice channel! ${tool.inaBaka}`);
     }
 }
 

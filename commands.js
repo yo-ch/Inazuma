@@ -27,6 +27,7 @@ const commands = {
         '       resume          : Resumes the song.\n' +
         '       queue | q       : Displays the song queue.\n' +
         '       np              : Displays the title of the current song.\n' +
+        '       summon          : Summons Inazuma to your voice channel.\n' +
         '       vol | v <0-100> : Sets volume.\n\n' +
         '   Requires a #music text channel.',
 }
