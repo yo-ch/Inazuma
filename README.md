@@ -45,7 +45,10 @@ Includes anime lookup (Anilist) and a music player.
 ~music | ~m <option>
    Options:       p | play <url>  : Adds the song to the queue.
                   s | skip        : Skips the current song.
+                  pause           : Pauses the song.
+                  resume          : Resumes the song.
                   q | queue       : Displays the song queue.
+                  np              : Displays the title of the current song.
                   v | vol <0-100> : Sets volume.
        
    Supports all sites that youtube-dl supports.
