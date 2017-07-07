@@ -17,7 +17,7 @@ module.exports = function(client) {
         //Add guild to the guild list.
         if (!guilds[msg.guild.id]) guilds[msg.guild.id] = {
             "queue": [],
-            "musicChannel": client.guilds.get(msg.guild.id).channels.find('name', 'music'),
+            "musicChannel": msg.guild.channels.find('name', 'music'),
             "voiceConnection": null,
             "dispatch": null,
             "status": 'offline',
@@ -25,9 +25,13 @@ module.exports = function(client) {
         };
 
         var guild = guilds[msg.guild.id];
+
         if (!guild.musicChannel) {
-            msg.channel.send(`Please create a ${tool.wrap('#music')} channel!`);
-            return;
+            guild.musicChannel = msg.guild.channels.find('name', 'music');
+            if (!guild.musicChannel) {
+                msg.channel.send(`Please create a ${tool.wrap('#music')} channel!`);
+                return;
+            }
         }
 
         switch (args[1]) {
@@ -37,9 +41,15 @@ module.exports = function(client) {
             case 'skip':
             case 's':
                 return skipSong(guild);
+            case 'pause':
+                return pauseSong(guild);
+            case 'resume':
+                return resumeSong(guild);
             case 'queue':
             case 'q':
                 return printQueue(guild);
+            case 'np':
+                return nowPlaying(msg, guild);
             case 'vol':
             case 'v':
                 return setVolume(msg, guild);
@@ -124,8 +134,24 @@ function playSong(msg, guild) {
 Skips the current song.
 */
 function skipSong(guild) {
-    if (guild.queue.length > 0) guild.dispatch.end();
+    if (guild.dispatch) guild.dispatch.end();
     else guild.musicChannel.send(`There\'s nothing to skip! ${tool.inaBaka}`);
+}
+
+/*
+Pauses the stream.
+*/
+function pauseSong(guild) {
+    if (guild.dispatch) guild.dispatch.pause();
+    else guild.musicChannel.send(`Nothing is playing right now. ${tool.inaBaka}`);
+}
+
+/*
+Resumes the stream.
+*/
+function resumeSong(guild) {
+    if (guild.dispatch) guild.dispatch.resume();
+    else guild.musicChannel.send(`Nothing is playing right now. ${tool.inaBaka}`);
 }
 
 /*
@@ -140,6 +166,14 @@ function printQueue(guild) {
     } else {
         guild.musicChannel.send(`There are no songs in the queue!`);
     }
+}
+
+/*
+Displays the currently playing song.
+*/
+function nowPlaying(msg, guild) {
+    msg.delete();
+    guild.musicChannel.send(`Now playing ${tool.wrap(guild.queue[0].title)}.`);
 }
 
 /*

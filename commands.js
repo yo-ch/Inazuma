@@ -20,7 +20,15 @@ const commands = {
 
     'vigne': '~vigne\n   Returns a random picture of Vigne.',
 
-    'music': '~music | ~m <option>\n   Options:\n       p | play <url>  : Adds the song to the queue.\n       s | skip        : Skips the current song.\n       q | queue       : Displays the song queue.\n       v | vol <0-100> : Sets volume.',
+    'music': '~music | ~m <option>\n' +
+        '   Options:\n       play | p <url>  : Adds the song to the queue.\n' +
+        '       skip | s        : Skips the current song.\n' +
+        '       pause           : Pauses the song.\n' +
+        '       resume          : Resumes the song.\n' +
+        '       queue | q       : Displays the song queue.\n' +
+        '       np              : Displays the title of the current song.\n' +
+        '       vol | v <0-100> : Sets volume.\n\n' +
+        '   Requires a #music text channel.',
 }
 
 const config = require('./config.json');
