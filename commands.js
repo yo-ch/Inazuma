@@ -21,15 +21,15 @@ const commands = {
     'vigne': '~vigne\n   Returns a random picture of Vigne.',
 
     'music': 'Music Commands:\n' +
-        '       ~play | p <url>  : Adds the song to the queue.\n' +
-        '       ~skip | s        : Skips the current song.\n' +
-        '       ~pause           : Pauses the song.\n' +
-        '       ~resume          : Resumes the song.\n' +
-        '       ~queue | q       : Displays the song queue.\n' +
-        '       ~np              : Displays the title of the current song.\n' +
-        '       ~summon          : Summons Inazuma to your voice channel.\n' +
-        '       ~vol | v <0-100> : Sets volume.\n\n' +
-        '   Requires a #music text channel.',
+        '   ~play | p <url>  : Adds the song to the queue.\n' +
+        '   ~skip | s        : Skips the current song.\n' +
+        '   ~pause           : Pauses the song.\n' +
+        '   ~resume          : Resumes the song.\n' +
+        '   ~queue | q       : Displays the song queue.\n' +
+        '   ~np              : Displays the title of the current song.\n' +
+        '   ~summon          : Summons Inazuma to your voice channel.\n' +
+        '   ~vol | v <0-100> : Sets volume.\n\n' +
+        'Requires a #music text channel.',
 }
 
 const config = require('./config.json');
@@ -69,7 +69,7 @@ module.exports = {
                 '   ~choose <arg1> | [arg2] ...\n' +
                 '   ~roll <int1> [int2]\n\n' +
 
-                '   ~music <option> \n\n' +
+                '   ~music\n\n' +
 
                 '   ~andy [@mention]\n' +
                 '   ~gavquote\n\n' +
