@@ -12,7 +12,6 @@ module.exports = function(client) {
         if (!msg.guild || !msg.guild.available) return;
 
         var args = msg.content.split(/\s+/);
-        if (args[0] !== command('music') && args[0] !== command('m')) return;
 
         //Add guild to the guild list.
         if (!guilds[msg.guild.id]) guilds[msg.guild.id] = {
@@ -35,31 +34,31 @@ module.exports = function(client) {
             }
         }
 
-        switch (args[1]) {
-            case 'play':
-            case 'p':
+        switch (args[0]) {
+            case command('play'):
+            case command('p'):
                 return queueSong(msg, guild);
-            case 'skip':
-            case 's':
+            case command('skip'):
+            case command('s'):
                 return skipSong(guild);
-            case 'pause':
+            case command('pause'):
                 return pauseSong(guild);
-            case 'resume':
+            case command('resume'):
                 return resumeSong(guild);
-            case 'queue':
-            case 'q':
+            case command('queue'):
+            case command('q'):
                 return printQueue(guild);
-            case 'np':
+            case command('np'):
                 return nowPlaying(msg, guild);
-            case 'summon':
+            case command('summon'):
                 return summonBot(msg, guild);
-            case 'vol':
-            case 'v':
+            case command('vol'):
+            case command('v'):
                 return setVolume(msg, guild);
 
-            case 'hime':
+            case command('hime'):
                 return hime(msg, guild);
-            default:
+            case command('music'):
                 msg.channel.send(
                     `Please refer to ${tool.wrap('~help music')}.`
                 );

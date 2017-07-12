@@ -4,6 +4,7 @@ const config = require('./config.json');
 const cmds = require('./commands.js');
 const ani = require('./anime.js');
 const music = require('./music.js');
+const tool = require('./tool.js');
 
 const bot = new Discord.Client();
 music(bot); //Pass client to music extension.
@@ -27,7 +28,7 @@ bot.on('message', message => {
         message.channel.send(`Arigato! ${tool.inaHappy}`);
     else if (message.content.search('299400284906717186') >= 0) //Random reply when bot is mentioned.
         cmds.reply(message);
-    else if (message.content.split(' ').length == 1 && isInt(parseInt(message.content))) //Could be input for the Anilist search function.
+    else if (message.content.split(/\s+/).length == 1 && isInt(parseInt(message.content))) //Could be input for the Anilist search function.
         ani.anilistChoose(message, parseInt(message.content));
 
     if (!message.content.startsWith(config.prefix)) return; //Not a command.
@@ -60,7 +61,9 @@ bot.on('message', message => {
 });
 
 bot.on('guildMemberAdd', member => {
-    member.guild.defaultChannel.send(`I-It's not like I wanted you to join this server or anything, ${ani.tsunNoun()}. ${member.user}`);
+    member.guild.defaultChannel.send(
+        `I-It's not like I wanted you to join this server or anything, ${ani.tsunNoun()}. ${member.user}`
+    );
 });
 
 bot.on('guildMemberRemove', member => {
@@ -76,7 +79,8 @@ bot.on('guildMemberRemove', member => {
 bot.login(config.token);
 
 function timer() {
-    if (config.anilist_token_expires_in <= 10 && config.anilist_token_expires_in > 0) console.log('Anilist access token has expired.');
+    if (config.anilist_token_expires_in <= 10 && config.anilist_token_expires_in > 0)
+        console.log('Anilist access token has expired.');
     if (config.anilist_token_expires_in > 0) config.anilist_token_expires_in -= 10;
 }
 setInterval(timer, 10000);

@@ -20,13 +20,13 @@ Includes anime lookup (Anilist) and a music player.
 ```
 ~airing [option]   
     Displays countdowns until the next episode for each anime in the airing list.  
-    
+
     Options:       a <anilist urls>      : Adds the given anime to the airing list.      
                    r <name in list>      : Removes the anime from the airing list.     
                    c                     : Clears the airing list.
 
 ~anilist | ~ani <anime name>   
-    Displays an anime's data, pulled from Anilist. 
+    Displays an anime's data, pulled from Anilist.
     If multiple choices are given, simply reply with the number.
 ```
 
@@ -42,16 +42,15 @@ Includes anime lookup (Anilist) and a music player.
 <h3> Music </h3>
 
 ```
-~music | ~m <option>
-   Options:       play | p <url>  : Adds the song to the queue.
-                  skip | s        : Skips the current song.
-                  pause           : Pauses the song.
-                  resume          : Resumes the song.
-                  queue | q       : Displays the song queue.
-                  np              : Displays the title of the current song.
-                  summon          : Summons Inazuma to your voice channel.
-                  vol | v <0-100> : Sets volume.
-       
+Music Commands:   ~play | p <url>  : Adds the song to the queue.
+                  ~skip | s        : Skips the current song.
+                  ~pause           : Pauses the song.
+                  ~resume          : Resumes the song.
+                  ~queue | q       : Displays the song queue.
+                  ~np              : Displays the title of the current song.
+                  ~summon          : Summons Inazuma to your voice channel.
+                  ~vol | v <0-100> : Sets volume.
+
    Supports all sites that youtube-dl supports.
    Requires a #music text channel.
 ```
@@ -69,7 +68,7 @@ Includes anime lookup (Anilist) and a music player.
 ```
 ~aoba
     Returns a random picture of Aoba.
-    
+
 ~vigne   
     Returns a random picture of Vigne.
 ```
@@ -107,10 +106,7 @@ Includes anime lookup (Anilist) and a music player.
 ```
 {
     "quotes": [
-    "Quote 1", 
+    "Quote 1",
     "Quote 2" ]
 }
 ```
-
-
-
