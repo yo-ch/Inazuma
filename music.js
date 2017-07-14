@@ -70,7 +70,7 @@ module.exports = function(client) {
 Queues the song at the given URL.
 */
 function queueSong(msg, guild) {
-    var url = msg.content.split(/\s+/)[2];
+    var url = msg.content.split(/\s+/)[1];
 
     if (url)
         ytdl.getInfo(url, (err, info) => {
