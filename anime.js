@@ -116,22 +116,22 @@ var self = module.exports = {
     },
 
     /*
-    Displays airing data of anime in the airing list.
+    Displays airing data of anime in the user's airing list.
     */
     retrieveAiringData: function(msg) {
         var sprintf = require('sprintf-js').sprintf;
         var fs = require('fs');
 
         var anime, animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
-        if (animeJSON.anime.length == 0) {
+        if (!animeJSON[msg.author.id]) {
             msg.channel.send(
-                `There aren\'t any anime in the airing list, ${self.tsunNoun()}.`
+                `There aren\'t any anime in your airing list, ${self.tsunNoun()}.`
             );
             return;
         }
 
         var info = [];
-        for (anime of animeJSON.anime) {
+        for (anime of animeJSON[msg.author.id]) {
             var unixts = Math.round((new Date()).getTime() / 1000);
 
             while (anime.countdowns[anime.nextEp - 1] < unixts && anime.countdowns
@@ -155,11 +155,11 @@ var self = module.exports = {
         });
 
         var i;
-        var airing = '';
+        var airing = `#${msg.author.username}'s Airing List\n`;
         for (i = 0; i < info.length; i++) //Add info to airing string.
             airing += info[i][0];
 
-        var airingListPromise = msg.channel.send(`${airing}`, { 'code': true });
+        var airingListPromise = msg.channel.send(`${airing}`, { 'code': 'md'  });
         fs.writeFile('airing_anime.json', JSON.stringify(animeJSON)); //Update file.
 
         setTimeout(() => { //Delete airing message after 5 minutes.
@@ -171,7 +171,7 @@ var self = module.exports = {
     },
 
     /*
-    Adds anime to the airing list using its URL.
+    Adds anime to the airing list of the user using its URL.
     */
     addAiringAnime: function(msg) {
         if (!msg.guild) return;
@@ -192,6 +192,7 @@ var self = module.exports = {
             }
             ids.push(id[0].slice(1, id[0].length - 1));
         }
+        if (ids.length == 0) return;
 
         self.addAiringInner(msg, ids);
     },
@@ -262,7 +263,11 @@ var self = module.exports = {
 
                 var animeJSON = JSON.parse(fs.readFileSync(
                     'airing_anime.json').toString());
-                animeJSON.anime.push(anime);
+
+                if (!animeJSON[msg.author.id])
+                    animeJSON[msg.author.id] = [];
+                animeJSON[msg.author.id].push(anime);
+
                 fs.writeFile('airing_anime.json', JSON.stringify(
                     animeJSON));
                 msg.channel.send(
