@@ -14,49 +14,51 @@ bot.on('ready', () => {
     bot.user.setGame('~help');
 });
 
-bot.on('message', message => {
-    if (message.author.bot) return; //Do not respond to messages from bots.
+bot.on('message', msg => {
+    if (msg.author.bot) return; //Do not respond to messages from bots.
 
     //Replies to non-commands.
-    if (message.content.toLowerCase().match(/^ay{2,}$/)) //Ayy lmao.
-        message.channel.send('lmao');
-    else if (message.content.toLowerCase().startsWith('same')) //same.
-        message.channel.send('same');
-    else if (message.content.toLowerCase().search('inazuma') >= 0) //Tehe~.
-        message.channel.send('<:inaTehe:301555244330909697>');
-    else if (message.content.search(':inaGanbare:') >= 0)
-        message.channel.send(`Arigato! ${tool.inaHappy}`);
-    else if (message.content.search('299400284906717186') >= 0) //Random reply when bot is mentioned.
-        cmds.reply(message);
-    else if (message.content.split(/\s+/).length == 1 && isInt(parseInt(message.content))) //Could be input for the Anilist search function.
-        ani.anilistChoose(message, parseInt(message.content));
+    if (msg.content.toLowerCase().match(/^ay{2,}$/)) //Ayy lmao.
+        msg.channel.send('lmao');
+    else if (msg.content.toLowerCase().startsWith('same')) //same.
+        msg.channel.send('same');
+    else if (msg.content.toLowerCase().search('inazuma') >= 0) //Tehe~.
+        msg.channel.send('<:inaTehe:301555244330909697>');
+    else if (msg.content.search(':inaGanbare:') >= 0)
+        msg.channel.send(`Arigato! ${tool.inaHappy}`);
+    else if (msg.content.search('299400284906717186') >= 0) //Random reply when bot is mentioned.
+        cmds.reply(msg);
+    else if (isInt(parseInt(msg.content))) //Could be input for the Anilist search function.
+        ani.anilistChoose(msg, parseInt(msg.content));
 
-    if (!message.content.startsWith(config.prefix)) return; //Not a command.
+    if (!msg.content.startsWith(config.prefix)) return; //Not a command.
+
+    var cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length);
 
     //Commands.
-    switch (message.content.split(/\s+/)[0]) {
-        case command('help'):
-        case command('tasukete'):
-            return cmds.help(message);
-        case command('andy'):
-            return cmds.andy(message);
-        case command('airing'):
-            return cmds.airing(message);
-        case command('ani'):
-        case command('anilist'):
-            return cmds.anilist(message);
-        case command('cc'):
-            return cmds.cc(message);
-        case command('choose'):
-            return cmds.choose(message);
-        case command('gavquote'):
-            return cmds.gavquote(message);
-        case command('roll'):
-            return cmds.roll(message);
-        case command('vigne'):
-            return cmds.vigne(message);
-        case command('aoba'):
-            return cmds.aoba(message);
+    switch (cmd) {
+        case 'help':
+        case 'tasukete':
+            return cmds.help(msg);
+        case 'andy':
+            return cmds.andy(msg);
+        case 'airing':
+            return cmds.airing(msg);
+        case 'ani':
+        case 'anilist':
+            return cmds.anilist(msg);
+        case 'cc':
+            return cmds.cc(msg);
+        case 'choose':
+            return cmds.choose(msg);
+        case 'gavquote':
+            return cmds.gavquote(msg);
+        case 'roll':
+            return cmds.roll(msg);
+        case 'vigne':
+            return cmds.vigne(msg);
+        case 'aoba':
+            return cmds.aoba(msg);
     }
 });
 
@@ -79,15 +81,11 @@ bot.on('guildMemberRemove', member => {
 bot.login(config.token);
 
 function timer() {
-    if (config.anilist_token_expires_in <= 10 && config.anilist_token_expires_in > 0)
+    if (ani.tokenExpiresIn <= 10)
         console.log('Anilist access token has expired.');
-    if (config.anilist_token_expires_in > 0) config.anilist_token_expires_in -= 10;
+    if (ani.tokenExpiresIn > 0) ani.tokenExpiresIn -= 10;
 }
 setInterval(timer, 10000);
-
-function command(cmd) {
-    return config.prefix + cmd;
-}
 
 function isInt(value) {
     var x = parseFloat(value);

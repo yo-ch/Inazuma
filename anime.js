@@ -1,12 +1,11 @@
-var searchData = '';
-var anilistSearch = false;
-var searchChoices = 0;
-var searchClient = '';
-
 const config = require('./config.json');
 const tool = require('./tool.js')
 
+var searchRequests = {};
+
 var self = module.exports = {
+    'anilistToken': '',
+    'tokenExpiresIn': 0,
     /*
     Request an API access token from the Anilist API.
     */
@@ -20,8 +19,8 @@ var self = module.exports = {
         rp(options).then(body => { //Wait for access token to be returned.
             console.log('Access token granted!')
             var auth = JSON.parse(body);
-            config.anilist_token = auth.access_token;
-            config.anilist_token_expires_in = auth.expires_in;
+            self.anilistToken= auth.access_token;
+            self.tokenExpiresIn = auth.expires_in;
             callback(msg);
         }).catch(function(err) {
             console.log('Failed to receive access token.')
@@ -33,7 +32,7 @@ var self = module.exports = {
     Retrieve the specified data from Anilist.
     */
     retrieveAnilistData: function(msg) {
-        if (config.anilist_token_expires_in === 0) { //Request new token if current token is expired.
+        if (self.tokenExpiresIn <= 0) { //Request new token if current token is expired.
             self.requestAccessToken(msg, self.retrieveAnilistData);
             return;
         }
@@ -42,7 +41,7 @@ var self = module.exports = {
         if (search.length >= 1) { //A search query was given.
             var request = require('request');
             var options = {
-                url: `https://anilist.co/api/anime/search/${search}?access_token=${config.anilist_token}`
+                url: `https://anilist.co/api/anime/search/${search}?access_token=${self.anilistToken}`
             };
 
             function callback(error, response, body) {
@@ -56,18 +55,17 @@ var self = module.exports = {
                             `https://anilist.co/anime/${results[0].id}/`);
                         msg.channel.send(ais);
                     } else if (results.length >= 2) { //Store results to retrieve when user replies with a choice.
-                        searchData = body;
-                        anilistSearch = true;
-                        searchChoices = results.length;
-                        searchClient = msg.author.id;
+                        var searchResults = {
+                            'searchData': body,
+                            'searchChoices': results.length
+                        };
+                        searchRequests[msg.author.id] = searchResults;
 
                         var choiceString = 'Choose a number onegai!\n\n';
 
-                        var i;
-                        for (i = 0; i < results.length; i++)
+                        for (var i = 0; i < results.length; i++)
                             choiceString +=
                             `${tool.wrap(`${i+1} - ${results[i].title_romaji}`)}\n`;
-
                         msg.channel.send(choiceString);
                     } else
                         msg.channel.send('Gomen, I couldn\'t find anything!');
@@ -80,12 +78,14 @@ var self = module.exports = {
     },
 
     /*
-    Chooses the from one of the options given when the user called the anilist command.
+    Replies with specified anime data after user has chosen a number.
     */
     anilistChoose: function(msg, choice) {
-        if (!anilistSearch || msg.author.id != searchClient) return;
-        if (choice > 0 && choice <= searchChoices) {
-            var results = JSON.parse(searchData);
+        var request = searchRequests[msg.author.id];
+        if (!request) return; //User does not have a search active.
+
+        if (choice > 0 && choice <= request.searchChoices) {
+            var results = JSON.parse(request.searchData);
             var anime = results[choice - 1];
 
             var ais = self.animeInfoString(anime.title_romaji, anime.average_score,
@@ -93,10 +93,7 @@ var self = module.exports = {
                 `https://anilist.co/anime/${anime.id}/`);
             msg.channel.send(ais);
 
-            anilistSearch = false;
-            searchData = '';
-            searchChoices = 0;
-            searchClient = '';
+            delete searchRequests[msg.author.id];
         }
     },
 
@@ -107,12 +104,9 @@ var self = module.exports = {
         //Format synopsis.
         var syn = synopsis.replace(/<br>\\n|<br>/g, '\n');
         syn = syn.replace(/<i>|<\/i>/g, '*');
-        syn = syn.slice(0, syn.indexOf('(Source:')).trim();
+        syn = syn.slice(0, syn.indexOf('(Source:')).trim(); //Remove source information.
 
-        var info =
-            `**${name}** (${url})\n**Score:** ${score}\n**Type:** ${type}\n**Episodes:** ${episodes}\n\n${syn}\n\n`;
-
-        return info;
+        return `**${name}** (${url})\n**Score:** ${score}\n**Type:** ${type}\n**Episodes:** ${episodes}\n\n${syn}\n\n`;
     },
 
     /*
@@ -159,7 +153,7 @@ var self = module.exports = {
         for (i = 0; i < info.length; i++) //Add info to airing string.
             airing += info[i][0];
 
-        var airingListPromise = msg.channel.send(`${airing}`, { 'code': 'md'  });
+        var airingListPromise = msg.channel.send(`${airing}`, { 'code': 'md' });
         fs.writeFile('airing_anime.json', JSON.stringify(animeJSON)); //Update file.
 
         setTimeout(() => { //Delete airing message after 5 minutes.
@@ -171,11 +165,10 @@ var self = module.exports = {
     },
 
     /*
-    Adds anime to the airing list of the user using its URL.
+    Adds anime to the airing list of the user using their URLs.
     */
     addAiringAnime: function(msg) {
-        if (!msg.guild) return;
-        if (config.anilist_token_expires_in === 0) { //Request new token if current token is expired.
+        if (self.tokenExpiresIn <= 0) { //Request new token if current token is expired.
             self.requestAccessToken(msg, self.addAiringAnime);
             return;
         }
@@ -198,7 +191,7 @@ var self = module.exports = {
     },
 
     /*
-    Recursive function that adds each anime given by their IDs to the airing list.
+    Recursive function that adds each anime given by their IDs to the user's airing list.
     */
     addAiringInner: function(msg, ids) {
         var rp = require('request-promise');
@@ -210,7 +203,7 @@ var self = module.exports = {
         var totalEps;
 
         var options = {
-            url: `https://anilist.co/api/anime/${ids[0]}?access_token=${config.anilist_token}`
+            url: `https://anilist.co/api/anime/${ids[0]}?access_token=${self.anilistToken}`
         }
 
         rp(options).then(body => { //Retrieve title of anime.
@@ -226,7 +219,7 @@ var self = module.exports = {
             }
 
             options = {
-                url: `https://anilist.co/api/anime/${ids[0]}/airing?access_token=${config.anilist_token}`
+                url: `https://anilist.co/api/anime/${ids[0]}/airing?access_token=${self.anilistToken}`
             }
 
             rp(options).then(body => { //Retrieve airing times for each episode of the anime.
@@ -300,16 +293,9 @@ var self = module.exports = {
     },
 
     /*
-    Removes an anime from the airing list given its display name in the list.
+    Removes an anime from the user's airing list given its name.
     */
     removeAiringAnime: function(msg) {
-        if (!msg.guild) return;
-
-        if (!msg.member.roles.has(msg.guild.roles.find('name', 'Weeb').id)) {
-            msg.channel.send('Gomen, you\'re not a weeb!');
-            return;
-        }
-
         var fs = require('fs');
         var animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
         var animeToRemove = msg.content.substring(10).trim().toLowerCase();
@@ -321,40 +307,33 @@ var self = module.exports = {
             return;
         }
 
-        for (var i = 0; i < animeJSON.anime.length; i++) {
-            var currAnimeTitle = animeJSON.anime[i].title.trim()
+        for (var i = 0; i < animeJSON[msg.author.id].length; i++) {
+            var currAnimeTitle = animeJSON[msg.author.id][i].title.trim()
             if (currAnimeTitle.toLowerCase().startsWith(animeToRemove)) {
-                animeJSON.anime.splice(i, 1);
+                animeJSON[msg.author.id].splice(i, 1);
                 fs.writeFile('airing_anime.json', JSON.stringify(animeJSON));
                 msg.channel.send(
-                    `**${currAnimeTitle}** has been removed from the airing list! <:inaHappy:301529610754195456>`
+                    `**${currAnimeTitle}** has been removed from your airing list! <:inaHappy:301529610754195456>`
                 );
                 return;
             }
         }
 
         msg.channel.send(
-            `**${animeToRemove}** isn't in the airing list, ${self.tsunNoun()}!`
+            `**${animeToRemove}** isn't in your airing list, ${self.tsunNoun()}!`
         );
     },
 
     /*
-    Clears the airing list.
+    Clears the user's airing list.
     */
     clearAiringList: function(msg) {
-        if (!msg.guild) return;
-
-        if (!msg.member.roles.has(msg.guild.roles.find('name', 'Weeb').id)) {
-            msg.channel.send('Gomen, you\'re not a weeb!');
-            return;
-        }
-
         var fs = require('fs');
 
         var idJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
-        idJSON.anime = [];
+        idJSON[msg.author.id] = [];
         fs.writeFile('airing_anime.json', JSON.stringify(idJSON));
-        msg.channel.send('The airing list has been cleared!');
+        msg.channel.send('Your airing list has been cleared!');
     },
 
     /*

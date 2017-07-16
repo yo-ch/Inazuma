@@ -12,7 +12,7 @@ module.exports = {
     },
 
     /*
-    Wraps the content in a unformatted text box.
+    Wraps the content in an unformatted text box.
     */
     wrap: function(content) {
         return '``' + content + '``';

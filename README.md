@@ -53,8 +53,10 @@ Music Commands:   ~play | p <url>  : Adds the song to the queue.
                   ~resume          : Resumes the song.
                   ~queue | q       : Displays the song queue.
                   ~np              : Displays the title of the current song.
-                  ~summon          : Summons Inazuma to your voice channel.
                   ~vol | v <0-100> : Sets volume.
+
+                  ~join            : Joins your voice channel.
+                  ~leave           : Leaves voice channel.
 
    Supports all sites that youtube-dl supports.
    Requires a #music text channel.
@@ -92,9 +94,7 @@ Music Commands:   ~play | p <url>  : Adds the song to the queue.
     "prefix": "~",
     "imgur_id": "Imgur ID",
     "anilist_id": "Anilist ID",
-    "anilist_secret": "Anilist Secret",
-    "anilist_token": "temp",
-    "anilist_token_expires_in": 0
+    "anilist_secret": "Anilist Secret"
 }
 ```
 

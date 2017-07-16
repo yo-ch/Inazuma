@@ -27,8 +27,10 @@ const commands = {
         '   ~resume          : Resumes the song.\n' +
         '   ~queue | q       : Displays the song queue.\n' +
         '   ~np              : Displays the title of the current song.\n' +
-        '   ~summon          : Summons Inazuma to your voice channel.\n' +
         '   ~vol | v <0-100> : Sets volume.\n\n' +
+
+        '   ~join            : Joins your voice channel.\n' +
+        '   ~leave           : Leaves voice channel.\n\n' +
         'Requires a #music text channel.',
 }
 
@@ -50,15 +52,15 @@ module.exports = {
     help: function(msg) {
         var args = msg.content.split(/\s+/).slice(1);
 
-        var cmd;
+        var helpStr;
         if (args.length == 1) { //User requested help for a specific command.
             if (args[0].charAt(0) == config.prefix) //Remove prefix for the help argument.
                 args[0] = args[0].slice(1);
-            cmd = commands[args[0]];
+            helpStr = commands.args[0];
         }
 
-        if (cmd) //Display help for requested command.
-            msg.channel.send(cmd, { 'code': true });
+        if (helpStr) //Display help for requested command.
+            msg.channel.send(helpStr, { 'code': true });
         else //Bring up default help menu.
             msg.channel.send(
                 'Commands:\n' +
@@ -83,20 +85,18 @@ module.exports = {
             );
     },
 
+    /*
+    Shut up weeb.
+    */
     andy: function(msg) {
         msg.delete();
         var user = msg.mentions.users.first();
         if (user) msg.channel.send(`Shut up weeb. ${user}`);
-        else
-            msg.channel.send(`Shut up weeb.`)
+        else msg.channel.send(`Shut up weeb.`)
     },
 
     /*
-    Displays the airing list.
-    Options:
-      -a <url>  : Adds an anime to the airing list.
-      -r <name> : Removes the anime from the airing list.
-      -c        : Clears the airing list.
+    Processes ~airing commands.
     */
     airing: function(msg) {
         var args = msg.content.split(/\s+/);
@@ -107,7 +107,7 @@ module.exports = {
     },
 
     /*
-    Lookup anilist data.
+    Lookup anime data.
     */
     anilist: function(msg) {
         ani.retrieveAnilistData(msg);
@@ -120,7 +120,9 @@ module.exports = {
     cc: function(msg) {
         if (msg.channel.type == 'dm') return;
         if (!msg.member.hasPermission('MOVE_MEMBERS')) {
-            msg.channel.send(`Gomenasai! You\'re not allowed to move users. ${msg.author}`);
+            msg.channel.send(
+                `Gomenasai! You\'re not allowed to move users. ${msg.author}`
+            );
             return;
         }
 
@@ -135,7 +137,8 @@ module.exports = {
 
         let userToBanish = msg.mentions.users.first();
         if (userToBanish)
-            msg.guild.member(userToBanish).setVoiceChannel(msg.guild.channels.find('name', channel.trim()));
+            msg.guild.member(userToBanish).setVoiceChannel(msg.guild.channels.find(
+                'name', channel.trim()));
     },
 
     /*
@@ -152,7 +155,9 @@ module.exports = {
         if (choices.length >= 1)
             msg.channel.send(choices[tool.randint(choices.length)]);
         else
-            msg.channel.send(`I can\'t choose if you don\'t give me any choices! ${tool.inaAngry}`);
+            msg.channel.send(
+                `I can\'t choose if you don\'t give me any choices! ${tool.inaAngry}`
+            );
     },
 
     /*

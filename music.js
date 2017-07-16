@@ -11,8 +11,6 @@ module.exports = function(client) {
         if (msg.author.bot) return;
         if (!msg.guild || !msg.guild.available) return;
 
-        var args = msg.content.split(/\s+/);
-
         //Add guild to the guild list.
         if (!guilds[msg.guild.id]) guilds[msg.guild.id] = {
             "queue": [],
@@ -34,31 +32,36 @@ module.exports = function(client) {
             }
         }
 
-        switch (args[0]) {
-            case command('play'):
-            case command('p'):
+        var cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length);
+
+        switch (cmd) {
+            case 'play':
+            case 'p':
                 return queueSong(msg, guild);
-            case command('skip'):
-            case command('s'):
+            case 'skip':
+            case 's':
                 return skipSong(guild);
-            case command('pause'):
+            case 'pause':
                 return pauseSong(guild);
-            case command('resume'):
+            case 'resume':
                 return resumeSong(guild);
-            case command('queue'):
-            case command('q'):
+            case 'queue':
+            case 'q':
                 return printQueue(guild);
-            case command('np'):
+            case 'np':
                 return nowPlaying(msg, guild);
-            case command('summon'):
-                return summonBot(msg, guild);
-            case command('vol'):
-            case command('v'):
+            case 'vol':
+            case 'v':
                 return setVolume(msg, guild);
 
-            case command('hime'):
+            case 'join':
+                return join(msg, guild);
+            case 'leave':
+                return leave(msg, guild);
+
+            case 'hime':
                 return hime(msg, guild);
-            case command('music'):
+            case 'music':
                 msg.channel.send(
                     `Please refer to ${tool.wrap('~help music')}.`
                 );
@@ -130,8 +133,10 @@ function playSong(msg, guild) {
                     });
 
                     guild.dispatch.on('end', reason => {
-                        guild.queue.shift();
-                        playSong(msg, guild);
+                        if (reason != 'leave') {
+                            guild.queue.shift();
+                            playSong(msg, guild);
+                        }
                     });
                 }).catch(() => {});
         }).catch(() => {
@@ -219,13 +224,12 @@ function setVolume(msg, guild) {
 /*
 Summons the bot to the user's voice channel.
 */
-function summonBot(msg, guild) {
+function join(msg, guild) {
     if (msg.member.voiceChannel) {
         msg.member.voiceChannel.join().then(connection => {
             guild.voiceConnection = connection;
             guild.musicChannel.send(
-                `Joining **${msg.member.voiceChannel.name}**.`
-            );
+                `Joining **${msg.member.voiceChannel.name}**.`);
             if (guild.queue.length > 0) playSong(msg, guild);
         })
     } else {
@@ -233,11 +237,26 @@ function summonBot(msg, guild) {
     }
 }
 
+function leave(msg, guild) {
+    if (guild.voiceConnection) {
+        guild.musicChannel.send(`Leaving **${guild.voiceConnection.channel.name}**.`);
+        guild.dispatch.end('leave');
+        guild.voiceConnection.disconnect();
+
+        changeStatus(guild, 'offline');
+
+        guild.voiceConnection = null;
+        guild.dispatch = null;
+    } else {
+        guild.musicChannel.send(`I'm not in a voice channel! ${tool.inaBaka}`);
+    }
+}
+
 /*
 Hime hime.
 */
 function hime(msg, guild) {
-    msg.content = '~m p https://soundcloud.com/shiinub/namirin-koi-no-hime-hime-pettanko';
+    msg.content = 'p https://soundcloud.com/shiinub/namirin-koi-no-hime-hime-pettanko';
     queueSong(msg, guild);
 }
 
@@ -265,7 +284,3 @@ function timer() {
     }
 }
 setInterval(timer, 10000);
-
-function command(cmd) {
-    return config.prefix + cmd;
-}
