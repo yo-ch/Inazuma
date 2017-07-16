@@ -140,7 +140,7 @@ function playSong(msg, guild) {
                     });
                 }).catch(() => {});
         }).catch(() => {
-            msg.channel.send(`You aren\'t in a voice channel! ${tool.inaBaka}`)
+            msg.channel.send(`Please summon me using ${tool.wrap('~join')}.`)
         });
     }
 }
@@ -159,7 +159,7 @@ function skipSong(guild) {
 Pauses the stream.
 */
 function pauseSong(guild) {
-    if (guild.dispatch) {
+    if (guild.queue.length > 0) {
         guild.dispatch.pause();
         changeStatus(guild, 'stopped')
     } else {
@@ -171,7 +171,7 @@ function pauseSong(guild) {
 Resumes the stream.
 */
 function resumeSong(guild) {
-    if (guild.dispatch) {
+    if (guild.queue.length > 0) {
         guild.dispatch.resume();
         changeStatus(guild, 'playing');
     } else {
@@ -230,6 +230,7 @@ function join(msg, guild) {
             guild.voiceConnection = connection;
             guild.musicChannel.send(
                 `Joining **${msg.member.voiceChannel.name}**.`);
+            changeStatus(guild, 'stopped');
             if (guild.queue.length > 0) playSong(msg, guild);
         })
     } else {
@@ -256,7 +257,7 @@ function leave(msg, guild) {
 Hime hime.
 */
 function hime(msg, guild) {
-    msg.content = 'p https://soundcloud.com/shiinub/namirin-koi-no-hime-hime-pettanko';
+    msg.content = '~p https://soundcloud.com/shiinub/namirin-koi-no-hime-hime-pettanko';
     queueSong(msg, guild);
 }
 
@@ -269,17 +270,16 @@ function changeStatus(guild, status) {
 Timer for inactivity. Leave voice channel after 5 minutes of inactivity.
 */
 function timer() {
-    for (guild in guilds) {
+    for (var guildId in guilds) {
+        var guild = guilds[guildId];
         if (guild.status === 'stopped') guild.inactivityTimer -= 10;
         if (guild.inactivityTimer <= 0) {
-            if (guild.voiceConnection) {
-                guild.voiceConnection.disconnect();
-                guild.voiceConnection = null;
-                guild.musicChannel.send(
-                    ':no_entry_sign: Leaving voice channel due to inactivity.');
+            guild.voiceConnection.disconnect();
+            guild.voiceConnection = null;
+            guild.musicChannel.send(
+                ':no_entry_sign: Leaving voice channel due to inactivity.');
 
-                changeStatus(guild, 'offline');
-            }
+            changeStatus(guild, 'offline');
         }
     }
 }
