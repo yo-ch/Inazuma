@@ -5,7 +5,8 @@ var searchRequests = {};
 
 var self = module.exports = {
     'anilistToken': '',
-    'tokenExpiresIn': 0,
+    'tokenTimer': 0,
+
     /*
     Request an API access token from the Anilist API.
     */
@@ -19,8 +20,8 @@ var self = module.exports = {
         rp(options).then(body => { //Wait for access token to be returned.
             console.log('Access token granted!')
             var auth = JSON.parse(body);
-            self.anilistToken= auth.access_token;
-            self.tokenExpiresIn = auth.expires_in;
+            self.anilistToken = auth.access_token;
+            self.tokenTimer = auth.expires_in;
             callback(msg);
         }).catch(function(err) {
             console.log('Failed to receive access token.')
@@ -32,7 +33,7 @@ var self = module.exports = {
     Retrieve the specified data from Anilist.
     */
     retrieveAnilistData: function(msg) {
-        if (self.tokenExpiresIn <= 0) { //Request new token if current token is expired.
+        if (self.tokenTimer <= 0) { //Request new token if current token is expired.
             self.requestAccessToken(msg, self.retrieveAnilistData);
             return;
         }
@@ -168,7 +169,7 @@ var self = module.exports = {
     Adds anime to the airing list of the user using their URLs.
     */
     addAiringAnime: function(msg) {
-        if (self.tokenExpiresIn <= 0) { //Request new token if current token is expired.
+        if (self.tokenTimer <= 0) { //Request new token if current token is expired.
             self.requestAccessToken(msg, self.addAiringAnime);
             return;
         }
@@ -362,5 +363,11 @@ var self = module.exports = {
         ];
         return nouns[tool.randint(nouns.length)];
     }
-
 }
+
+function timer() {
+    if (self.tokenTimer <= 10 && self.tokenTimer > 0)
+        console.log('Anilist access token has expired.');
+    if (self.tokenTimer > 0) self.tokenTimer -= 10;
+}
+setInterval(timer, 10000);

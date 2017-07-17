@@ -28,7 +28,7 @@ bot.on('message', msg => {
         msg.channel.send(`Arigato! ${tool.inaHappy}`);
     else if (msg.content.search('299400284906717186') >= 0) //Random reply when bot is mentioned.
         cmds.reply(msg);
-    else if (isInt(parseInt(msg.content))) //Could be input for the Anilist search function.
+    else if (tool.isInt(parseInt(msg.content))) //Could be input for the Anilist search function.
         ani.anilistChoose(msg, parseInt(msg.content));
 
     if (!msg.content.startsWith(config.prefix)) return; //Not a command.
@@ -79,15 +79,3 @@ bot.on('guildMemberRemove', member => {
 
 // log our bot in
 bot.login(config.token);
-
-function timer() {
-    if (ani.tokenExpiresIn <= 10)
-        console.log('Anilist access token has expired.');
-    if (ani.tokenExpiresIn > 0) ani.tokenExpiresIn -= 10;
-}
-setInterval(timer, 10000);
-
-function isInt(value) {
-    var x = parseFloat(value);
-    return !isNaN(value) && (x | 0) === x;
-}
