@@ -118,7 +118,7 @@ var self = module.exports = {
         var fs = require('fs');
 
         var anime, animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
-        if (!animeJSON[msg.author.id]) {
+        if (!animeJSON[msg.author.id] || animeJSON[msg.author.id].length === 0) {
             msg.channel.send(
                 `There aren\'t any anime in your airing list, ${self.tsunNoun()}.`
             );
@@ -189,6 +189,8 @@ var self = module.exports = {
         if (ids.length == 0) return;
 
         self.addAiringInner(msg, ids);
+
+        msg.embeds = [];
     },
 
     /*
@@ -218,6 +220,7 @@ var self = module.exports = {
                 );
                 return;
             }
+
 
             options = {
                 url: `https://anilist.co/api/anime/${ids[0]}/airing?access_token=${self.anilistToken}`
@@ -265,7 +268,7 @@ var self = module.exports = {
                 fs.writeFile('airing_anime.json', JSON.stringify(
                     animeJSON));
                 msg.channel.send(
-                    `**${anime.title}** has been added to the airing list! <:inaHappy:301529610754195456>`
+                    `**${anime.title}** has been added to your airing list! <:inaHappy:301529610754195456>`
                 );
 
                 ids.shift();
@@ -274,7 +277,7 @@ var self = module.exports = {
             }).catch(err => {
                 console.log('Failed to retrieve airing times.');
                 msg.channel.send(
-                    `There was a problem adding your anime to the list.`
+                    `There was a problem adding your anime to your list.`
                 );
 
                 ids.shift();
@@ -285,7 +288,8 @@ var self = module.exports = {
             console.log(err);
             console.log('Failed to retrieve title of anime.');
             msg.channel.send(
-                `There was a problem adding your anime to the list.`);
+                `There was a problem adding your anime to your list.`
+            );
 
             ids.shift();
             if (ids.length > 0)

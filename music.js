@@ -9,6 +9,7 @@ var guilds = {};
 module.exports = function(client) {
     client.on('message', msg => { //Respond to music requests.
         if (msg.author.bot) return;
+        if (!msg.content.startsWith(config.prefix)) return; //Not a command.
         if (!msg.guild || !msg.guild.available) return;
 
         //Add guild to the guild list.

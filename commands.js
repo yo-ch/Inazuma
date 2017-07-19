@@ -56,7 +56,7 @@ module.exports = {
         if (args.length == 1) { //User requested help for a specific command.
             if (args[0].charAt(0) == config.prefix) //Remove prefix for the help argument.
                 args[0] = args[0].slice(1);
-            helpStr = commands.args[0];
+            helpStr = commands[args[0]];
         }
 
         if (helpStr) //Display help for requested command.
