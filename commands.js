@@ -1,59 +1,3 @@
-const commands = {
-    'help': `~help [command]
-  Brings up the command page. Pass a command for further information.`,
-    'tasukete': `~tasukete [command]
-  Brings up the command page. Pass a command for further information.`,
-
-    'andy': `~andy [@mention]
-  Shut up weeb. Mentions user, if included.`,
-
-    'aoba': `~aoba
-  Returns a random picture of Aoba.`,
-
-    'airing': `~airing [option]
-  Displays countdowns until the next episode for each anime in your airing list.
-
-    Options:
-      a <anilist urls> : Adds the given anime to your airing list.
-      r <name in list> : Removes the anime from your airing list.
-      c                : Clears your airing list.`,
-
-    'anilist': `~anilist | ~ani <anime name>
-  Displays an anime\'s data, pulled from Anilist.
-  If multiple choices are given, simply reply with the number.`,
-
-    'cc': `~cc <voice channel> <@mention>
-  Changes the mentioned user\'s voice channel to the given channel.`,
-
-    'choose': `~choose <arg1> | [arg2] ...
-  Randomly chooses between the provided choice(s).`,
-
-    'gavquote': `~gavquote
-  Returns a random Gavin quote.`,
-
-    'roll': `~roll <int1> [int2]
-  Rolls an integer from 1 to int1 inclusive.
-  If int2 is given, rolls an integer between int1 and int2 inclusive.`,
-
-    'vigne': `~vigne
-  Returns a random picture of Vigne.`,
-
-    'music': `Music Commands:
-  ~play | p <url>  : Adds the song to the queue.
-  ~skip | s        : Skips the current song.
-  ~pause           : Pauses the song.
-  ~resume          : Resumes the song.
-  ~queue | q       : Displays the song queue.
-  ~np              : Displays the title of the current song.
-  ~vol | v <0-100> : Sets volume.
-
-  ~join            : Joins your voice channel.
-  ~leave           : Leaves voice channel.
-
-Supports all sites that youtube-dl supports.
-Requires a #music text channel.`,
-}
-
 const config = require('./config.json');
 
 const ani = require('./anime.js');
@@ -260,7 +204,7 @@ module.exports = {
     HELPER FUNCTIONS
     */
     reply: function (msg) {
-        let replies = [
+        const replies = [
             `Nani yo?`,
             `What do you want, ${ani.tsunNoun()}...`,
             `Hmmmphh.`,
@@ -271,4 +215,59 @@ module.exports = {
         ];
         msg.channel.send(replies[tool.randint(replies.length)]);
     }
+}
+
+const commands = {
+    'help': `~help [command]
+  Brings up the command page. Pass a command for further information.`,
+    'tasukete': `~tasukete [command]
+  Brings up the command page. Pass a command for further information.`,
+
+    'andy': `~andy [@mention]
+  Shut up weeb. Mentions user, if included.`,
+
+    'aoba': `~aoba
+  Returns a random picture of Aoba.`,
+
+    'airing': `~airing [option]
+  Displays countdowns until the next episode for each anime in your airing list.
+
+    Options:
+      a <anilist urls> : Adds the given anime to your airing list.
+      r <name in list> : Removes the anime from your airing list.
+      c                : Clears your airing list.`,
+
+    'anilist': `~anilist | ~ani <anime name>
+  Displays an anime\'s data, pulled from Anilist.
+  If multiple choices are given, simply reply with the number.`,
+
+    'cc': `~cc <voice channel> <@mention>
+  Changes the mentioned user\'s voice channel to the given channel.`,
+
+    'choose': `~choose <arg1> | [arg2] ...
+  Randomly chooses between the provided choice(s).`,
+
+    'gavquote': `~gavquote
+  Returns a random Gavin quote.`,
+
+    'roll': `~roll <int1> [int2]
+  Rolls an integer from 1 to int1 inclusive.
+  If int2 is given, rolls an integer between int1 and int2 inclusive.`,
+
+    'vigne': `~vigne
+  Returns a random picture of Vigne.`,
+
+    'music': `Music Commands:
+  ~play <url> | <search query> : Adds the song to the queue.
+  ~skip                        : Skips the current song.
+  ~pause                       : Pauses the song.
+  ~resume                      : Resumes the song.
+  ~queue                       : Displays the song queue.
+  ~np                          : Displays the title of the current song.
+  ~vol | v <0-100>             : Sets volume.
+
+  ~join                        : Joins your voice channel.
+  ~leave                       : Leaves voice channel.
+
+Requires a #music text channel.`,
 }

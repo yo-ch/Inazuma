@@ -152,7 +152,7 @@ var self = module.exports = {
 
             if ((anime.totalEps < anime.nextEp && anime.totalEps > 0) ||
                 countdown < 0)
-                info.push([sprintf('%-50s DONE AIRING\n', title), Infinity]);
+                info.push([sprintf('%-50s -- DONE AIRING --\n', title), Infinity]);
             else
                 info.push([sprintf('%-50s Ep %-3i in %s\n', title, anime.nextEp,
                     self.secondsToCountdown(countdown)), countdown]);
@@ -216,20 +216,24 @@ var self = module.exports = {
             promises.push(self.addAiringInner(msg, ids[i]));
         }
 
-        Promise.all(promises).then(airingData => { //Wait for all anime to finish processing.
+        Promise.all(promises).then(airingData => { //Wait for all anime to finish processing to write to file.
             for (var i = 0; i < airingData.length; i++) {
                 if (airingData[i] == 'err') continue;
                 animeJSON[msg.author.id].push(airingData[i]);
             }
             fs.writeFile('airing_anime.json', JSON.stringify(
-                animeJSON));
+                animeJSON), () => {
+                msg.channel.send(
+                    `Finished adding anime to your list. ${tool.inaHappy}`
+                );
+            });
         });
 
 
     },
 
     /*
-    Recursive function that adds each anime given by their IDs to the user's airing list.
+    Function that adds an anime given by their ID on Anilist to the user's airing list.
     */
     addAiringInner: function (msg, id) {
         var rp = require('request-promise');
@@ -287,7 +291,7 @@ var self = module.exports = {
                     if (!nextEp) nextEp = totalEps + 1; //Anime done airing, but status wasn't updated.
 
                     msg.channel.send(
-                        `**${title}** has been added to your airing list! <:inaHappy:301529610754195456>`
+                        `**${title}** has been added to your airing list!`
                     );
 
                     return resolve({
@@ -323,7 +327,7 @@ var self = module.exports = {
     removeAiringAnime: function (msg) {
         var fs = require('fs');
         var animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
-        var animeToRemove = msg.content.substring(10).trim().toLowerCase();
+        var animeToRemove = msg.content.split(/\s+/).slice(2).join(' ').trim().toLowerCase();
 
         if (animeToRemove.length < 4) {
             msg.channel.send(
@@ -383,7 +387,7 @@ var self = module.exports = {
     */
     tsunNoun: function () {
         const nouns = ['b-baka', 's-stupid', 'd-dummy', 'baaaka',
-            '<:inaBaka:301529550783774721>', 'dummy'
+            `${tool.inaBaka}`, 'dummy'
         ];
         return nouns[tool.randint(nouns.length)];
     }

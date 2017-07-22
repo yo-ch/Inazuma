@@ -6,7 +6,7 @@ const ani = require('./anime.js');
 
 var guilds = {};
 
-module.exports = function(client) {
+module.exports = function (client) {
     client.on('message', msg => { //Respond to music requests.
         if (msg.author.bot) return;
         if (!msg.content.startsWith(config.prefix)) return; //Not a command.
@@ -37,22 +37,18 @@ module.exports = function(client) {
 
         switch (cmd) {
             case 'play':
-            case 'p':
                 return queueSong(msg, guild);
             case 'skip':
-            case 's':
                 return skipSong(guild);
             case 'pause':
                 return pauseSong(guild);
             case 'resume':
                 return resumeSong(guild);
             case 'queue':
-            case 'q':
                 return printQueue(guild);
             case 'np':
                 return nowPlaying(msg, guild);
             case 'vol':
-            case 'v':
                 return setVolume(msg, guild);
 
             case 'join':
@@ -74,9 +70,10 @@ module.exports = function(client) {
 Queues the song at the given URL.
 */
 function queueSong(msg, guild) {
-    var url = msg.content.split(/\s+/)[1];
+    var url = msg.content.split(/\s+/).slice(1).join(' ');
 
-    if (url)
+    if (url) {
+        if (!url.startsWith('http')) url = 'gvsearch1:' + url;
         ytdl.getInfo(url, (err, info) => {
             if (err || info.format_id === undefined)
                 return guild.musicChannel.send(`Invalid video, ${ani.tsunNoun()}!`);
@@ -89,6 +86,7 @@ function queueSong(msg, guild) {
                 if (guild.queue.length === 1) playSong(msg, guild);
             }).catch(() => {});
         });
+    }
 }
 
 /*
