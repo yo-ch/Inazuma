@@ -18,12 +18,12 @@ var self = module.exports = {
         };
 
         rp(options).then(body => { //Wait for access token to be returned.
-            console.log('Access token granted!')
+            console.log('Access token granted!');
             var auth = JSON.parse(body);
             self.anilistToken = auth.access_token;
             self.tokenTimer = auth.expires_in;
             callback(msg);
-        }).catch(function(err) {
+        }).catch(err => {
             console.log('Failed to receive access token.')
         });
         console.log('Anilist access token requested!');
@@ -145,7 +145,7 @@ var self = module.exports = {
                     self.secondsToCountdown(countdown)), countdown]);
         }
 
-        info.sort(function(a, b) { //Sorts, starting with anime closest to airing.
+        info.sort((a, b) => { //Sorts, starting with anime closest to airing.
             return a[1] - b[1]; //compare countdowns.
         });
 
@@ -169,6 +169,8 @@ var self = module.exports = {
     Adds anime to the airing list of the user using their URLs.
     */
     addAiringAnime: function(msg) {
+        var fs = require('fs');
+
         if (self.tokenTimer <= 0) { //Request new token if current token is expired.
             self.requestAccessToken(msg, self.addAiringAnime);
             return;
@@ -188,112 +190,114 @@ var self = module.exports = {
         }
         if (ids.length == 0) return;
 
-        self.addAiringInner(msg, ids);
+        var animeJSON = JSON.parse(fs.readFileSync(
+            'airing_anime.json').toString());
 
-        msg.embeds = [];
+        if (!animeJSON[msg.author.id])
+            animeJSON[msg.author.id] = [];
+
+        var promises = [];
+        for (var i = 0; i < ids.length; i++) {
+            promises.push(self.addAiringInner(msg, ids[i]));
+        }
+
+            for (var i = 0; i < airingData.length; i++) {
+                if (airingData[i] == 'err') continue;
+                animeJSON[msg.author.id].push(airingData[i]);
+            }
+            fs.writeFile('airing_anime.json', JSON.stringify(
+                animeJSON));
+        });
+
+
     },
 
     /*
     Recursive function that adds each anime given by their IDs to the user's airing list.
     */
-    addAiringInner: function(msg, ids) {
+    addAiringInner: function(msg, id) {
         var rp = require('request-promise');
-        var fs = require('fs');
+        return new Promise((resolve, reject) => {
+            var countdowns = []; //Required airing data.
+            var title = '';
+            var nextEp = null;
+            var totalEps;
 
-        var countdowns = []; //Data to write to JSON file.
-        var title = '';
-        var nextEp = null;
-        var totalEps;
-
-        var options = {
-            url: `https://anilist.co/api/anime/${ids[0]}?access_token=${self.anilistToken}`
-        }
-
-        rp(options).then(body => { //Retrieve title of anime.
-            results = JSON.parse(body);
-            title = results.title_romaji;
-            totalEps = results.total_episodes;
-
-            if (results.airing_status != 'currently airing') {
-                msg.channel.send(
-                    `**${title}** isn't currently airing, ${self.tsunNoun()}!`
-                );
-                return;
+            var options = {
+                url: `https://anilist.co/api/anime/${id}?access_token=${self.anilistToken}`
             }
 
+            rp(options).then(body => { //Retrieve title of anime.
+                results = JSON.parse(body);
 
-            options = {
-                url: `https://anilist.co/api/anime/${ids[0]}/airing?access_token=${self.anilistToken}`
-            }
+                title = results.title_romaji.trim();
+                totalEps = results.total_episodes;
 
-            rp(options).then(body => { //Retrieve airing times for each episode of the anime.
-                var results = JSON.parse(body);
-                var ep;
-                for (ep in results) {
-                    countdowns.push(results[ep]);
-                }
-
-                if (countdowns.length == 0) {
+                if (results.airing_status != 'currently airing') {
                     msg.channel.send(
-                        `Gomen, airing times for **${title}** are not available yet.`
+                        `**${title}** isn't currently airing, ${self.tsunNoun()}!`
                     );
-                    return;
+                    return resolve('err');
                 }
 
-                var unixts = Math.round((new Date()).getTime() /
-                    1000); //Get current unix time.
-                for (var i = 0; i < countdowns.length; i++) { //Get next ep number.
-                    if (countdowns[i] > unixts) {
-                        nextEp = i + 1; //Add 1 because we started at 'ep 0' technically.
-                        break;
+                options = {
+                    url: `https://anilist.co/api/anime/${id}/airing?access_token=${self.anilistToken}`
+                }
+
+                rp(options).then(body => { //Retrieve airing times for each episode of the anime.
+                    var results = JSON.parse(body);
+                    var length = Object.keys(results).length;
+
+                    if (length == 0) {
+                        msg.channel.send(
+                            `Gomen, airing times for **${title}** are not available yet.`
+                        );
+                        return resolve('err');
                     }
-                }
-                if (!nextEp) nextEp = totalEps + 1;
 
-                var anime = {
-                    'title': title.trim(),
-                    'countdowns': countdowns,
-                    'totalEps': totalEps == 0 ? countdowns.length :
-                        totalEps,
-                    'nextEp': nextEp
-                }
+                    for (var i = 0; i < length; i++) {
+                        countdowns.push(results[
+                            `${i + 1}`]);
+                    }
 
-                var animeJSON = JSON.parse(fs.readFileSync(
-                    'airing_anime.json').toString());
+                    var unixts = Math.round(new Date().getTime() /
+                        1000);
+                    for (var i = 0; i < countdowns.length; i++) { //Get next ep number.
+                        if (countdowns[i] > unixts) {
+                            nextEp = i + 1; //Add 1 because we started at 'ep 0' technically.
+                            break;
+                        }
+                    }
+                    if (!nextEp) nextEp = totalEps + 1; //Anime done airing, but status wasn't updated.
 
-                if (!animeJSON[msg.author.id])
-                    animeJSON[msg.author.id] = [];
-                animeJSON[msg.author.id].push(anime);
+                    msg.channel.send(
+                        `**${title}** has been added to your airing list! <:inaHappy:301529610754195456>`
+                    );
 
-                fs.writeFile('airing_anime.json', JSON.stringify(
-                    animeJSON));
-                msg.channel.send(
-                    `**${anime.title}** has been added to your airing list! <:inaHappy:301529610754195456>`
-                );
-
-                ids.shift();
-                if (ids.length > 0)
-                    self.addAiringInner(msg, ids);
+                    return resolve({
+                        'title': title,
+                        'countdowns': countdowns,
+                        'totalEps': totalEps == 0 ?
+                            countdowns.length : totalEps,
+                        'nextEp': nextEp
+                    });
+                }).catch(err => {
+                    console.log(
+                        'Failed to retrieve airing times.'
+                    );
+                    console.log(err);
+                    msg.channel.send(
+                        `There was a problem adding your anime to your list.`
+                    );
+                    return resolve('err');
+                });
             }).catch(err => {
-                console.log('Failed to retrieve airing times.');
+                console.log('Failed to retrieve title of anime.');
                 msg.channel.send(
                     `There was a problem adding your anime to your list.`
                 );
-
-                ids.shift();
-                if (ids.length > 0)
-                    self.addAiringInner(msg, ids);
+                return resolve('err');
             });
-        }).catch(err => {
-            console.log(err);
-            console.log('Failed to retrieve title of anime.');
-            msg.channel.send(
-                `There was a problem adding your anime to your list.`
-            );
-
-            ids.shift();
-            if (ids.length > 0)
-                self.addAiringInner(msg, ids);
         });
     },
 
@@ -312,13 +316,13 @@ var self = module.exports = {
             return;
         }
 
-        for (var i = 0; i < animeJSON[msg.author.id].length; i++) {
-            var currAnimeTitle = animeJSON[msg.author.id][i].title.trim()
-            if (currAnimeTitle.toLowerCase().startsWith(animeToRemove)) {
-                animeJSON[msg.author.id].splice(i, 1);
+        for (var anime in animeJSON[msg.author.id]) {
+            var animeTitle = animeJSON[msg.author.id][anime].title;
+            if (animeTitle.toLowerCase().startsWith(animeToRemove)) {
+                animeJSON[msg.author.id].splice(anime, 1);
                 fs.writeFile('airing_anime.json', JSON.stringify(animeJSON));
                 msg.channel.send(
-                    `**${currAnimeTitle}** has been removed from your airing list! <:inaHappy:301529610754195456>`
+                    `**${animeTitle}** has been removed from your airing list! <:inaHappy:301529610754195456>`
                 );
                 return;
             }
@@ -362,7 +366,7 @@ var self = module.exports = {
     Returns a random tsundere noun.
     */
     tsunNoun: function() {
-        let nouns = ['b-baka', 's-stupid', 'd-dummy', 'baaaka',
+        const nouns = ['b-baka', 's-stupid', 'd-dummy', 'baaaka',
             '<:inaBaka:301529550783774721>', 'dummy'
         ];
         return nouns[tool.randint(nouns.length)];

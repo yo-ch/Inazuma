@@ -14,12 +14,12 @@ module.exports = function(client) {
 
         //Add guild to the guild list.
         if (!guilds[msg.guild.id]) guilds[msg.guild.id] = {
-            "queue": [],
-            "musicChannel": msg.guild.channels.find('name', 'music'),
-            "voiceConnection": null,
-            "dispatch": null,
-            "status": 'offline', //States: offline, playing, stopped
-            "inactivityTimer": 300
+            queue: [],
+            musicChannel: msg.guild.channels.find('name', 'music'),
+            voiceConnection: null,
+            dispatch: null,
+            status: 'offline', //States: offline, playing, stopped
+            inactivityTimer: 300
         };
 
         var guild = guilds[msg.guild.id];
