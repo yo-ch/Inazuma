@@ -20,15 +20,15 @@ Planned:
 [] = optional, <> = required, | = or
 ```
 
-<h3> Utility </h3>
+## Utility
 
 ```
 ~airing [option]   
     Displays countdowns until the next episode for each anime in the airing list.  
 
-    Options:       a <anilist urls>      : Adds the given anime to the airing list.      
-                   r <name in list>      : Removes the anime from the airing list.     
-                   c                     : Clears the airing list.
+    Options:       a <anilist urls> : Adds the given anime to the airing list.      
+                   r <name in list> : Removes the anime from the airing list.     
+                   c                : Clears the airing list.
 
 ~anilist | ~ani <anime name>   
     Displays an anime's data, pulled from Anilist.
@@ -44,25 +44,25 @@ Planned:
     If int2 is given, rolls an integer between int1 and int2 inclusive.
 ```
 
-<h3> Music </h3>
+## Music
 
 ```
-Music Commands:   ~play | p <url>  : Adds the song to the queue.
-                  ~skip | s        : Skips the current song.
-                  ~pause           : Pauses the song.
-                  ~resume          : Resumes the song.
-                  ~queue | q       : Displays the song queue.
-                  ~np              : Displays the title of the current song.
-                  ~vol | v <0-100> : Sets volume.
+Music Commands:   ~play <url> | <search query> : Adds the song to the queue.
+                  ~skip                        : Skips the current song.
+                  ~pause                       : Pauses the song.
+                  ~resume                      : Resumes the song.
+                  ~queue                       : Displays the song queue.
+                  ~np                          : Displays the title of the current song.
+                  ~vol <0-100>                 : Sets volume.
 
-                  ~join            : Joins your voice channel.
-                  ~leave           : Leaves voice channel.
+                  ~join                        : Joins your voice channel.
+                  ~leave                       : Leaves voice channel.
 
    Supports all sites that youtube-dl supports.
    Requires a #music text channel.
 ```
 
-<h3> Etc. </h3>
+## Etc.
 
 ```
 ~andy [@mention]   
@@ -86,7 +86,8 @@ Music Commands:   ~play | p <url>  : Adds the song to the queue.
 ```
 
 # JSON Sample Files
-<h3> config.json</h3>
+
+## config.json
 
 ```
 {
@@ -98,7 +99,7 @@ Music Commands:   ~play | p <url>  : Adds the song to the queue.
 }
 ```
 
-<h3> airing_anime.json </h3>
+## airing_anime.json
 
 ```
 {
@@ -106,7 +107,7 @@ Music Commands:   ~play | p <url>  : Adds the song to the queue.
 }
 ```
 
-<h3> gavquotes.json </h3>
+## gavquotes.json
 
 ```
 {
