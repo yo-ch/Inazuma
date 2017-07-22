@@ -1,37 +1,57 @@
 const commands = {
-    'help': '~help [command]\n   Brings up the command page. Pass a command for further information.',
-    'tasukete': '~tasukete [command]\n   Brings up the command page. Pass a command for further information.',
+    'help': `~help [command]
+  Brings up the command page. Pass a command for further information.`,
+    'tasukete': `~tasukete [command]
+  Brings up the command page. Pass a command for further information.`,
 
-    'andy': '~andy [@mention]\n   Shut up weeb. Mentions user, if included.',
+    'andy': `~andy [@mention]
+  Shut up weeb. Mentions user, if included.`,
 
-    'aoba': '~aoba\n   Returns a random picture of Aoba.',
+    'aoba': `~aoba
+  Returns a random picture of Aoba.`,
 
-    'airing': '~airing [option]\n   Displays countdowns until the next episode for each anime in your airing list.\n\n   Options:\n       a <anilist urls> : Adds the given anime to your airing list.\n       r <name in list> : Removes the anime from your airing list.\n       c                : Clears your airing list.',
+    'airing': `~airing [option]
+  Displays countdowns until the next episode for each anime in your airing list.
 
-    'anilist': '~anilist | ~ani <anime name>\n   Displays an anime\'s data, pulled from Anilist.\n   If multiple choices are given, simply reply with the number.',
+    Options:
+      a <anilist urls> : Adds the given anime to your airing list.
+      r <name in list> : Removes the anime from your airing list.
+      c                : Clears your airing list.`,
 
-    'cc': '~cc <voice channel> <@mention>\n   Changes the mentioned user\'s voice channel to the given channel.',
+    'anilist': `~anilist | ~ani <anime name>
+  Displays an anime\'s data, pulled from Anilist.
+  If multiple choices are given, simply reply with the number.`,
 
-    'choose': '~choose <arg1> | [arg2] ...\n   Randomly chooses between the provided choice(s).',
+    'cc': `~cc <voice channel> <@mention>
+  Changes the mentioned user\'s voice channel to the given channel.`,
 
-    'gavquote': '~gavquote\n   Returns a random Gavin quote.',
+    'choose': `~choose <arg1> | [arg2] ...
+  Randomly chooses between the provided choice(s).`,
 
-    'roll': '~roll <int1> [int2]\n   Rolls an integer from 1 to int1 inclusive.\n   If int2 is given, rolls an integer between int1 and int2 inclusive.',
+    'gavquote': `~gavquote
+  Returns a random Gavin quote.`,
 
-    'vigne': '~vigne\n   Returns a random picture of Vigne.',
+    'roll': `~roll <int1> [int2]
+  Rolls an integer from 1 to int1 inclusive.
+  If int2 is given, rolls an integer between int1 and int2 inclusive.`,
 
-    'music': 'Music Commands:\n' +
-        '   ~play | p <url>  : Adds the song to the queue.\n' +
-        '   ~skip | s        : Skips the current song.\n' +
-        '   ~pause           : Pauses the song.\n' +
-        '   ~resume          : Resumes the song.\n' +
-        '   ~queue | q       : Displays the song queue.\n' +
-        '   ~np              : Displays the title of the current song.\n' +
-        '   ~vol | v <0-100> : Sets volume.\n\n' +
+    'vigne': `~vigne
+  Returns a random picture of Vigne.`,
 
-        '   ~join            : Joins your voice channel.\n' +
-        '   ~leave           : Leaves voice channel.\n\n' +
-        'Requires a #music text channel.',
+    'music': `Music Commands:
+  ~play | p <url>  : Adds the song to the queue.
+  ~skip | s        : Skips the current song.
+  ~pause           : Pauses the song.
+  ~resume          : Resumes the song.
+  ~queue | q       : Displays the song queue.
+  ~np              : Displays the title of the current song.
+  ~vol | v <0-100> : Sets volume.
+
+  ~join            : Joins your voice channel.
+  ~leave           : Leaves voice channel.
+
+Supports all sites that youtube-dl supports.
+Requires a #music text channel.`,
 }
 
 const config = require('./config.json');
@@ -49,7 +69,7 @@ module.exports = {
     /*
     COMMANDS
     */
-    help: function(msg) {
+    help: function (msg) {
         var args = msg.content.split(/\s+/).slice(1);
 
         var helpStr;
@@ -88,7 +108,7 @@ module.exports = {
     /*
     Shut up weeb.
     */
-    andy: function(msg) {
+    andy: function (msg) {
         msg.delete();
         var user = msg.mentions.users.first();
         if (user) msg.channel.send(`Shut up weeb. ${user}`);
@@ -98,7 +118,7 @@ module.exports = {
     /*
     Processes ~airing commands.
     */
-    airing: function(msg) {
+    airing: function (msg) {
         var args = msg.content.split(/\s+/);
         if (!args[1]) ani.retrieveAiringData(msg);
         else if (args[1] == 'a') ani.addAiringAnime(msg);
@@ -109,7 +129,7 @@ module.exports = {
     /*
     Lookup anime data.
     */
-    anilist: function(msg) {
+    anilist: function (msg) {
         ani.retrieveAnilistData(msg);
     },
 
@@ -117,7 +137,7 @@ module.exports = {
     Sets the voice channel of the mentioned user if the author of the message
     has the MOVE_MEMBER permission.
     */
-    cc: function(msg) {
+    cc: function (msg) {
         if (msg.channel.type == 'dm') return;
         if (!msg.member.hasPermission('MOVE_MEMBERS')) {
             msg.channel.send(
@@ -144,7 +164,7 @@ module.exports = {
     /*
     Chooses between 1 or more choices given by the user, delimited by '|'.
     */
-    choose: function(msg) {
+    choose: function (msg) {
         var args = msg.content.split("|");
 
         args[0] = args[0].slice(8); //Slice off command string.
@@ -163,7 +183,7 @@ module.exports = {
     /*
     Returns a random Gavin quote.
     */
-    gavquote: function(msg) {
+    gavquote: function (msg) {
         let gq = require('./gavquotes.json');
         msg.channel.send(`\`\`${gq.quotes[tool.randint(gq.quotes.length)]}\`\``);
     },
@@ -171,7 +191,7 @@ module.exports = {
     /*
     Rolls a number between 1 and num1 or num1 and num2 inclusive.
     */
-    roll: function(msg) {
+    roll: function (msg) {
         var args = msg.content.split(/\s+/).slice(1);
 
         if (args.length > 2) return;
@@ -200,9 +220,9 @@ module.exports = {
     /*
     Interacts with the imgur API to pull a random image link from an album.
     */
-    aoba: function(msg) {
+    aoba: function (msg) {
         //Create a http request.
-        var request = require('request');
+        var rp = require('request-promise');
 
         //api url + authorization header
         var options = {
@@ -212,20 +232,15 @@ module.exports = {
             }
         };
 
-        //Callback funct.
-        function callback(error, response, body) {
-            if (!error && response.statusCode == 200) {
-                var info = JSON.parse(body);
-                msg.channel.send(info.data[tool.randint(info.data.length)].link);
-            }
-        }
-
-        request(options, callback);
+        rp(options).then(body => {
+            var info = JSON.parse(body);
+            msg.channel.send(info.data[tool.randint(info.data.length)].link);
+        });
     },
 
-    vigne: function(msg) {
+    vigne: function (msg) {
         //Create a http request.
-        var request = require('request');
+        var rp = require('request-promise');
 
         //api url + authorization header
         var options = {
@@ -235,21 +250,16 @@ module.exports = {
             }
         };
 
-        //Callback funct.
-        function callback(error, response, body) {
-            if (!error && response.statusCode == 200) {
-                var info = JSON.parse(body);
-                msg.channel.send(info.data[tool.randint(info.data.length)].link);
-            }
-        }
-
-        request(options, callback);
+        rp(options).then(body => {
+            var info = JSON.parse(body);
+            msg.channel.send(info.data[tool.randint(info.data.length)].link);
+        });
     },
 
     /*
     HELPER FUNCTIONS
     */
-    reply: function(msg) {
+    reply: function (msg) {
         let replies = [
             `Nani yo?`,
             `What do you want, ${ani.tsunNoun()}...`,
