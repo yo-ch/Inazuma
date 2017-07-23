@@ -47,16 +47,16 @@ Planned:
 ## Music
 
 ```
-Music Commands:   ~play <url> | <search query> : Adds the song to the queue.
-                  ~skip                        : Skips the current song.
-                  ~pause                       : Pauses the song.
-                  ~resume                      : Resumes the song.
-                  ~queue                       : Displays the song queue.
-                  ~np                          : Displays the title of the current song.
-                  ~vol <0-100>                 : Sets volume.
+Music Commands:   ~play <url> | <search> : Adds the song to the queue.
+                  ~skip                  : Skips the current song.
+                  ~pause                 : Pauses the song.
+                  ~resume                : Resumes the song.
+                  ~queue                 : Displays the song queue.
+                  ~np                    : Displays the title of the current song.
+                  ~vol <0-100>           : Sets volume.
 
-                  ~join                        : Joins your voice channel.
-                  ~leave                       : Leaves voice channel.
+                  ~join                  : Joins your voice channel.
+                  ~leave                 : Leaves voice channel.
 
    Supports all sites that youtube-dl supports.
    Requires a #music text channel.

@@ -228,12 +228,10 @@ var self = module.exports = {
                 );
             });
         });
-
-
     },
 
     /*
-    Function that adds an anime given by their ID on Anilist to the user's airing list.
+    Gets airing information for anime by their IDs on Anilist.
     */
     addAiringInner: function (msg, id) {
         var rp = require('request-promise');

@@ -19,7 +19,7 @@ module.exports = function (client) {
             voiceConnection: null,
             dispatch: null,
             status: 'offline', //States: offline, playing, stopped
-            inactivityTimer: 300
+            inactivityTimer: 60
         };
 
         var guild = guilds[msg.guild.id];
@@ -74,19 +74,33 @@ function queueSong(msg, guild) {
 
     if (url) {
         if (!url.startsWith('http')) url = 'gvsearch1:' + url;
-        ytdl.getInfo(url, (err, info) => {
-            if (err || info.format_id === undefined)
+        ytdl.getInfo(url, [], { maxBuffer: Infinity }, (err, info) => {
+            if (err) {
+                console.log(err);
                 return guild.musicChannel.send(`Invalid video, ${ani.tsunNoun()}!`);
 
-            guild.musicChannel.send(
-                `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
-            ).then(() => {
-                msg.delete();
-                guild.queue.push(info);
-                if (guild.queue.length === 1) playSong(msg, guild);
-            }).catch(() => {});
+            }
+            
+            if (Array.isArray(info)) { //Playlist.
+                for (var i = 0; i < info.length; i++) {
+                    queueSongInner(msg, info[i], guild);
+                }
+                guild.musicChannel.send(
+                    `Enqueued ${info.length} songs in ${tool.wrap(info[0].playlist_title)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+                );
+            } else { //Single song.
+                queueSongInner(msg, info, guild);
+                guild.musicChannel.send(
+                    `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+                );
+            }
         });
     }
+}
+
+function queueSongInner(msg, info, guild) {
+    guild.queue.push({ title: info.title, url: info.url});
+    if (guild.queue.length === 1) playSong(msg, guild);
 }
 
 /*
@@ -127,6 +141,8 @@ function playSong(msg, guild) {
 
                     //Wait for errors/end of song, then play the next song.
                     guild.dispatch.on('error', error => {
+                        console.log(error);
+                        console.log('Error while playing song.');
                         guild.queue.shift();
                         playSong(msg, guild);
                     });
@@ -196,9 +212,8 @@ function printQueue(guild) {
 Displays the currently playing song.
 */
 function nowPlaying(msg, guild) {
-    msg.delete();
     if (guild.queue.length > 0)
-        guild.musicChannel.send(`Now playing ${tool.wrap(guild.queue[0].title)}.`);
+        guild.musicChannel.send(`:notes: Now playing ${tool.wrap(guild.queue[0].title)}.`);
     else
         guild.musicChannel.send('Nothing is playing right now.');
 }
@@ -207,7 +222,7 @@ function nowPlaying(msg, guild) {
 Sets the volume of the stream.
 */
 function setVolume(msg, guild) {
-    var vol = parseInt(msg.content.split(/\s+/)[2]) / 100;
+    var vol = parseInt(msg.content.split(/\s+/)[1]) / 100;
     if (vol && (vol >= 0 && vol <= 1)) {
         if (guild.dispatch) {
             guild.dispatch.setVolumeLogarithmic(vol);
@@ -256,13 +271,13 @@ function leave(msg, guild) {
 Hime hime.
 */
 function hime(msg, guild) {
-    msg.content = '~p https://soundcloud.com/shiinub/namirin-koi-no-hime-hime-pettanko';
+    msg.content = '~play https://soundcloud.com/shiinub/namirin-koi-no-hime-hime-pettanko';
     queueSong(msg, guild);
 }
 
 function changeStatus(guild, status) {
     guild.status = status;
-    guild.inactivityTimer = 300;
+    guild.inactivityTimer = 60;
 }
 
 /*

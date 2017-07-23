@@ -258,16 +258,16 @@ const commands = {
   Returns a random picture of Vigne.`,
 
     'music': `Music Commands:
-  ~play <url> | <search query> : Adds the song to the queue.
-  ~skip                        : Skips the current song.
-  ~pause                       : Pauses the song.
-  ~resume                      : Resumes the song.
-  ~queue                       : Displays the song queue.
-  ~np                          : Displays the title of the current song.
-  ~vol | v <0-100>             : Sets volume.
+  ~play <url> | <search> : Adds the song to the queue.
+  ~skip                  : Skips the current song.
+  ~pause                 : Pauses the song.
+  ~resume                : Resumes the song.
+  ~queue                 : Displays the song queue.
+  ~np                    : Displays the title of the current song.
+  ~vol | v <0-100>       : Sets volume.
 
-  ~join                        : Joins your voice channel.
-  ~leave                       : Leaves voice channel.
+  ~join                  : Joins your voice channel.
+  ~leave                 : Leaves voice channel.
 
 Requires a #music text channel.`,
 }
