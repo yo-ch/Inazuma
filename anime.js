@@ -1,5 +1,9 @@
+'use strict';
 const config = require('./config.json');
 const tool = require('./tool.js')
+const rp = require('request-promise');
+const sprintf = require('sprintf-js').sprintf;
+const fs = require('fs');
 
 var searchRequests = {};
 
@@ -11,7 +15,6 @@ var self = module.exports = {
     Update the Anilist API access token if needed.
     */
     updateAccessToken: function () {
-        var rp = require('request-promise');
         return new Promise((resolve, reject) => {
             if (self.tokenTimer >= 15) return resolve();
 
@@ -37,8 +40,6 @@ var self = module.exports = {
     Retrieve the specified data from Anilist.
     */
     retrieveAnilistData: function (msg) {
-        var rp = require('request-promise');
-
         self.updateAccessToken().then(() => {
             var search = msg.content.split(/\s+/).slice(1);
             if (search.length >= 1) { //A search query was given.
@@ -115,21 +116,17 @@ var self = module.exports = {
     Formats the given anime information.
     */
     animeInfoString: function (name, score, type, episodes, synopsis, url) {
-        //Format synopsis.
         var syn = synopsis.replace(/<br>\\n|<br>/g, '\n');
         syn = syn.replace(/<i>|<\/i>/g, '*');
         syn = syn.slice(0, syn.indexOf('(Source:')).trim(); //Remove source information.
 
-        return `**${name}** (${url})\n  **Score:** ${score}\n  **Type:** ${type}\n  **Episodes:** ${episodes}\n\n${syn}\n\n`;
+        return `**${name}** (${url})\n**Score:** ${score}\n**Type:** ${type}\n**Episodes:**${episodes}\n\n${syn}\n\n`;
     },
 
     /*
     Displays airing data of anime in the user's airing list.
     */
     retrieveAiringData: function (msg) {
-        var sprintf = require('sprintf-js').sprintf;
-        var fs = require('fs');
-
         var anime, animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
         if (!animeJSON[msg.author.id] || animeJSON[msg.author.id].length === 0) {
             msg.channel.send(
@@ -184,8 +181,6 @@ var self = module.exports = {
     Adds anime to the airing list of the user using their URLs.
     */
     addAiringAnime: function (msg) {
-        var fs = require('fs');
-
         if (self.tokenTimer <= 0) { //Request new token if current token is expired.
             self.requestAccessToken(msg, self.addAiringAnime);
             return;
@@ -234,7 +229,6 @@ var self = module.exports = {
     Gets airing information for anime by their IDs on Anilist.
     */
     addAiringInner: function (msg, id) {
-        var rp = require('request-promise');
         return new Promise((resolve, reject) => {
             var countdowns = []; //Required airing data.
             var title = '';
@@ -246,7 +240,7 @@ var self = module.exports = {
             }
 
             rp(options).then(body => { //Retrieve title of anime.
-                results = JSON.parse(body);
+                var results = JSON.parse(body);
 
                 title = results.title_romaji.trim();
                 totalEps = results.total_episodes;
@@ -323,7 +317,6 @@ var self = module.exports = {
     Removes an anime from the user's airing list given its name.
     */
     removeAiringAnime: function (msg) {
-        var fs = require('fs');
         var animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
         var animeToRemove = msg.content.split(/\s+/).slice(2).join(' ').trim().toLowerCase();
 
@@ -355,8 +348,6 @@ var self = module.exports = {
     Clears the user's airing list.
     */
     clearAiringList: function (msg) {
-        var fs = require('fs');
-
         var idJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
         idJSON[msg.author.id] = [];
         fs.writeFile('airing_anime.json', JSON.stringify(idJSON));

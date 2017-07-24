@@ -1,8 +1,9 @@
+'use strict';
 const config = require('./config.json');
-
 const ani = require('./anime.js');
-const music = require('./music.js');
 const tool = require('./tool.js');
+
+const rp = require('request-promise');
 
 var searchData = '';
 var anilistSearch = false;
@@ -165,9 +166,6 @@ module.exports = {
     Interacts with the imgur API to pull a random image link from an album.
     */
     aoba: function (msg) {
-        //Create a http request.
-        var rp = require('request-promise');
-
         //api url + authorization header
         var options = {
             url: 'https://api.imgur.com/3/album/4e3Dd/images',
@@ -183,9 +181,6 @@ module.exports = {
     },
 
     vigne: function (msg) {
-        //Create a http request.
-        var rp = require('request-promise');
-
         //api url + authorization header
         var options = {
             url: 'https://api.imgur.com/3/album/90DeF/images',
@@ -258,7 +253,7 @@ const commands = {
   Returns a random picture of Vigne.`,
 
     'music': `Music Commands:
-  ~play <url> | <search> : Adds the song to the queue.
+  ~play <url> | <search> : Adds the song/playlist to the queue.
   ~skip                  : Skips the current song.
   ~pause                 : Pauses the song.
   ~resume                : Resumes the song.
