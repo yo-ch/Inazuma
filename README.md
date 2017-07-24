@@ -58,7 +58,7 @@ Music Commands:   ~play <url> | <search> : Adds the song/playlist to the queue.
                   ~join                  : Joins your voice channel.
                   ~leave                 : Leaves voice channel.
 
-   Supports all sites that youtube-dl supports.
+   Supports Youtube and Soundcloud.
    Requires a #music text channel.
 ```
 

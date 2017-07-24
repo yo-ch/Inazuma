@@ -80,9 +80,9 @@ function processInput(msg, guild) {
         } else if (url.search('youtube.com')) { //Youtube.
             var playlist = url.match(/list=(\S+?)(&|\s|$|#)/); //Match playlist id.
             if (playlist) { //Playlist.
-                processYoutubePlaylist(msg, guild, playlist[1]);
+                youtube.processPlaylist(msg, guild, playlist[1]);
             } else if (url.search(/v=(\S+?)(&|\s|$|#)/)) { //Video.
-                processSongNew(msg, guild, url);
+                youtube.processSongNew(msg, guild, url);
             } else {
                 msg.channel.send(`Invalid Youtube link! ${inaBaka}`);
             }
@@ -94,95 +94,99 @@ function processInput(msg, guild) {
     }
 }
 
-function processSearch(msg, guild, url) {
-    url = 'gvsearch1:' + url;
-    youtubeDL.getInfo(url, (err, info) => {
-        if (err) console.log(err);
-        queueSong(msg, guild, info);
-        guild.musicChannel.send(
-            `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
-        );
-        if (guild.status != 'playing') playSong(msg, guild);
-    });
-}
-
-function processSongNew(msg, guild, url) {
-    ytdl.getInfo(url, (err, info) => {
-        if (err) console.log(info);
-        var stream = ytdl.downloadFromInfo(info, { retries: 10, highWaterMark: 32768 });
-        queueSong(msg, guild, { title: info.title, url: stream, processed: true });
-
-        guild.musicChannel.send(
-            `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
-        );
-        if (guild.status != 'playing') playSong(msg, guild);
-    });
-}
-
-function processSongAtIndex(msg, guild, song, index) {
-    if (song && !song.hasOwnProperty('processed')) {
-        var stream = ytdl(song.url, { retries: 10, highWaterMark: 32768 });
-        queueSong(msg, guild, { title: song.title, url: stream, processed: true }, index);
-    }
-}
-
-function processYoutubePlaylist(msg, guild, playlistId) {
-    const youtubeApiUrl = 'https://www.googleapis.com/youtube/v3/';
-
-    getPlaylistInfo(null, null, processPlaylistInfo);
-
-    function getPlaylistInfo(playlistItems, pageToken, callback) {
-        if (!playlistItems) playlistItems = [];
-        pageToken = pageToken ? `&pageToken=${pageToken}` : '';
-
-        var options;
-        options = {
-            url: `${youtubeApiUrl}playlistItems?playlistId=${playlistId}${pageToken}&part=snippet&fields=nextPageToken,items(snippet(title,resourceId/videoId))&maxResults=50&key=${config.youtube_api_key}`
-        }
-        rp(options).then(body => {
-            var playlist = JSON.parse(body);
-            playlistItems = playlistItems.concat(playlist.items);
-
-            if (playlist.hasOwnProperty('nextPageToken'))
-                getPlaylistInfo(playlistItems, playlist.nextPageToken, callback);
-            else callback(playlistItems);
-        });
-    }
-
-    function processPlaylistInfo(playlistItems) {
-        var processNo = 6 - guild.queue.length;
-        var queueLength = guild.queue.length;
-        for (let i = 0; i < playlistItems.length; i++)
-            guild.queue.push(null);
-        for (let i = 0; i < processNo && i < playlistItems.length; i++) { //Get stream urls to fill song queue up to 5.
-            var info = {
-                title: playlistItems[i].snippet.title,
-                url: `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`
-            }
-            processSongAtIndex(msg, guild, info, i + queueLength);
-        }
-
-        //Add rest of songs to queue, which will be processed later, to avoid spamming I/O.
-        if (processNo < 0) processNo = 0;
-        for (let i = processNo; i < playlistItems.length; i++) {
-            var info = {
-                title: playlistItems[i].snippet.title,
-                url: `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`
-            }
-            queueSong(msg, guild, info, i + queueLength);
-        }
-        var options = {
-            url: `${youtubeApiUrl}playlists?id=${playlistId}&part=snippet&key=${config.youtube_api_key}`
-        }
-
-        rp(options).then(body => { //Get playlist name.
-            var playlistTitle = JSON.parse(body).items[0].snippet.title;
+const youtube = {
+    processSearch: function (msg, guild, url) {
+        url = 'gvsearch1:' + url;
+        youtubeDL.getInfo(url, (err, info) => {
+            if (err) console.log(err);
+            queueSong(msg, guild, info);
             guild.musicChannel.send(
-                `Enqueued ${tool.wrap(playlistItems.length)} songs from ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+                `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
             );
-
             if (guild.status != 'playing') playSong(msg, guild);
-        })
+        });
+    },
+
+    processSongNew: function (msg, guild, url) {
+        ytdl.getInfo(url, (err, info) => {
+            if (err) console.log(info);
+            var stream = ytdl.downloadFromInfo(info, { retries: 7, highWaterMark: 32768 });
+            queueSong(msg, guild, { title: info.title, url: stream, processed: true });
+
+            guild.musicChannel.send(
+                `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+            );
+            if (guild.status != 'playing') playSong(msg, guild);
+        });
+    },
+
+    processSongAtIndex: function (msg, guild, song, index) {
+        if (song && !song.hasOwnProperty('processed')) {
+            var stream = ytdl(song.url, { retries: 7, highWaterMark: 32768 });
+            console.log(stream);
+            queueSong(msg, guild, { title: song.title, url: stream, processed: true },
+                index);
+        }
+    },
+
+    processPlaylist: function (msg, guild, playlistId) {
+        const youtubeApiUrl = 'https://www.googleapis.com/youtube/v3/';
+
+        getPlaylistInfo(null, null, processPlaylistInfo);
+
+        function getPlaylistInfo(playlistItems, pageToken, callback) {
+            if (!playlistItems) playlistItems = [];
+            pageToken = pageToken ? `&pageToken=${pageToken}` : '';
+
+            var options;
+            options = {
+                url: `${youtubeApiUrl}playlistItems?playlistId=${playlistId}${pageToken}&part=snippet&fields=nextPageToken,items(snippet(title,resourceId/videoId))&maxResults=50&key=${config.youtube_api_key}`
+            }
+            rp(options).then(body => {
+                var playlist = JSON.parse(body);
+                playlistItems = playlistItems.concat(playlist.items);
+
+                if (playlist.hasOwnProperty('nextPageToken'))
+                    getPlaylistInfo(playlistItems, playlist.nextPageToken, callback);
+                else callback(playlistItems);
+            });
+        }
+
+        function processPlaylistInfo(playlistItems) {
+            var processNo = 6 - guild.queue.length;
+            var queueLength = guild.queue.length;
+            for (let i = 0; i < playlistItems.length; i++)
+                guild.queue.push(null);
+            for (let i = 0; i < processNo && i < playlistItems.length; i++) { //Get stream urls to fill song queue up to 5.
+                var info = {
+                    title: playlistItems[i].snippet.title,
+                    url: `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`
+                }
+                youtube.processSongAtIndex(msg, guild, info, i + queueLength);
+            }
+
+            //Add rest of songs to queue, which will be processed later, to avoid spamming I/O.
+            if (processNo < 0) processNo = 0;
+            for (let i = processNo; i < playlistItems.length; i++) {
+                var info = {
+                    title: playlistItems[i].snippet.title,
+                    url: `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`
+                }
+                queueSong(msg, guild, info, i + queueLength);
+            }
+            var options = {
+                url: `${youtubeApiUrl}playlists?id=${playlistId}&part=snippet&key=${config.youtube_api_key}`
+            }
+
+            rp(options).then(body => { //Get playlist name.
+                var playlistTitle = JSON.parse(body).items[0].snippet.title;
+                guild.musicChannel.send(
+                    `Enqueued ${tool.wrap(playlistItems.length)} songs from ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+                );
+
+                if (guild.status != 'playing') playSong(msg, guild);
+            })
+        }
     }
 }
 
@@ -231,10 +235,11 @@ function playSong(msg, guild) {
                 startSong();
 
             function startSong() {
-                processSongAtIndex(msg, guild, guild.queue[5], 5);
+                youtube.processSongAtIndex(msg, guild, guild.queue[5], 5);
                 changeStatus(guild, 'playing');
                 guild.musicChannel.send(`:notes: Now playing ${tool.wrap(music.title)}`).then(
                     function () {
+                        console.log('@@@@@@@@@@@@@@' + music.url);
                         guild.dispatch = guild.voiceConnection.playArbitraryInput(music
                             .url, { seek: 0, passes: 2, volume: guild.volume });
 
@@ -319,6 +324,7 @@ function resumeSong(guild) {
 Prints the queue.
 */
 function printQueue(guild) {
+    console.log(guild.queue[0].slice(0, 5));
     if (guild.queue.length > 0) {
         try {
             var queueString = '';
