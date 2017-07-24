@@ -1,8 +1,11 @@
-const ytdl = require('youtube-dl');
-const request = require('request');
+'use strict';
 const config = require('./config.json');
 const tool = require('./tool.js');
 const ani = require('./anime.js');
+
+const youtubeDL = require('youtube-dl');
+const request = require('request');
+const rp = require('request-promise');
 
 var guilds = {};
 
@@ -27,8 +30,7 @@ module.exports = function (client) {
         if (!guild.musicChannel) {
             guild.musicChannel = msg.guild.channels.find('name', 'music');
             if (!guild.musicChannel) {
-                msg.channel.send(
-                    `Please create a ${tool.wrap('#music')} channel!`);
+                msg.channel.send(`Please create a ${tool.wrap('#music')} channel!`);
                 return;
             }
         }
@@ -37,7 +39,7 @@ module.exports = function (client) {
 
         switch (cmd) {
             case 'play':
-                return queueSong(msg, guild);
+                return processInput(msg, guild);
             case 'skip':
                 return skipSong(guild);
             case 'pause':
@@ -59,48 +61,121 @@ module.exports = function (client) {
             case 'hime':
                 return hime(msg, guild);
             case 'music':
-                msg.channel.send(
-                    `Please refer to ${tool.wrap('~help music')}.`
-                );
+                msg.channel.send(`Please refer to ${tool.wrap('~help music')}.`);
         }
     });
 }
 
 /*
-Queues the song at the given URL.
+Processes user input for ~play command calls.
+
+Determines what kind of input (search query, youtube video/playlist, soundcloud song/playlist) has been given, and proceeds accordingly.
 */
-function queueSong(msg, guild) {
+function processInput(msg, guild) {
     var url = msg.content.split(/\s+/).slice(1).join(' ');
-
     if (url) {
-        if (!url.startsWith('http')) url = 'gvsearch1:' + url;
-        ytdl.getInfo(url, [], { maxBuffer: Infinity }, (err, info) => {
-            if (err) {
-                console.log(err);
-                return guild.musicChannel.send(`Invalid video, ${ani.tsunNoun()}!`);
-
-            }
-            
-            if (Array.isArray(info)) { //Playlist.
-                for (var i = 0; i < info.length; i++) {
-                    queueSongInner(msg, info[i], guild);
-                }
-                guild.musicChannel.send(
-                    `Enqueued ${info.length} songs in ${tool.wrap(info[0].playlist_title)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
-                );
-            } else { //Single song.
-                queueSongInner(msg, info, guild);
+        if (!url.startsWith('http')) { //Assume its a search.
+            url = 'gvsearch1:' + url;
+            youtubeDL.getInfo(url, (err, info) => {
+                if (err) return guild.musicChannel.send(`Invalid video, ${ani.tsunNoun()}!`);
+                queueSong(msg, guild, info);
                 guild.musicChannel.send(
                     `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
                 );
+            });
+        } else if (url.search('youtube.com')) { //Youtube.
+            var playlist = url.match(/list=(\S+?)(&|\s|$)/); //Match playlist id.
+            if (playlist) { //Playlist.
+                processYoutubePlaylist(msg, guild, url, playlist[1]);
+            } else { //Video.
+                if (url.search(/list=(\S+?)(&|\s|$)/)) { //Valid video url.
+                    if (guild.queue.length > 5) queueSong(msg, guild, url);
+                    else processSongNew(msg, guild, url);
+                } else {
+
+                }
             }
-        });
+        } else if (url.search('soundcloud.com')) { //Soundcloud.
+
+        } else {
+            msg.channel.send('Gomen, I only support Youtube and Soundcloud.');
+        }
     }
 }
 
-function queueSongInner(msg, info, guild) {
-    guild.queue.push({ title: info.title, url: info.url});
-    if (guild.queue.length === 1) playSong(msg, guild);
+function processSongInQueue(msg, guild, song, index) {
+    if (!song) return setTimeout(processSongInQueue, 5000);
+
+    youtubeDL.getInfo(song.url, (err, info) => {
+        if (err) return guild.musicChannel.send(`Invalid video, ${ani.tsunNoun()}!`);
+        queueSong(msg, guild, { title: song.title, url: info.url }, index);
+    });
+}
+
+function processSongNew(msg, guild, url) {
+    youtubeDL.getInfo(url, (err, info) => {
+        if (err) return guild.musicChannel.send(`Invalid video, ${ani.tsunNoun()}!`);
+        queueSong(msg, guild, info);
+    });
+}
+
+function processYoutubePlaylist(msg, guild, url, playlistId) {
+    const youtubeApiUrl = 'https://www.googleapis.com/youtube/v3/';
+
+    var options;
+    var playlistTitle = 'N/A';
+    options = {
+        url: `${youtubeApiUrl}playlistItems?playlistId=${playlistId}&part=snippet&fields=items(snippet(title,resourceId/videoId))&maxResults=50&key=${config.youtube_api_key}`
+    }
+    rp(options).then(body => {
+        var playlistItems = JSON.parse(body).items;
+        var processNo = 5 - guild.queue.length;
+        for (let i = 0; i < processNo && i < playlistItems.length; i++) { //Get stream url to fill song queue up to 5.
+            youtubeDL.getInfo(
+                `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`,
+                (err, info) => {
+                    queueSong(msg, guild, {
+                        title: info.title,
+                        url: info.url,
+                    }, i);
+                });
+        }
+
+        //Add rest of songs to queue, which will be processed later, to avoid spamming I/O.
+        if (processNo < 0) processNo = 0;
+        for (let i = processNo; i < playlistItems.length; i++) {
+            var info = {
+                title: playlistItems[i].snippet.title,
+                url: `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`,
+            }
+            queueSong(msg, guild, info, i);
+        }
+        options = {
+            url: `${youtubeApiUrl}playlists?id=${playlistId}&part=snippet&key=${config.youtube_api_key}`
+        }
+        rp(options).then(body => {
+            playlistTitle = JSON.parse(body).items[0].snippet.title;
+            guild.musicChannel.send(
+                `Enqueued ${tool.wrap(playlistItems.length)} songs in ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+            );
+            if (!guild.voiceConnection)
+                msg.channel.send(
+                    `Please summon me using ${tool.wrap('~join')} to start playing the queue.`
+                );
+        })
+    });
+}
+
+/*
+Adds the song to the queue.
+*/
+function queueSong(msg, guild, info) {
+    var index;
+    if (arguments.length == 4) index = arguments[3];
+    if (index || index == 0) {
+        guild.queue[index] = { title: info.title.trim(), url: info.url };
+    } else
+        guild.queue.push({ title: info.title.trim(), url: info.url });
 }
 
 /*
@@ -126,36 +201,55 @@ function playSong(msg, guild) {
                 }).catch(() => {});
             } else {
                 reject();
+                msg.channel.send(
+                    `Please summon me using ${tool.wrap('~join')} to start playing the queue.`
+                )
             }
-
         }).then(() => {
-            //Play song.
+            //Play song and retrieve the stream URL of the 5th song in the queue.
             changeStatus(guild, 'playing');
+            processSongInQueue(msg, guild, guild.queue[4], 4)
 
-            const music = guild.queue[0];
-            guild.musicChannel.send(
-                `:notes: Now playing ${tool.wrap(music.title.trim())}`).then(
-                () => {
-                    guild.dispatch = guild.voiceConnection.playArbitraryInput(
-                        request(music.url));
-
-                    //Wait for errors/end of song, then play the next song.
-                    guild.dispatch.on('error', error => {
-                        console.log(error);
-                        console.log('Error while playing song.');
+            var music = guild.queue[0];
+            if (!music)
+                setTimeout(() => {
+                    music = guild.queue[0];
+                    if (music) startSong();
+                    else {
                         guild.queue.shift();
                         playSong(msg, guild);
-                    });
+                    }
+                }, 5000);
+            else
+                startSong();
 
-                    guild.dispatch.on('end', reason => {
-                        if (reason != 'leave') {
-                            guild.queue.shift();
+            function startSong() {
+                guild.musicChannel.send(`:notes: Now playing ${tool.wrap(music.title)}`);
+
+                guild.dispatch = guild.voiceConnection.playArbitraryInput(
+                    request(music.url, function (err, response, body) {
+                        if (err) console.log(err);
+                    }));
+
+                //Wait for errors/end of song, then play the next song.
+                guild.dispatch.on('error', error => {
+                    console.log(error);
+                    console.log('Error while playing song.');
+                    guild.queue.shift();
+                    playSong(msg, guild);
+                });
+
+                guild.dispatch.on('end', reason => {
+                    if (reason != 'leave') {
+                        guild.queue.shift();
+                        setTimeout(function () { //Deal event firing twice glitch on dispatch end.
                             playSong(msg, guild);
-                        }
-                    });
-                }).catch(() => {});
-        }).catch(() => {
-            msg.channel.send(`Please summon me using ${tool.wrap('~join')}.`)
+                        }, 50)
+                    }
+                });
+            }
+        }).catch((err) => {
+            console.log(err);
         });
     }
 }
@@ -164,9 +258,10 @@ function playSong(msg, guild) {
 Skips the current song.
 */
 function skipSong(guild) {
-    if (guild.dispatch)
+    if (guild.dispatch) {
+        guild.musicChannel.send(`:fast_forward: Skipped ${tool.wrap(guild.queue[0].title)}.`);
         guild.dispatch.end();
-    else
+    } else
         guild.musicChannel.send(`There\'s nothing to skip! ${tool.inaBaka}`);
 }
 
@@ -199,10 +294,18 @@ Prints the queue.
 */
 function printQueue(guild) {
     if (guild.queue.length > 0) {
-        var queueString = '';
-        for (var i = 0; i < guild.queue.length; i++)
-            queueString += `${i+1}. ${guild.queue[i].title}\n`;
-        guild.musicChannel.send(queueString, { 'code': true });
+        try {
+            var queueString = '';
+            for (var i = 0; i < guild.queue.length && i < 15; i++)
+                queueString += `${i+1}. ${guild.queue[i].title}\n`;
+            if (guild.queue.length > 15) queueString += `\nand ${guild.queue.length-15} more.`;
+            guild.musicChannel.send(queueString, { 'code': true });
+        } catch (err) {
+            console.log('ERROR CAUGHT:\n' + err);
+            guild.musicChannel.send(
+                `${tool.inaError} Gomen, I can't display the queue right now. Try again in a few moments onegai.`
+            );
+        }
     } else {
         guild.musicChannel.send(`There are no songs in the queue!`);
     }
@@ -225,8 +328,8 @@ function setVolume(msg, guild) {
     var vol = parseInt(msg.content.split(/\s+/)[1]) / 100;
     if (vol && (vol >= 0 && vol <= 1)) {
         if (guild.dispatch) {
-            guild.dispatch.setVolumeLogarithmic(vol);
-            guild.musicChannel.send(`Volume set to ${tool.wrap(vol*100)}`);
+            guild.dispatch.setVolume(vol);
+            guild.musicChannel.send(`:speaker:Volume set to ${tool.wrap(vol*100)}`);
         } else {
             guild.musicChannel.send(`Nothing is playing right now. ${tool.inaAngry}`);
         }
@@ -255,7 +358,7 @@ function join(msg, guild) {
 function leave(msg, guild) {
     if (guild.voiceConnection) {
         guild.musicChannel.send(`Leaving **${guild.voiceConnection.channel.name}**.`);
-        guild.dispatch.end('leave');
+        if (guild.dispatch) guild.dispatch.end('leave');
         guild.voiceConnection.disconnect();
 
         changeStatus(guild, 'offline');
@@ -272,7 +375,7 @@ Hime hime.
 */
 function hime(msg, guild) {
     msg.content = '~play https://soundcloud.com/shiinub/namirin-koi-no-hime-hime-pettanko';
-    queueSong(msg, guild);
+    processInput(msg, guild);
 }
 
 function changeStatus(guild, status) {
@@ -290,8 +393,7 @@ function timer() {
         if (guild.inactivityTimer <= 0) {
             guild.voiceConnection.disconnect();
             guild.voiceConnection = null;
-            guild.musicChannel.send(
-                ':no_entry_sign: Leaving voice channel due to inactivity.');
+            guild.musicChannel.send(':no_entry_sign: Leaving voice channel due to inactivity.');
 
             changeStatus(guild, 'offline');
         }

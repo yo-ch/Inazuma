@@ -47,7 +47,7 @@ Planned:
 ## Music
 
 ```
-Music Commands:   ~play <url> | <search> : Adds the song to the queue.
+Music Commands:   ~play <url> | <search> : Adds the song/playlist to the queue.
                   ~skip                  : Skips the current song.
                   ~pause                 : Pauses the song.
                   ~resume                : Resumes the song.
