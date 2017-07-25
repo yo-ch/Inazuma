@@ -53,6 +53,8 @@ module.exports = function (client) {
                 return nowPlaying(msg, guild);
             case 'vol':
                 return setVolume(msg, guild);
+            case 'purge':
+                return purge(guild);
 
             case 'join':
                 return join(msg, guild);
@@ -131,10 +133,9 @@ const youtube = {
     processPlaylist: function (msg, guild, playlistId) {
         const youtubeApiUrl = 'https://www.googleapis.com/youtube/v3/';
 
-        getPlaylistInfo(null, null, processPlaylistInfo);
+        getPlaylistInfo([], null, processPlaylistInfo);
 
         function getPlaylistInfo(playlistItems, pageToken, callback) {
-            if (!playlistItems) playlistItems = [];
             pageToken = pageToken ? `&pageToken=${pageToken}` : '';
 
             var options;
@@ -143,7 +144,8 @@ const youtube = {
             }
             rp(options).then(body => {
                 var playlist = JSON.parse(body);
-                playlistItems = playlistItems.concat(playlist.items);
+                playlistItems = playlistItems.concat(playlist.items.filter(item =>
+                    item.snippet.title != 'Deleted video'));
 
                 if (playlist.hasOwnProperty('nextPageToken'))
                     getPlaylistInfo(playlistItems, playlist.nextPageToken, callback);
@@ -216,17 +218,17 @@ function playSong(msg, guild) {
         guild.musicChannel.send('Queue complete.');
         changeStatus(guild, 'stopped');
     } else {
-        //Find the voice channel to play in.
         joinVoiceChannel(msg, guild).then(() => {
-            //Play song and process the 6th song in the queue.
             var music = guild.queue[0];
-            //First song not processed yet. Wait 5 seconds, and try again, and play the next song if needed.
+            //Song not processed yet, try again, and if needed skip the song.
             if (!music)
                 setTimeout(() => {
                     music = guild.queue[0];
                     if (music) startSong();
                     else {
-                        console.log('Could not play song, skipping to next song.');
+                        console.log(
+                            `${tool.inaError} Could not play song, skipping to next song.`
+                        );
                         guild.queue.shift();
                         playSong(msg, guild);
                     }
@@ -234,12 +236,12 @@ function playSong(msg, guild) {
             else
                 startSong();
 
+            //Play song and process the 6th song in the queue.
             function startSong() {
                 youtube.processSongAtIndex(msg, guild, guild.queue[5], 5);
                 changeStatus(guild, 'playing');
                 guild.musicChannel.send(`:notes: Now playing ${tool.wrap(music.title)}`).then(
                     function () {
-                        console.log('@@@@@@@@@@@@@@' + music.processed);
                         guild.dispatch = guild.voiceConnection.playArbitraryInput(music
                             .url, { seek: 0, passes: 2, volume: guild.volume });
 
@@ -340,6 +342,11 @@ function printQueue(guild) {
     } else {
         guild.musicChannel.send(`There are no songs in the queue!`);
     }
+}
+
+function purgeQueue(guild) {
+    guild.queue = [];
+    guild.musicChannel.send('The queue has been cleared.');
 }
 
 /*

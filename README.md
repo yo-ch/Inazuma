@@ -51,8 +51,11 @@ Music Commands:   ~play <url> | <search> : Adds the song/playlist to the queue.
                   ~skip                  : Skips the current song.
                   ~pause                 : Pauses the song.
                   ~resume                : Resumes the song.
+
                   ~queue                 : Displays the song queue.
+                  ~purge                 : Clears the song queue.
                   ~np                    : Displays the title of the current song.
+
                   ~vol <0-100>           : Sets volume.
 
                   ~join                  : Joins your voice channel.

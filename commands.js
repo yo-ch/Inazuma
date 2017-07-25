@@ -257,8 +257,11 @@ const commands = {
   ~skip                  : Skips the current song.
   ~pause                 : Pauses the song.
   ~resume                : Resumes the song.
+
   ~queue                 : Displays the song queue.
+  ~purge                 : Clears the song queue.
   ~np                    : Displays the title of the current song.
+  
   ~vol | v <0-100>       : Sets volume.
 
   ~join                  : Joins your voice channel.

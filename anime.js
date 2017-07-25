@@ -14,7 +14,7 @@ var self = module.exports = {
     /*
     Update the Anilist API access token if needed.
     */
-    updateAccessToken: function () {
+    updateAccessToken() {
         return new Promise((resolve, reject) => {
             if (self.tokenTimer >= 15) return resolve();
 
@@ -39,7 +39,7 @@ var self = module.exports = {
     /*
     Retrieve the specified data from Anilist.
     */
-    retrieveAnilistData: function (msg) {
+    retrieveAnilistData(msg) {
         self.updateAccessToken().then(() => {
             var search = msg.content.split(/\s+/).slice(1);
             if (search.length >= 1) { //A search query was given.
@@ -95,7 +95,7 @@ var self = module.exports = {
     /*
     Replies with specified anime data after user has chosen a number.
     */
-    anilistChoose: function (msg, choice) {
+    anilistChoose(msg, choice) {
         var request = searchRequests[msg.author.id];
         if (!request) return; //User does not have a search active.
 
@@ -115,7 +115,7 @@ var self = module.exports = {
     /*
     Formats the given anime information.
     */
-    animeInfoString: function (name, score, type, episodes, synopsis, url) {
+    animeInfoString(name, score, type, episodes, synopsis, url) {
         var syn = synopsis.replace(/<br>\\n|<br>/g, '\n');
         syn = syn.replace(/<i>|<\/i>/g, '*');
         syn = syn.slice(0, syn.indexOf('(Source:')).trim(); //Remove source information.
@@ -126,7 +126,7 @@ var self = module.exports = {
     /*
     Displays airing data of anime in the user's airing list.
     */
-    retrieveAiringData: function (msg) {
+    retrieveAiringData(msg) {
         var anime, animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
         if (!animeJSON[msg.author.id] || animeJSON[msg.author.id].length === 0) {
             msg.channel.send(
@@ -180,55 +180,56 @@ var self = module.exports = {
     /*
     Adds anime to the airing list of the user using their URLs.
     */
-    addAiringAnime: function (msg) {
-        if (self.tokenTimer <= 0) { //Request new token if current token is expired.
-            self.requestAccessToken(msg, self.addAiringAnime);
-            return;
-        }
+    addAiringAnime(msg) {
+        self.updateAccessToken(msg, self.addAiringAnime).then(() => {
+            var animeToAdd = msg.content.split(/\s+/).slice(2);
+            if (!animeToAdd) return;
 
-        var animeToAdd = msg.content.split(/\s+/).slice(2);
-        if (!animeToAdd) return;
-
-        var ids = [];
-        for (var i = 0; i < animeToAdd.length; i++) {
-            var id = animeToAdd[i].match(/\/\d+\//g);
-            if (!id) { //No matches in regex.
-                msg.channel.send(`Invalid link, ${self.tsunNoun()}!`);
-                continue;
+            var ids = [];
+            for (var i = 0; i < animeToAdd.length; i++) {
+                var id = animeToAdd[i].match(/\/\d+\//g);
+                if (!id) { //No matches in regex.
+                    msg.channel.send(`Invalid link, ${self.tsunNoun()}!`);
+                    continue;
+                }
+                ids.push(id[0].slice(1, id[0].length - 1));
             }
-            ids.push(id[0].slice(1, id[0].length - 1));
-        }
-        if (ids.length == 0) return;
+            if (ids.length == 0) return;
 
-        var animeJSON = JSON.parse(fs.readFileSync(
-            'airing_anime.json').toString());
+            var animeJSON = JSON.parse(fs.readFileSync(
+                'airing_anime.json').toString());
 
-        if (!animeJSON[msg.author.id])
-            animeJSON[msg.author.id] = [];
+            if (!animeJSON[msg.author.id])
+                animeJSON[msg.author.id] = [];
 
-        var promises = [];
-        for (var i = 0; i < ids.length; i++) {
-            promises.push(self.addAiringInner(msg, ids[i]));
-        }
-
-        Promise.all(promises).then(airingData => { //Wait for all anime to finish processing to write to file.
-            for (var i = 0; i < airingData.length; i++) {
-                if (airingData[i] == 'err') continue;
-                animeJSON[msg.author.id].push(airingData[i]);
+            var promises = [];
+            for (var i = 0; i < ids.length; i++) {
+                promises.push(self.addAiringInner(msg, ids[i]));
             }
-            fs.writeFile('airing_anime.json', JSON.stringify(
-                animeJSON), () => {
-                msg.channel.send(
-                    `Finished adding anime to your list. ${tool.inaHappy}`
-                );
+
+            Promise.all(promises).then(airingData => { //Wait for all anime to finish processing to write to file.
+                for (var i = 0; i < airingData.length; i++) {
+                    if (airingData[i] == 'err') continue;
+                    animeJSON[msg.author.id].push(airingData[i]);
+                }
+                fs.writeFile('airing_anime.json', JSON.stringify(
+                    animeJSON), () => {
+                    msg.channel.send(
+                        `Finished adding anime to your list. ${tool.inaHappy}`
+                    );
+                });
             });
+        }).catch(() => {
+            msg.channel.send(
+                `${inaError} Gomen, I couldn't add your anime to the list.`
+            )
         });
     },
 
     /*
     Gets airing information for anime by their IDs on Anilist.
     */
-    addAiringInner: function (msg, id) {
+    addAiringInner(msg, id) {
         return new Promise((resolve, reject) => {
             var countdowns = []; //Required airing data.
             var title = '';
@@ -316,7 +317,7 @@ var self = module.exports = {
     /*
     Removes an anime from the user's airing list given its name.
     */
-    removeAiringAnime: function (msg) {
+    removeAiringAnime(msg) {
         var animeJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
         var animeToRemove = msg.content.split(/\s+/).slice(2).join(' ').trim().toLowerCase();
 
@@ -347,7 +348,7 @@ var self = module.exports = {
     /*
     Clears the user's airing list.
     */
-    clearAiringList: function (msg) {
+    clearAiringList(msg) {
         var idJSON = JSON.parse(fs.readFileSync('airing_anime.json').toString());
         idJSON[msg.author.id] = [];
         fs.writeFile('airing_anime.json', JSON.stringify(idJSON));
@@ -357,7 +358,7 @@ var self = module.exports = {
     /*
     Converts a countdown in seconds to days/hours/minutes.
     */
-    secondsToCountdown: function (seconds) {
+    secondsToCountdown(seconds) {
         var days = Math.floor(seconds / 86400);
         var hours = Math.floor((seconds % 86400) / 3600);
 
@@ -374,7 +375,7 @@ var self = module.exports = {
     /*
     Returns a random tsundere noun.
     */
-    tsunNoun: function () {
+    tsunNoun() {
         const nouns = ['b-baka', 's-stupid', 'd-dummy', 'baaaka',
             `${tool.inaBaka}`, 'dummy'
         ];
