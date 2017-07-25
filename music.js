@@ -123,7 +123,6 @@ const youtube = {
     processSongAtIndex: function (msg, guild, song, index) {
         if (song && !song.hasOwnProperty('processed')) {
             var stream = ytdl(song.url, { retries: 7, highWaterMark: 32768 });
-            console.log(stream);
             queueSong(msg, guild, { title: song.title, url: stream, processed: true },
                 index);
         }
@@ -200,8 +199,9 @@ function queueSong(msg, guild, song) {
     var songInfo = {
         title: song.title ? song.title.trim() : 'N/A',
         url: song.url,
-        processed: song.hasOwnProperty('processed') ? true : false
     }
+    if (song.hasOwnProperty('processed')) songInfo['processed'] = true;
+
     if (index || index == 0) {
         guild.queue[index] = songInfo;
     } else
@@ -239,7 +239,7 @@ function playSong(msg, guild) {
                 changeStatus(guild, 'playing');
                 guild.musicChannel.send(`:notes: Now playing ${tool.wrap(music.title)}`).then(
                     function () {
-                        console.log('@@@@@@@@@@@@@@' + music.url);
+                        console.log('@@@@@@@@@@@@@@' + music.processed);
                         guild.dispatch = guild.voiceConnection.playArbitraryInput(music
                             .url, { seek: 0, passes: 2, volume: guild.volume });
 
@@ -324,7 +324,6 @@ function resumeSong(guild) {
 Prints the queue.
 */
 function printQueue(guild) {
-    console.log(guild.queue[0].slice(0, 5));
     if (guild.queue.length > 0) {
         try {
             var queueString = '';
