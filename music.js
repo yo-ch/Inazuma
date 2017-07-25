@@ -226,9 +226,7 @@ function playSong(msg, guild) {
                     music = guild.queue[0];
                     if (music) startSong();
                     else {
-                        console.log(
-                            `${tool.inaError} Could not play song, skipping to next song.`
-                        );
+                        console.log(`${tool.inaError} Could not play song, skipping to next song.`);
                         guild.queue.shift();
                         playSong(msg, guild);
                     }
