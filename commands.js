@@ -25,30 +25,14 @@ module.exports = {
         }
 
         if (helpStr) //Display help for requested command.
-            msg.channel.send(helpStr, { 'code': true });
+            msg.channel.send(helpStr, {'code': true});
         else //Bring up default help menu.
-            msg.channel.send(
-                'Commands:\n' +
-                '   ~help [command]\n\n' +
-
-                '   ~airing [options]\n' +
-                '   ~anilist <anime name>\n' +
-                '   ~choose <arg1> | [arg2] ...\n' +
-                '   ~roll <int1> [int2]\n\n' +
-
-                '   ~music\n\n' +
-
-                '   ~andy [@mention]\n' +
-                '   ~gavquote\n\n' +
-
-                '   ~aoba\n' +
-                '   ~vigne\n\n' +
-
-                '   ~cc <voice channel> <@mention>\n\n' +
-
-                '[] = optional, <> = required, | = or', { 'code': true }
-            );
-    },
+            msg.channel.send('Commands:\n   ~help [command]\n\n   ~airing [options]\n   ~anilist <anime name>' +
+                    '\n   ~choose <arg1> | [arg2] ...\n   ~roll <int1> [int2]\n\n   ~music\n\n   ~and' +
+                    'y [@mention]\n   ~gavquote\n\n   ~aoba\n   ~vigne\n\n   ~cc <voice channel> <@me' +
+                    'ntion>\n\n[] = optional, <> = required, | = or', {'code': true});
+        }
+    ,
 
     /*
     Shut up weeb.
@@ -56,8 +40,10 @@ module.exports = {
     andy: function (msg) {
         msg.delete();
         var user = msg.mentions.users.first();
-        if (user) msg.channel.send(`Shut up weeb. ${user}`);
-        else msg.channel.send(`Shut up weeb.`)
+        if (user)
+            msg.channel.send(`Shut up weeb. ${user}`);
+        else
+            msg.channel.send(`Shut up weeb.`)
     },
 
     /*
@@ -65,11 +51,16 @@ module.exports = {
     */
     airing: function (msg) {
         var args = msg.content.split(/\s+/);
-        if (!args[1]) ani.retrieveAiringData(msg);
-        else if (args[1] == 'a') ani.addAiringAnime(msg);
-        else if (args[1] == 'r') ani.removeAiringAnime(msg);
-        else if (args[1] == 'c') ani.clearAiringList(msg);
-    },
+        if (!args[1])
+            ani.retrieveAiringData(msg);
+        else if (args[1] == 'a')
+            ani.addAiringAnime(msg);
+        else if (args[1] == 'r')
+            ani.removeAiringAnime(msg);
+        else if (args[1] == 'c')
+            ani.clearAiringList(msg);
+        }
+    ,
 
     /*
     Lookup anime data.
@@ -83,11 +74,10 @@ module.exports = {
     has the MOVE_MEMBER permission.
     */
     cc: function (msg) {
-        if (msg.channel.type == 'dm') return;
+        if (msg.channel.type == 'dm')
+            return;
         if (!msg.member.hasPermission('MOVE_MEMBERS')) {
-            msg.channel.send(
-                `Gomenasai! You\'re not allowed to move users. ${msg.author}`
-            );
+            msg.channel.send(`Gomenasai! You\'re not allowed to move users. ${msg.author}`);
             return;
         }
 
@@ -102,9 +92,9 @@ module.exports = {
 
         let userToBanish = msg.mentions.users.first();
         if (userToBanish)
-            msg.guild.member(userToBanish).setVoiceChannel(msg.guild.channels.find(
-                'name', channel.trim()));
-    },
+            msg.guild.member(userToBanish).setVoiceChannel(msg.guild.channels.find('name', channel.trim()));
+        }
+    ,
 
     /*
     Chooses between 1 or more choices given by the user, delimited by '|'.
@@ -120,17 +110,16 @@ module.exports = {
         if (choices.length >= 1)
             msg.channel.send(choices[tool.randint(choices.length)]);
         else
-            msg.channel.send(
-                `I can\'t choose if you don\'t give me any choices! ${tool.inaAngry}`
-            );
-    },
+            msg.channel.send(`I can\'t choose if you don\'t give me any choices! ${tool.inaAngry}`);
+        }
+    ,
 
     /*
     Returns a random Gavin quote.
     */
     gavquote: function (msg) {
         let gq = require('./gavquotes.json');
-        msg.channel.send(`\`\`${gq.quotes[tool.randint(gq.quotes.length)]}\`\``);
+        msg.channel.send(`${tool.wrap(gq.quotes[tool.randint(gq.quotes.length)])}`);
     },
 
     /*
@@ -139,7 +128,8 @@ module.exports = {
     roll: function (msg) {
         var args = msg.content.split(/\s+/).slice(1);
 
-        if (args.length > 2) return;
+        if (args.length > 2)
+            return;
 
         if (args.length == 1) {
             var num = parseInt(args[0]);
@@ -147,20 +137,19 @@ module.exports = {
                 msg.channel.send(tool.randint(num) + 1);
             else
                 msg.channel.send(`These aren\'t numbers ${ani.tsunNoun()}!`);
-        } else {
+            }
+        else {
             var num1 = parseInt(args[0]);
             var num2 = parseInt(args[1]);
-            if (!tool.isInt(num1) || !tool.isInt(num2)) {
-                msg.channel.send(`These aren\'t numbers ${ani.tsunNoun()}!`);
-                return;
-            }
+            if (!tool.isInt(num1) || !tool.isInt(num2))
+                return msg.channel.send(`These aren\'t numbers ${ani.tsunNoun()}!`);
 
             if (num1 > num2)
                 msg.channel.send(tool.randint(num1 - num2 + 1) + num2);
             else
                 msg.channel.send(tool.randint(num2 - num1 + 1) + num1);
-        }
-    },
+            }
+        },
 
     /*
     Interacts with the imgur API to pull a random image link from an album.
@@ -267,5 +256,5 @@ const commands = {
   ~join                  : Joins your voice channel.
   ~leave                 : Leaves voice channel.
 
-Requires a #music text channel.`,
+Requires a #music text channel.`
 }

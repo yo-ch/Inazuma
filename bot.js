@@ -16,7 +16,8 @@ bot.on('ready', () => {
 });
 
 bot.on('message', msg => {
-    if (msg.author.bot) return; //Do not respond to messages from bots.
+    if (msg.author.bot)
+        return; //Do not respond to messages from bots.
 
     //Replies to non-commands.
     if (msg.content.toLowerCase().match(/^ay{2,}$/)) //Ayy lmao.
@@ -32,11 +33,11 @@ bot.on('message', msg => {
     else if (tool.isInt(parseInt(msg.content))) //Could be input for the Anilist search function.
         ani.anilistChoose(msg, parseInt(msg.content));
 
-    if (!msg.content.startsWith(config.prefix)) return; //Not a command.
+    if (!msg.content.startsWith(config.prefix))
+        return; //Not a command.
 
     var cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length);
 
-    //Commands.
     switch (cmd) {
         case 'help':
         case 'tasukete':
@@ -64,19 +65,13 @@ bot.on('message', msg => {
 });
 
 bot.on('guildMemberAdd', member => {
-    member.guild.defaultChannel.send(
-        `I-It's not like I wanted you to join this server or anything, ${ani.tsunNoun()}. ${member.user}`
-    );
+    member.guild.defaultChannel.send(`I-It's not like I wanted you to join this server or anything, ${ani.tsunNoun()}. ${member.user}`);
 });
 
 bot.on('guildMemberRemove', member => {
     member.guild.defaultChannel.send(`S-Sayonara. ${member.user}`);
 });
 
-//catch errors
-// bot.on('error', (e) => console.error(e));
-// bot.on('warn', (e) => console.warn(e));
-// bot.on('debug', (e) => console.info(e));
-
-// log our bot in
+// catch errors bot.on('error', (e) => console.error(e)); bot.on('warn', (e) =>
+// console.warn(e)); bot.on('debug', (e) => console.info(e)); log our bot in
 bot.login(config.token);

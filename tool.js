@@ -17,7 +17,7 @@ module.exports = {
     wrap: function (content) {
         return '``' + content + '``';
     },
-    
+
     inaAngry: '<:inaAngry:302886932164116480>',
     inaBaka: '<:inaBaka:301529550783774721>',
     inaError: '<:inaError:338904821299937282>',
