@@ -16,38 +16,10 @@ Common Params:
 
 var self = module.exports = {
     /*
-    Update the Anilist API access token if needed.
-
-    @return A promise, resolved if access token was succesfully updated, rejected if not.
-    */
-    updateAccessToken() {
-        return new Promise((resolve, reject) => {
-            if (tokenTimer >= 15)
-                return resolve();
-
-            console.log('Anilist access token requested!');
-            var options = {
-                url: `https://anilist.co/api/auth/access_token?grant_type=client_credentials&client_id=${config.anilist_id}&client_secret=${config.anilist_secret}`,
-                method: 'POST'
-            };
-            rp(options).then(body => {
-                console.log('Access token granted!');
-                var auth = JSON.parse(body);
-                anilistToken = auth.access_token;
-                tokenTimer = auth.expires_in;
-                resolve();
-            }).catch(err => {
-                console.log('Failed to receive access token.');
-                reject();
-            });
-        });
-    },
-
-    /*
     Retrieve the specified anime from Anilist.
     */
     retrieveAnilistData(msg) {
-        self.updateAccessToken().then(() => {
+        updateAccessToken().then(() => {
             var search = msg.content.split(/\s+/).slice(1);
             if (search.length >= 1) { //A search query was given.
                 var options = {
@@ -58,7 +30,7 @@ var self = module.exports = {
                     var results = JSON.parse(body);
 
                     if (results.length == 1) { //Send results.
-                        var ais = self.animeInfoString(results[0].title_romaji, results[0].average_score, results[0].type, results[0].total_episodes, results[0].description, `https://anilist.co/anime/${results[0].id}/`);
+                        var ais = animeInfoString(results[0].title_romaji, results[0].average_score, results[0].type, results[0].total_episodes, results[0].description, `https://anilist.co/anime/${results[0].id}/`);
                         msg.channel.send(ais);
                     } else if (results.length >= 2) {
                         //Store results to retrieve when user replies with a choice.
@@ -99,7 +71,7 @@ var self = module.exports = {
             var results = JSON.parse(request.searchData);
             var anime = results[choice - 1];
 
-            var ais = self.animeInfoString(anime.title_romaji, anime.average_score, anime.type, results[0].total_episodes, anime.description, `https://anilist.co/anime/${anime.id}/`);
+            var ais = animeInfoString(anime.title_romaji, anime.average_score, anime.type, results[0].total_episodes, anime.description, `https://anilist.co/anime/${anime.id}/`);
             msg.channel.send(ais);
 
             setTimeout(() => { //Delete request after 5 minutes. (Used for adding to airing list).
@@ -138,7 +110,7 @@ var self = module.exports = {
                 ]);
             else
                 info.push([
-                    sprintf('%-50s Ep %-3i in %s\n', title, anime.nextEp, self.secondsToCountdown(countdown)),
+                    sprintf('%-50s Ep %-3i in %s\n', title, anime.nextEp, secondsToCountdown(countdown)),
                     countdown
                 ]);
             }
@@ -167,7 +139,7 @@ var self = module.exports = {
     Adds anime to the airing list of the user using their URLs.
     */
     addAiringAnime(msg) {
-        self.updateAccessToken(msg, self.addAiringAnime).then(() => {
+        updateAccessToken().then(() => {
             var animeToAdd = msg.content.split(/\s+/).slice(2);
             if (!animeToAdd)
                 return;
@@ -315,6 +287,34 @@ var self = module.exports = {
         fs.writeFile('airing_anime.json', JSON.stringify(idJSON));
         msg.channel.send('Your airing list has been cleared!');
     }
+}
+
+/*
+Update the Anilist API access token if needed.
+
+@return A promise, resolved if access token was succesfully updated, rejected if not.
+*/
+function updateAccessToken() {
+    return new Promise((resolve, reject) => {
+        if (tokenTimer >= 15)
+            return resolve();
+
+        console.log('Anilist access token requested!');
+        var options = {
+            url: `https://anilist.co/api/auth/access_token?grant_type=client_credentials&client_id=${config.anilist_id}&client_secret=${config.anilist_secret}`,
+            method: 'POST'
+        };
+        rp(options).then(body => {
+            console.log('Access token granted!');
+            var auth = JSON.parse(body);
+            anilistToken = auth.access_token;
+            tokenTimer = auth.expires_in;
+            resolve();
+        }).catch(err => {
+            console.log('Failed to receive access token.');
+            reject();
+        });
+    });
 }
 
 /*
