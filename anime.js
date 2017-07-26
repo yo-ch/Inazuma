@@ -109,19 +109,6 @@ var self = module.exports = {
     },
 
     /*
-    Formats the given anime information.
-
-    @params String
-    */
-    animeInfoString(name, score, type, episodes, synopsis, url) {
-        var syn = synopsis.replace(/<br>\\n|<br>/g, '\n');
-        syn = syn.replace(/<i>|<\/i>/g, '*');
-        syn = syn.slice(0, syn.indexOf('(Source:')).trim(); //Remove source information.
-
-        return `**${name}** (${url})\n**Score:** ${score}\n**Type:** ${type}\n**Episodes:**${episodes}\n\n${syn}\n\n`;
-    },
-
-    /*
     Displays airing data of anime in the user's airing list.
     */
     retrieveAiringData(msg) {
@@ -327,42 +314,40 @@ var self = module.exports = {
         idJSON[msg.author.id] = [];
         fs.writeFile('airing_anime.json', JSON.stringify(idJSON));
         msg.channel.send('Your airing list has been cleared!');
-    },
+    }
+}
 
-    /*
-    Converts a countdown in seconds to days/hours/minutes.
-    */
-    secondsToCountdown(seconds) {
-        var days = Math.floor(seconds / 86400);
-        var hours = Math.floor((seconds % 86400) / 3600);
+/*
+Formats the given anime information.
 
-        days = (days == 0)
-            ? ''
-            : days + 'd ';
-        hours = (hours == 0)
-            ? ''
-            : hours + 'h';
+@params String
+*/
+function animeInfoString(name, score, type, episodes, synopsis, url) {
+    var syn = synopsis.replace(/<br>\\n|<br>/g, '\n');
+    syn = syn.replace(/<i>|<\/i>/g, '*');
+    syn = syn.slice(0, syn.indexOf('(Source:')).trim(); //Remove source information.
 
-        if (days == '' && hours == '')
-            return `${Math.ceil(seconds / 60)}m`;
-        else
-            return `${days}${hours}`;
-        }
-    ,
+    return `**${name}** (${url})\n**Score:** ${score}\n**Type:** ${type}\n**Episodes:**${episodes}\n\n${syn}\n\n`;
+}
 
-    /*
-    Returns a random tsundere noun.
-    */
-    tsunNoun() {
-        const nouns = [
-            'b-baka',
-            's-stupid',
-            'd-dummy',
-            'baaaka',
-            `${tool.inaBaka}`,
-            'dummy'
-        ];
-        return nouns[tool.randint(nouns.length)];
+/*
+Converts a countdown in seconds to days/hours/minutes.
+*/
+function secondsToCountdown(seconds) {
+    var days = Math.floor(seconds / 86400);
+    var hours = Math.floor((seconds % 86400) / 3600);
+
+    days = (days == 0)
+        ? ''
+        : days + 'd ';
+    hours = (hours == 0)
+        ? ''
+        : hours + 'h';
+
+    if (days == '' && hours == '') {
+        return `${Math.ceil(seconds / 60)}m`;
+    } else {
+        return `${days}${hours}`;
     }
 }
 

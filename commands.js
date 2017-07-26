@@ -136,13 +136,13 @@ module.exports = {
             if (tool.isInt(num))
                 msg.channel.send(tool.randint(num) + 1);
             else
-                msg.channel.send(`These aren\'t numbers ${ani.tsunNoun()}!`);
+                msg.channel.send(`These aren\'t numbers ${tool.tsunNoun()}!`);
             }
         else {
             var num1 = parseInt(args[0]);
             var num2 = parseInt(args[1]);
             if (!tool.isInt(num1) || !tool.isInt(num2))
-                return msg.channel.send(`These aren\'t numbers ${ani.tsunNoun()}!`);
+                return msg.channel.send(`These aren\'t numbers ${tool.tsunNoun()}!`);
 
             if (num1 > num2)
                 msg.channel.send(tool.randint(num1 - num2 + 1) + num2);
@@ -190,7 +190,7 @@ module.exports = {
     reply: function (msg) {
         const replies = [
             `Nani yo?`,
-            `What do you want, ${ani.tsunNoun()}...`,
+            `What do you want, ${tool.tsunNoun()}...`,
             `Hmmmphh.`,
             `Kimochi warui. <:vigneKuzu:270818397380411393>`,
             `Baka janaino?`,

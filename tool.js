@@ -2,11 +2,11 @@ module.exports = {
     /*
     Generates a random integer from 0 to upper exclusive.
     */
-    randint: function (upper) {
+    randint(upper) {
         return Math.floor(Math.random() * (upper));
     },
 
-    isInt: function (value) { //Written by krisk.
+    isInt(value) { //Written by krisk.
         var x = parseFloat(value);
         return !isNaN(value) && (x | 0) === x;
     },
@@ -14,8 +14,23 @@ module.exports = {
     /*
     Wraps the content in an unformatted text box.
     */
-    wrap: function (content) {
+    wrap(content) {
         return '``' + content + '``';
+    },
+
+    /*
+    Returns a random tsundere noun.
+    */
+    tsunNoun() {
+        const nouns = [
+            'b-baka',
+            's-stupid',
+            'd-dummy',
+            'baaaka',
+            `${tool.inaBaka}`,
+            'dummy'
+        ];
+        return nouns[tool.randint(nouns.length)];
     },
 
     inaAngry: '<:inaAngry:302886932164116480>',

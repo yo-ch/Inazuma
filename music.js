@@ -115,7 +115,7 @@ Processes a search using youtube-dl, pushing the resulting song to the queue.
 */
 function processSearch(msg, guild, searchQuery) {
     searchQuery = 'gvsearch1:' + searchQuery;
-    youtubeDL.getInfo(searchQuery, (err, info) => {
+    youtubeDL.getInfo(searchQuery, ['--extract-audio'], (err, info) => {
         if (err)
             console.log(err);
         queueSong(msg, guild, info);
@@ -141,7 +141,8 @@ const youtube = {
                 console.log(info);
             var stream = ytdl.downloadFromInfo(info, {
                 retries: 7,
-                highWaterMark: 32768
+                highWaterMark: 32768,
+                filter: 'audioonly'
             });
             queueSong(msg, guild, {
                 title: info.title,
@@ -166,7 +167,8 @@ const youtube = {
         if (song && !song.hasOwnProperty('processed')) {
             var stream = ytdl(song.url, {
                 retries: 7,
-                highWaterMark: 32768
+                highWaterMark: 32768,
+                filter: 'audioonly'
             });
             queueSong(msg, guild, {
                 title: song.title,
@@ -192,6 +194,8 @@ const youtube = {
 
         @param Array playlistItems - The metadata of each video in the playlist.
         @param String pageToken - The next page token response for the playlist if applicable.
+
+        @return Promise - Resolved if playlist metadata succesfully retrieved, rejected if not.
         */
         function getPlaylistInfo(playlistItems, pageToken) {
             return new Promise((resolve, reject) => {
@@ -319,12 +323,15 @@ function playSong(msg, guild) {
             function startSong() {
                 youtube.processSongAtIndex(msg, guild, guild.queue[5], 5);
                 changeStatus(guild, 'playing');
-                guild.musicChannel.send(`:notes: Now playing ${tool.wrap(music.title)}`).then(function () {
+                guild.musicChannel.send(`:notes: Now playing ${tool.wrap(music.title)}`).then(() => {
                     guild.dispatch = guild.voiceConnection.playArbitraryInput(music.url, {
-                        seek: 0,
                         passes: 2,
                         volume: guild.volume
                     });
+
+                    guild.dispatch.on('start', () => { //Deal with pause delay bug. issue#1693
+                        guild.voiceConnection.player.streamingData.pausedTime = 0;
+                    })
 
                     //Wait for errors/end of song, then play the next song.
                     guild.dispatch.on('error', error => {
@@ -347,7 +354,7 @@ function playSong(msg, guild) {
 
                     guild.dispatch.on('debug', info => {
                         console.log(info);
-                    })
+                    });
                 }).catch(() => {});
             }
         }).catch(() => {
@@ -358,7 +365,7 @@ function playSong(msg, guild) {
     /*
     Resolves the voice channel.
 
-    @return A promise that is resolved if the bot is connected to a voice channel, and rejected if not.
+    @return Promise - resolved if the bot is connected to a voice channel, and rejected if not.
     */
     function joinVoiceChannel() {
         return new Promise((resolve, reject) => {
@@ -378,15 +385,16 @@ function skipSong(guild) {
     if (guild.dispatch) {
         guild.musicChannel.send(`:fast_forward: Skipped ${tool.wrap(guild.queue[0].title)}`);
         guild.dispatch.end();
-    } else
+    } else {
         guild.musicChannel.send(`There\'s nothing to skip! ${tool.inaBaka}`);
     }
+}
 
 /*
 Pauses the dispatcher.
 */
 function pauseSong(guild) {
-    if (guild.queue.length > 0) {
+    if (guild.dispatch) {
         guild.dispatch.pause();
     } else {
         guild.musicChannel.send(`Nothing is playing right now. ${tool.inaBaka}`);
@@ -397,7 +405,7 @@ function pauseSong(guild) {
 Resumes the dispatcher.
 */
 function resumeSong(guild) {
-    if (guild.queue.length > 0) {
+    if (guild.dispatch) {
         guild.dispatch.resume();
     } else {
         guild.musicChannel.send(`Nothing is playing right now. ${tool.inaBaka}`);

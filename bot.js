@@ -65,7 +65,7 @@ bot.on('message', msg => {
 });
 
 bot.on('guildMemberAdd', member => {
-    member.guild.defaultChannel.send(`I-It's not like I wanted you to join this server or anything, ${ani.tsunNoun()}. ${member.user}`);
+    member.guild.defaultChannel.send(`I-It's not like I wanted you to join this server or anything, ${tool.tsunNoun()}. ${member.user}`);
 });
 
 bot.on('guildMemberRemove', member => {
