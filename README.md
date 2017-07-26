@@ -62,7 +62,7 @@ Music Commands:   ~play <url> | <search> : Adds the song/playlist to the queue.
                   ~join                  : Joins your voice channel.
                   ~leave                 : Leaves voice channel.
 
-   Supports Youtube and Soundcloud.
+   Supports Youtube and search.
    Requires a #music text channel.
 ```
 
@@ -107,7 +107,9 @@ Music Commands:   ~play <url> | <search> : Adds the song/playlist to the queue.
 
 ```
 {
-    "anime": []
+    "User1ID": [],
+    "User2ID": [],
+    ...
 }
 ```
 
