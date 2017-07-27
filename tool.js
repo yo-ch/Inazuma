@@ -27,10 +27,10 @@ module.exports = {
             's-stupid',
             'd-dummy',
             'baaaka',
-            `${tool.inaBaka}`,
+            `${this.inaBaka}`,
             'dummy'
         ];
-        return nouns[tool.randint(nouns.length)];
+        return nouns[this.randint(nouns.length)];
     },
 
     inaAngry: '<:inaAngry:302886932164116480>',

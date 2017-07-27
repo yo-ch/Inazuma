@@ -11,10 +11,8 @@ var guilds = {};
 
 module.exports = function (client) {
     client.on('message', msg => { //Respond to music requests.
-        if (msg.author.bot)
+        if (msg.author.bot || !msg.content.startsWith(config.prefix))
             return;
-        if (!msg.content.startsWith(config.prefix))
-            return; //Not a command.
         if (!msg.guild || !msg.guild.available)
             return;
 
@@ -40,7 +38,7 @@ module.exports = function (client) {
             }
         }
 
-        var cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length);
+        var cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length).toLowerCase();
 
         switch (cmd) {
             case 'play':
@@ -101,7 +99,7 @@ function processInput(msg, guild) {
                 msg.channel.send(`Invalid Youtube link! ${inaBaka}`);
             }
         } else if (url.search('soundcloud.com')) { //Soundcloud.
-            msg.channel.send('Gomen, Soundcloud isn\'nt functional right now.');
+            msg.channel.send('Gomen, Soundcloud music isn\'nt functional right now.');
         } else {
             msg.channel.send('Gomen, I only support Youtube and Soundcloud.');
         }

@@ -29,14 +29,14 @@ bot.on('message', msg => {
     else if (msg.content.search(':inaGanbare:') >= 0)
         msg.channel.send(`Arigato! ${tool.inaHappy}`);
     else if (msg.content.search('299400284906717186') >= 0) //Random reply when bot is mentioned.
-        cmds.reply(msg);
+        reply(msg);
     else if (tool.isInt(parseInt(msg.content))) //Could be input for the Anilist search function.
         ani.anilistChoose(msg, parseInt(msg.content));
 
     if (!msg.content.startsWith(config.prefix))
         return; //Not a command.
 
-    var cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length);
+    var cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length).toLowerCase();
 
     switch (cmd) {
         case 'help':
@@ -58,9 +58,8 @@ bot.on('message', msg => {
         case 'roll':
             return cmds.roll(msg);
         case 'vigne':
-            return cmds.vigne(msg);
         case 'aoba':
-            return cmds.aoba(msg);
+            return cmds.retrieveImgurAlbum(msg);
     }
 });
 
@@ -75,3 +74,16 @@ bot.on('guildMemberRemove', member => {
 // catch errors bot.on('error', (e) => console.error(e)); bot.on('warn', (e) =>
 // console.warn(e)); bot.on('debug', (e) => console.info(e)); log our bot in
 bot.login(config.token);
+
+function reply(msg) {
+    const replies = [
+        `Nani yo?`,
+        `What do you want, ${tool.tsunNoun()}...`,
+        `Hmmmphh.`,
+        `Kimochi warui. <:vigneKuzu:270818397380411393>`,
+        `Baka janaino?`,
+        `Doushitano?`,
+        `${tool.inaAngry}`
+    ];
+    msg.channel.send(replies[tool.randint(replies.length)]);
+}
