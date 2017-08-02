@@ -76,7 +76,10 @@ Common Params:
 @param Object msg - The message that called the command.
 @param Object guild - The guild that the message is from.
 
-A song is processed when the relevant metadata (song and playlist names) and readable stream are retrieved.
+Song object:
+  String title - Title of the song.
+  String url - The url or stream url of the song.
+  String type - The type of song (youtube, soundcloud, search).
 */
 
 /*
@@ -94,14 +97,14 @@ function processInput(msg, guild) {
             if (playlist) { //Playlist.
                 youtube.processPlaylist(msg, guild, playlist[1]);
             } else if (url.search(/v=(\S+?)(&|\s|$|#)/)) { //Video.
-                youtube.processSongNew(msg, guild, url);
+                youtube.processSong(msg, guild, url);
             } else {
                 msg.channel.send(`Invalid Youtube link! ${inaBaka}`);
             }
         } else if (url.search('soundcloud.com')) { //Soundcloud.
             msg.channel.send('Gomen, Soundcloud music isn\'nt functional right now.');
         } else {
-            msg.channel.send('Gomen, I only support Youtube and Soundcloud.');
+            msg.channel.send('Gomen, I only support Youtube right now.');
         }
     }
 }
@@ -116,8 +119,13 @@ function processSearch(msg, guild, searchQuery) {
     youtubeDL.getInfo(searchQuery, ['--extract-audio'], (err, info) => {
         if (err)
             console.log(err);
-        queueSong(msg, guild, info);
+        queueSong(msg, guild, {
+            title: info.title,
+            url: info.url,
+            type: 'search'
+        });
         guild.musicChannel.send(`Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`);
+
         if (guild.status != 'playing')
             playSong(msg, guild);
         }
@@ -133,19 +141,15 @@ const youtube = {
 
     @param String url - The URL of the new song.
     */
-    processSongNew(msg, guild, url) {
+    processSong(msg, guild, url) {
         ytdl.getInfo(url, (err, info) => {
             if (err)
                 console.log(info);
-            var stream = ytdl.downloadFromInfo(info, {
-                retries: 7,
-                highWaterMark: 32768,
-                filter: 'audioonly'
-            });
+
             queueSong(msg, guild, {
                 title: info.title,
-                url: stream,
-                processed: true
+                url: url,
+                type: 'youtube'
             });
 
             guild.musicChannel.send(`Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`);
@@ -156,29 +160,7 @@ const youtube = {
     },
 
     /*
-    Processes an unprocessed song, and inserts the result at the specified index.
-
-    @param Object song - The unprocessed song, which includes a title and the corresponding Youtube link.
-    @param Number index - The index in the queue to insert the song at.
-    */
-    processSongAtIndex(msg, guild, song, index) {
-        if (song && !song.hasOwnProperty('processed')) {
-            var stream = ytdl(song.url, {
-                retries: 7,
-                highWaterMark: 32768,
-                filter: 'audioonly'
-            });
-            queueSong(msg, guild, {
-                title: song.title,
-                url: stream,
-                processed: true
-            }, index);
-        }
-    },
-
-    /*
     Processes a Youtube playlist.
-    The queue is filled up to 6 processed songs, with the rest of the songs in the playlist added to the queue unprocessed. These songs will be processed when they are the 6th song in the queue, to avoid I/O spamming.
 
     @param String playlistId - the ID of the Youtube playlist.
     */
@@ -224,27 +206,13 @@ const youtube = {
         @param Array playlistItems - The metadata of each video in the playlist.
         */
         function processPlaylistInfo(playlistItems) {
-            var processNo = 6 - guild.queue.length;
             var queueLength = guild.queue.length;
-            for (let i = 0; i < playlistItems.length; i++)
-                guild.queue.push(null);
-            for (let i = 0; i < processNo && i < playlistItems.length; i++) {
-                //Get stream urls to fill song queue up to 6.
-                var info = {
-                    title: playlistItems[i].snippet.title,
-                    url: `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`
-                }
-                youtube.processSongAtIndex(msg, guild, info, i + queueLength);
-            }
 
-            // Add rest of songs to queue, which will be processed later, to avoid spamming
-            // I/O.
-            if (processNo < 0)
-                processNo = 0;
-            for (let i = processNo; i < playlistItems.length; i++) {
+            for (let i = 0; i < playlistItems.length; i++) {
                 var info = {
                     title: playlistItems[i].snippet.title,
-                    url: `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`
+                    url: `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`,
+                    type: 'youtube'
                 }
                 queueSong(msg, guild, info, i + queueLength);
             }
@@ -261,15 +229,30 @@ const youtube = {
                 }
             )
         }
+    },
+
+    /*
+    Gets the readable stream of the given song.
+
+    @param Object song - The song to get the stream of.
+    */
+    getStream(song) {
+        if (song) {
+            var stream = ytdl(song.url, {
+                retries: 7,
+                highWaterMark: 32768,
+                filter: 'audioonly'
+            });
+            return stream;
+        }
     }
 }
 
 /*
-Adds the song (processed or unprocessed) to the queue.
+Adds the song to the queue.
 If an index argument is included, insert the song at that index instead of pushing it to the queue.
 
-@param Object song - A processed song including a title, and a readable stream or,
-                     An unprocessed song including a title, and a link to the song.
+@param Object song - The song to queue.
 @param Number [index] - The index to insert the song at.
 */
 function queueSong(msg, guild, song) {
@@ -281,19 +264,19 @@ function queueSong(msg, guild, song) {
         title: song.title
             ? song.title.trim()
             : 'N/A',
-        url: song.url
+        url: song.url,
+        type: song.type
     }
-    if (song.hasOwnProperty('processed'))
-        songInfo['processed'] = true;
 
     if (index || index == 0) {
         guild.queue[index] = songInfo;
-    } else
+    } else {
         guild.queue.push(songInfo);
     }
+}
 
 /*
-A recursive function, that plays the queue.
+A recursive function that plays the queue.
 */
 function playSong(msg, guild) {
     if (guild.queue.length === 0) {
@@ -301,60 +284,47 @@ function playSong(msg, guild) {
         changeStatus(guild, 'stopped');
     } else {
         joinVoiceChannel().then(() => {
-            var music = guild.queue[0];
-            //Song not processed yet, try again, and if needed skip the song.
-            if (!music)
-                setTimeout(() => {
-                    music = guild.queue[0];
-                    if (music)
-                        startSong();
-                    else {
-                        console.log(`${tool.inaError} Could not play song, skipping to next song.`);
-                        guild.queue.shift();
+            var song = guild.queue[0];
+            var stream;
+            if (song.type == 'youtube')
+                stream = youtube.getStream(song);
+            else if (song.type == 'soundcloud')
+            ;
+            else //song.type == 'search'
+                stream = song.url;
+
+            guild.musicChannel.send(`:notes: Now playing ${tool.wrap(song.title)}`).then(() => {
+                changeStatus(guild, 'playing');
+                guild.dispatch = guild.voiceConnection.playStream(stream, {
+                    passes: 2,
+                    volume: guild.volume
+                });
+
+                guild.dispatch.on('start', () => { //Deal with pause delay bug. issue#1693
+                    guild.voiceConnection.player.streamingData.pausedTime = 0;
+                })
+
+                //Wait for errors/end of song, then play the next song.
+                guild.dispatch.on('error', error => {
+                    console.log('error:' + error);
+                    guild.dispatch = null;
+                    guild.queue.shift();
+                    playSong(msg, guild);
+                });
+
+                guild.dispatch.on('end', reason => {
+                    console.log('end:' + reason);
+                    guild.dispatch = null;
+                    guild.queue.shift();
+                    if (reason != 'leave') {
                         playSong(msg, guild);
                     }
-                }, 5000);
-            else
-                startSong();
+                });
 
-            //Play song and process the 6th song in the queue.
-            function startSong() {
-                youtube.processSongAtIndex(msg, guild, guild.queue[5], 5);
-                changeStatus(guild, 'playing');
-                guild.musicChannel.send(`:notes: Now playing ${tool.wrap(music.title)}`).then(() => {
-                    guild.dispatch = guild.voiceConnection.playArbitraryInput(music.url, {
-                        passes: 2,
-                        volume: guild.volume
-                    });
-
-                    guild.dispatch.on('start', () => { //Deal with pause delay bug. issue#1693
-                        guild.voiceConnection.player.streamingData.pausedTime = 0;
-                    })
-
-                    //Wait for errors/end of song, then play the next song.
-                    guild.dispatch.on('error', error => {
-                        console.log('error:' + error);
-                        guild.dispatch = null;
-                        guild.queue.shift();
-                        playSong(msg, guild);
-                    });
-
-                    guild.dispatch.on('end', reason => {
-                        console.log('end:' + reason);
-                        guild.dispatch = null;
-                        guild.queue.shift();
-                        if (reason != 'leave') {
-                            setTimeout(function () { //Deal with event firing twice bug on dispatch end.
-                                playSong(msg, guild);
-                            }, 100)
-                        }
-                    });
-
-                    guild.dispatch.on('debug', info => {
-                        console.log(info);
-                    });
-                }).catch(() => {});
-            }
+                guild.dispatch.on('debug', info => {
+                    console.log(info);
+                });
+            }).catch(() => {});
         }).catch(() => {
             msg.channel.send(`Please summon me using ${tool.wrap('~join')} to start playing the queue.`);
         });
@@ -508,7 +478,7 @@ function leave(msg, guild) {
 Hime hime.
 */
 function hime(msg, guild) {
-    msg.content = '~play https://soundcloud.com/shiinub/namirin-koi-no-hime-hime-pettanko';
+    msg.content = '~play koi no hime pettanko';
     processInput(msg, guild);
 }
 
