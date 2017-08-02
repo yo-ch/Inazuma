@@ -13,7 +13,7 @@ module.exports = {
     'choose': choose,
     'gavquote': gavquote,
     'roll': roll,
-    'retrieveimgurAlbum': retrieveImgurAlbum
+    'retrieveImgurAlbum': retrieveImgurAlbum
 }
 
 function help(msg) {

@@ -11,7 +11,9 @@ const bot = new Discord.Client();
 music(bot); //Pass client to music extension.
 
 bot.on('ready', () => {
-    console.log('Inazuma desu. Yoroshiku onegai itashimasu.\n');
+    console.log('Inazuma desu. Yoroshiku onegai itashimasu.');
+    console.log(`Serving ${bot.guilds.size} guilds.`);
+
     bot.user.setGame('~help');
 });
 
