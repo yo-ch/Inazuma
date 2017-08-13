@@ -8,6 +8,7 @@ Includes anime lookup (Anilist) and a music player.
 Planned:
     osu! api integration.
     Soundcloud music when API registration opens back up.
+    Moderation tools.
 ```
 
 # Commands
