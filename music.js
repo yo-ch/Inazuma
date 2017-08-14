@@ -9,66 +9,63 @@ const rp = require('request-promise');
 
 var guilds = {};
 
-module.exports = function (client) {
-    client.on('message', msg => { //Respond to music requests.
-        if (msg.author.bot || !msg.content.startsWith(config.prefix))
-            return;
-        if (!msg.guild || !msg.guild.available)
-            return;
+module.exports.processCommand = function (msg) {
+    if (!msg.guild || !msg.guild.available)
+        return;
 
-        //Add guild to the guild list.
-        if (!guilds[msg.guild.id])
-            guilds[msg.guild.id] = {
-                queue: [],
-                musicChannel: msg.guild.channels.find('name', 'music'),
-                voiceConnection: null,
-                dispatch: null,
-                volume: 1,
-                status: 'offline', //States: offline, playing, stopped
-                inactivityTimer: 60
-            };
+    //Add guild to the guild list.
+    if (!guilds[msg.guild.id])
+        guilds[msg.guild.id] = {
+            queue: [],
+            musicChannel: msg.guild.channels.find('name', 'music'),
+            voiceConnection: null,
+            dispatch: null,
+            volume: 1,
+            status: 'offline', //States: offline, playing, stopped
+            inactivityTimer: 60
+        };
 
-        var guild = guilds[msg.guild.id];
+    var guild = guilds[msg.guild.id];
 
+    if (!guild.musicChannel) {
+        guild.musicChannel = msg.guild.channels.find('name', 'music');
         if (!guild.musicChannel) {
-            guild.musicChannel = msg.guild.channels.find('name', 'music');
-            if (!guild.musicChannel) {
-                msg.channel.send(`Please create a ${tool.wrap('#music')} channel!`);
-                return;
-            }
+            msg.channel.send(`Please create a ${tool.wrap('#music')} channel!`);
+            return;
         }
+    }
 
-        var cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length).toLowerCase();
+    var musicCmd = msg.content.split(/\s+/)[1];
+    if (musicCmd)
+        musicCmd.toLowerCase();
+    switch (musicCmd) {
+        case 'play':
+            return processInput(msg, guild);
+        case 'skip':
+            return skipSong(guild);
+        case 'pause':
+            return pauseSong(guild);
+        case 'resume':
+            return resumeSong(guild);
+        case 'queue':
+            return printQueue(guild);
+        case 'np':
+            return nowPlaying(msg, guild);
+        case 'vol':
+            return setVolume(msg, guild);
+        case 'purge':
+            return purgeQueue(guild);
 
-        switch (cmd) {
-            case 'play':
-                return processInput(msg, guild);
-            case 'skip':
-                return skipSong(guild);
-            case 'pause':
-                return pauseSong(guild);
-            case 'resume':
-                return resumeSong(guild);
-            case 'queue':
-                return printQueue(guild);
-            case 'np':
-                return nowPlaying(msg, guild);
-            case 'vol':
-                return setVolume(msg, guild);
-            case 'purge':
-                return purgeQueue(guild);
+        case 'join':
+            return join(msg, guild);
+        case 'leave':
+            return leave(msg, guild);
 
-            case 'join':
-                return join(msg, guild);
-            case 'leave':
-                return leave(msg, guild);
-
-            case 'hime':
-                return hime(msg, guild);
-            case 'music':
-                msg.channel.send(`Please refer to ${tool.wrap('~help music')}.`);
-        }
-    });
+        case 'hime':
+            return hime(msg, guild);
+        default:
+            msg.channel.send(`Please refer to ${tool.wrap('~help music')}.`);
+    }
 }
 
 /*
@@ -78,7 +75,7 @@ Common Params:
 
 Song object:
   String title - Title of the song.
-  String url - The url or stream url of the song.
+  Object url - The url/data needed to get the stream or the stream url of the song.
   String type - The type of song (youtube, soundcloud, search).
 */
 
@@ -288,9 +285,7 @@ function playSong(msg, guild) {
             var stream;
             if (song.type == 'youtube')
                 stream = youtube.getStream(song);
-            else if (song.type == 'soundcloud')
-            ;
-            else //song.type == 'search'
+            else //(song.type == 'soundcloud' || song.type =='search')
                 stream = song.url;
 
             guild.musicChannel.send(`:notes: Now playing ${tool.wrap(song.title)}`).then(() => {
@@ -300,11 +295,6 @@ function playSong(msg, guild) {
                     volume: guild.volume
                 });
 
-                guild.dispatch.on('start', () => { //Deal with pause delay bug. issue#1693
-                    guild.voiceConnection.player.streamingData.pausedTime = 0;
-                })
-
-                //Wait for errors/end of song, then play the next song.
                 guild.dispatch.on('error', error => {
                     console.log('error:' + error);
                     guild.dispatch = null;
@@ -487,7 +477,9 @@ Changes the status of the bot.
 */
 function changeStatus(guild, status) {
     guild.status = status;
-    guild.inactivityTimer = 60;
+    guild.inactivityTimer = status == 'paused'
+        ? 600
+        : 60;
 }
 
 /*
@@ -496,7 +488,7 @@ Timer for inactivity. Leave voice channel after 1 minute of inactivity.
 function timer() {
     for (var guildId in guilds) {
         var guild = guilds[guildId];
-        if (guild.status === 'stopped')
+        if (guild.status == 'stopped' || guild.status == 'paused')
             guild.inactivityTimer -= 10;
         if (guild.inactivityTimer <= 0) {
             guild.voiceConnection.disconnect();

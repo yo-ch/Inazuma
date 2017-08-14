@@ -6,8 +6,8 @@ Includes anime lookup (Anilist) and a music player.
 
 ```
 Planned:
-    osu! api integration.
     Soundcloud music when API registration opens back up.
+    Airing list notifications.
 ```
 
 # Commands
@@ -25,11 +25,11 @@ Planned:
 
 ```
 ~airing [option]   
-    Displays countdowns until the next episode for each anime in the airing list.  
+    Displays countdowns until the next episode for each anime in your airing list.  
 
-    Options:       a <anilist urls> : Adds the given anime to the airing list.      
-                   r <name in list> : Removes the anime from the airing list.     
-                   c                : Clears the airing list.
+    Options:   a <anilist urls> : Adds the given anime to your airing list.      
+               r <name in list> : Removes the anime from your airing list.     
+               c                : Clears your airing list.
 
 ~anilist | ~ani <anime name>   
     Displays an anime's data, pulled from Anilist.
@@ -48,22 +48,23 @@ Planned:
 ## Music
 
 ```
-Music Commands:   ~play <url> | <search> : Adds the song/playlist to the queue.
-                  ~skip                  : Skips the current song.
-                  ~pause                 : Pauses the song.
-                  ~resume                : Resumes the song.
+~music <command>:
+    play <url> | <search> : Adds the song/playlist to the queue.
+    skip                  : Skips the current song.
+    pause                 : Pauses the song.
+    resume                : Resumes the song.
 
-                  ~queue                 : Displays the song queue.
-                  ~purge                 : Clears the song queue.
-                  ~np                    : Displays the title of the current song.
+    queue                 : Displays the song queue.
+    purge                 : Clears the song queue.
+    np                    : Displays the title of the current song.
 
-                  ~vol <0-100>           : Sets volume.
+    vol <0-100>           : Sets volume.
 
-                  ~join                  : Joins your voice channel.
-                  ~leave                 : Leaves voice channel.
+    join                  : Joins your voice channel.
+    leave                 : Leaves voice channel.
 
-   Supports Youtube and search.
-   Requires a #music text channel.
+Supports Youtube and search.
+Requires a #music text channel.
 ```
 
 ## Etc.
@@ -99,7 +100,8 @@ Music Commands:   ~play <url> | <search> : Adds the song/playlist to the queue.
     "prefix": "~",
     "imgur_id": "Imgur ID",
     "anilist_id": "Anilist ID",
-    "anilist_secret": "Anilist Secret"
+    "anilist_secret": "Anilist Secret",
+    "youtube_api_key": "Youtube API Key"
 }
 ```
 

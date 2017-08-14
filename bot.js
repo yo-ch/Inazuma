@@ -8,7 +8,6 @@ const music = require('./music.js');
 const tool = require('./tool.js');
 
 const bot = new Discord.Client();
-music(bot); //Pass client to music extension.
 
 bot.on('ready', () => {
     console.log('Inazuma desu. Yoroshiku onegai itashimasu.');
@@ -19,7 +18,7 @@ bot.on('ready', () => {
 
 bot.on('message', msg => {
     if (msg.author.bot)
-        return; //Do not respond to messages from bots.
+        return; // Do not respond to messages from bots.
 
     //Replies to non-commands.
     if (msg.content.toLowerCase().match(/^ay{2,}$/)) //Ayy lmao.
@@ -39,7 +38,6 @@ bot.on('message', msg => {
         return; //Not a command.
 
     var cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length).toLowerCase();
-
     switch (cmd) {
         case 'help':
         case 'tasukete':
@@ -62,6 +60,8 @@ bot.on('message', msg => {
         case 'vigne':
         case 'aoba':
             return cmds.retrieveImgurAlbum(msg);
+        case 'music':
+            return music.processCommand(msg);
     }
 });
 

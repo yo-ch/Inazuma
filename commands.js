@@ -30,7 +30,7 @@ function help(msg) {
         msg.channel.send(helpStr, {'code': true});
     else //Bring up default help menu.
         msg.channel.send('Commands:\n   ~help [command]\n\n   ~airing [options]\n   ~anilist <anime name>' +
-                '\n   ~choose <arg1> | [arg2] ...\n   ~roll <int1> [int2]\n\n   ~music\n\n   ~and' +
+                '\n   ~choose <arg1> | [arg2] ...\n   ~roll <int1> [int2]\n\n   ~music <command>\n\n   ~and' +
                 'y [@mention]\n   ~gavquote\n\n   ~aoba\n   ~vigne\n\n   ~cc <voice channel> <@me' +
                 'ntion>\n\n[] = optional, <> = required, | = or', {'code': true});
     }
@@ -212,20 +212,20 @@ const commands = {
     'vigne': `~vigne
   Returns a random picture of Vigne.`,
 
-    'music': `Music Commands:
-  ~play <url> | <search> : Adds the song/playlist to the queue.
-  ~skip                  : Skips the current song.
-  ~pause                 : Pauses the song.
-  ~resume                : Resumes the song.
+    'music': `~music | m <command>:
+   play <url> | <search> : Adds the song/playlist to the queue.
+   skip                  : Skips the current song.
+   pause                 : Pauses the song.
+   resume                : Resumes the song.
 
-  ~queue                 : Displays the song queue.
-  ~purge                 : Clears the song queue.
-  ~np                    : Displays the title of the current song.
+   queue                 : Displays the song queue.
+   purge                 : Clears the song queue.
+   np                    : Displays the title of the current song.
 
-  ~vol | v <0-100>       : Sets volume.
+   vol | v <0-100>       : Sets volume.
 
-  ~join                  : Joins your voice channel.
-  ~leave                 : Leaves voice channel.
+   join                  : Joins your voice channel.
+   leave                 : Leaves voice channel.
 
 Requires a #music text channel.`
 }
