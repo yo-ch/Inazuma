@@ -8,6 +8,7 @@ Includes anime lookup (Anilist) and a music player.
 Planned:
     Soundcloud music when API registration opens back up.
     Airing list notifications.
+    Moderation tools.
 ```
 
 # Commands
