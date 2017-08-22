@@ -12,6 +12,7 @@ module.exports = {
     'cc': cc,
     'choose': choose,
     'gavquote': gavquote,
+    'prune': prune,
     'roll': roll,
     'retrieveImgurAlbum': retrieveImgurAlbum
 }
@@ -29,10 +30,26 @@ function help(msg) {
     if (helpStr) //Display help for requested command.
         msg.channel.send(helpStr, {'code': true});
     else //Bring up default help menu.
-        msg.channel.send('Commands:\n   ~help [command]\n\n   ~airing [options]\n   ~anilist <anime name>' +
-                '\n   ~choose <arg1> | [arg2] ...\n   ~roll <int1> [int2]\n\n   ~music <command>\n\n   ~and' +
-                'y [@mention]\n   ~gavquote\n\n   ~aoba\n   ~vigne\n\n   ~cc <voice channel> <@me' +
-                'ntion>\n\n[] = optional, <> = required, | = or', {'code': true});
+        msg.channel.send(`Commands:
+   ~help [command]
+
+   ~airing [options]
+   ~anilist <anime name>
+   ~choose <arg1> | [arg2] ...
+   ~roll <int1> [int2]
+
+   ~music <command>
+
+   ~andy [@mention]
+   ~gavquote
+
+   ~aoba
+   ~vigne
+
+   ~prune <amount>
+   ~cc <voice channel> <@mention>
+
+[] = optional, <> = required, | = or`, {'code': true});
     }
 
 /*
@@ -121,6 +138,17 @@ function gavquote(msg) {
 }
 
 /*
+Prunes the specified number of messages from a channel.
+*/
+function prune(msg) {
+    if (!msg.member.hasPermission('MANAGE_MESSAGES')) return;
+    var args = msg.content.split(/\s+/);
+    var x = args[1];
+    if (tool.isInt(x))
+        msg.channel.bulkDelete(x);
+    }
+
+/*
 Rolls a number between 1 and num1 or num1 and num2 inclusive.
 */
 function roll(msg) {
@@ -204,6 +232,12 @@ const commands = {
 
     'gavquote': `~gavquote
   Returns a random Gavin quote.`,
+
+    'prune': `~prune <amount> [options]
+  Prunes messages.
+
+  Options:
+    soon tm.`,
 
     'roll': `~roll <int1> [int2]
   Rolls an integer from 1 to int1 inclusive.

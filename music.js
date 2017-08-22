@@ -85,7 +85,7 @@ Processes user input for ~play command calls.
 Determines what kind of input (search query, youtube video/playlist, soundcloud song/playlist) has been given, and proceeds accordingly.
 */
 function processInput(msg, guild) {
-    var url = msg.content.split(/\s+/).slice(1).join(' ');
+    var url = msg.content.split(/\s+/).slice(2).join(' ');
     if (url) {
         if (!url.startsWith('http')) { //Assume its a search.
             processSearch(msg, guild, url);
@@ -316,7 +316,7 @@ function playSong(msg, guild) {
                 });
             }).catch(() => {});
         }).catch(() => {
-            msg.channel.send(`Please summon me using ${tool.wrap('~join')} to start playing the queue.`);
+            msg.channel.send(`Please summon me using ${tool.wrap('~music join')} to start playing the queue.`);
         });
     }
 
@@ -468,7 +468,7 @@ function leave(msg, guild) {
 Hime hime.
 */
 function hime(msg, guild) {
-    msg.content = '~play koi no hime pettanko';
+    msg.content = '~music play koi no hime pettanko';
     processInput(msg, guild);
 }
 
