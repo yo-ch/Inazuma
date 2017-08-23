@@ -17,8 +17,8 @@ bot.on('ready', () => {
 });
 
 bot.on('message', msg => {
-    if (msg.author.bot)
-        return; // Do not respond to messages from bots.
+    if (msg.author.bot || msg.channel.type == 'dm')
+        return; // Do not respond to messages from bots or DMs.
 
     //Replies to non-commands.
     if (msg.content.toLowerCase().match(/^ay{2,}$/)) //Ayy lmao.

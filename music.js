@@ -413,7 +413,7 @@ function nowPlaying(msg, guild) {
 Sets the volume of the dispatcher.
 */
 function setVolume(msg, guild) {
-    var vol = parseInt(msg.content.split(/\s+/)[1]) / 100;
+    var vol = parseInt(msg.content.split(/\s+/)[2]) / 100;
     if (vol && (vol >= 0 && vol <= 1)) {
         if (guild.dispatch) {
             guild.dispatch.setVolume(vol);
