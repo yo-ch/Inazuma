@@ -46,7 +46,7 @@ function help(msg) {
    ~aoba
    ~vigne
 
-   ~prune <amount>
+   ~prune <amount> [options]
    ~cc <voice channel> <@mention>
 
 [] = optional, <> = required, | = or`, {'code': true});
@@ -141,12 +141,51 @@ function gavquote(msg) {
 Prunes the specified number of messages from a channel.
 */
 function prune(msg) {
-    if (!msg.member.hasPermission('MANAGE_MESSAGES')) return;
+    if (!msg.member.hasPermission('MANAGE_MESSAGES'))
+        return;
     var args = msg.content.split(/\s+/);
-    var x = args[1];
-    if (tool.isInt(x))
-        msg.channel.bulkDelete(x);
+    var amount = parseInt(args[1]);
+
+    if (amount < 2 || amount > 100)
+        return msg.channel.send(`Give me an amount between 2 and 100, onegai.`);
+
+    args = args.slice(2); //Get options.
+    var bot = args.includes('--bots');
+
+    if (tool.isInt(amount)) {
+        amount = amount < 100
+            ? amount + 1
+            : amount; //Add extra to account for not deleting the prune command.
+        try {
+            if (bot) {
+                msg.channel.fetchMessages({limit: amount}).then(msgs => {
+                    var botMessages = msgs.filterArray(msg => {
+                        return msg.author.bot;
+                    });
+
+                    if (botMessages.length > 1) {
+                        msg.channel.bulkDelete(botMessages.slice(1), true).then(deleted => {
+                            msg.channel.send(`Pruned ${tool.wrap(deleted.size)} messages.`);
+                        });
+                    }
+
+                }).catch(() => {
+                    throw 'err';
+                });
+            } else {
+                msg.channel.fetchMessages({limit: amount}).then(msgs => {
+                    msg.channel.bulkDelete(msgs.array().slice(1), true).then(deleted => {
+                        msg.channel.send(`Pruned ${tool.wrap(deleted.size)} messages.`);
+                    });
+                }).catch(() => {
+                    throw 'err';
+                });
+            }
+        } catch (err) {
+            msg.channel.send(`Gomen, I couldn't delete your messages. ${tool.inaError}`);
+        }
     }
+}
 
 /*
 Rolls a number between 1 and num1 or num1 and num2 inclusive.
@@ -234,10 +273,10 @@ const commands = {
   Returns a random Gavin quote.`,
 
     'prune': `~prune <amount> [options]
-  Prunes messages.
+  Prunes the last <amount> messages.
 
   Options:
-    soon tm.`,
+    --bots : Prunes only bot messages.`,
 
     'roll': `~roll <int1> [int2]
   Rolls an integer from 1 to int1 inclusive.
