@@ -91,8 +91,6 @@ Sets the voice channel of the mentioned user if the author of the message
 has the MOVE_MEMBER permission.
 */
 function cc(msg) {
-    if (msg.channel.type == 'dm')
-        return;
     if (!msg.member.hasPermission('MOVE_MEMBERS')) {
         msg.channel.send(`Gomenasai! You\'re not allowed to move users. ${msg.author}`);
         return;
@@ -149,38 +147,46 @@ function prune(msg) {
     if (amount < 2 || amount > 100)
         return msg.channel.send(`Give me an amount between 2 and 100, onegai.`);
 
-    args = args.slice(2); //Get options.
-    var bot = args.includes('--bots');
+    var options = tool.parseOptions(msg.content);
+
+    var bot = options.long.includes('bots');
+    var pin = options.short.includes('p') || options.long.includes('pinned');
 
     if (tool.isInt(amount)) {
         amount = amount < 100
             ? amount + 1
             : amount; //Add extra to account for not deleting the prune command.
         try {
-            if (bot) {
-                msg.channel.fetchMessages({limit: amount}).then(msgs => {
-                    var botMessages = msgs.filterArray(msg => {
+            msg.channel.fetchMessages({limit: amount}).then(msgs => {
+                var msgsToDelete;
+                if (bot) {
+                    msgsToDelete = msgs.filterArray(msg => {
                         return msg.author.bot;
                     });
+                } else {
+                    msgsToDelete = msgs.array().slice(1) //Slice off command.;
+                }
 
-                    if (botMessages.length > 1) {
-                        msg.channel.bulkDelete(botMessages.slice(1), true).then(deleted => {
-                            msg.channel.send(`Pruned ${tool.wrap(deleted.size)} messages.`);
-                        });
-                    }
+                if (!pin) { //Filter pinned messages out.
+                    msgsToDelete = msgsToDelete.filter(msg => {
+                        return !msg.pinned;
+                    });
+                }
 
-                }).catch(() => {
-                    throw 'err';
-                });
-            } else {
-                msg.channel.fetchMessages({limit: amount}).then(msgs => {
-                    msg.channel.bulkDelete(msgs.array().slice(1), true).then(deleted => {
+                if (msgsToDelete.length >= 2) {
+                    msg.channel.bulkDelete(msgsToDelete, true).then(deleted => {
                         msg.channel.send(`Pruned ${tool.wrap(deleted.size)} messages.`);
                     });
-                }).catch(() => {
-                    throw 'err';
-                });
-            }
+                } else if (msgsToDelete.length == 1) {
+                    msgsToDelete[0].delete().then(deleted => {
+                        msg.channel.send(`Pruned ${tool.wrap('1')} message.`);
+                    });
+                } else {
+                    msg.channel.send(`There were no messages to prune.`);
+                }
+            }).catch(() => {
+                throw 'err';
+            });
         } catch (err) {
             msg.channel.send(`Gomen, I couldn't delete your messages. ${tool.inaError}`);
         }
@@ -190,9 +196,9 @@ function prune(msg) {
 /*
 Rolls a number between 1 and num1 or num1 and num2 inclusive.
 */
-function roll(msg) {
+function
+roll(msg) {
     var args = msg.content.split(/\s+/).slice(1);
-
     if (args.length > 2)
         return;
 
@@ -207,7 +213,8 @@ function roll(msg) {
         var num1 = parseInt(args[0]);
         var num2 = parseInt(args[1]);
         if (!tool.isInt(num1) || !tool.isInt(num2))
-            return msg.channel.send(`These aren\'t numbers ${tool.tsunNoun()}!`);
+            return
+        msg.channel.send(`These aren\'t numbers ${tool.tsunNoun()}!`);
 
         if (num1 > num2)
             msg.channel.send(tool.randint(num1 - num2 + 1) + num2);
@@ -219,13 +226,13 @@ function roll(msg) {
 /*
 Interacts with the imgur API to pull a random image link from an album.
 */
-function retrieveImgurAlbum(msg) {
+function
+retrieveImgurAlbum(msg) {
     const albums = {
         'aoba': '4e3Dd',
         'vigne': '90DeF'
     }
     var album = albums[msg.content.slice(config.prefix.length)];
-
     var options = {
         url: `https://api.imgur.com/3/album/${album}/images`,
         headers: {
@@ -276,7 +283,8 @@ const commands = {
   Prunes the last <amount> messages.
 
   Options:
-    --bots : Prunes only bot messages.`,
+    [--bots]        : Prunes only bot messages.
+    [--pinned | -p] : Also prunes pinned messages. (They are not pruned by default.)`,
 
     'roll': `~roll <int1> [int2]
   Rolls an integer from 1 to int1 inclusive.

@@ -33,6 +33,32 @@ module.exports = {
         return nouns[this.randint(nouns.length)];
     },
 
+    /*
+    Parses '--' (long) and '-' (short) arguments for command strings.
+    */
+    parseOptions(argString) {
+        var matches;
+        var shortRegex = /-(\w+)/g;
+        var longRegex = /--(\w+)/g;
+        var shortOpts = [];
+        var longOpts = [];
+        while (matches = shortRegex.exec(argString)) {
+            if (matches.input.indexOf('--') == -1) {
+                if (matches[1].length > 1) {
+                    for (let i = 0; i < matches[1].length; i++) {
+                        shortOpts.push(matches[1][i]);
+                    }
+                } else {
+                    shortOpts.push(matches[1]);
+                }
+            }
+        }
+        while (matches = longRegex.exec(argString)) {
+            longOpts.push(matches[1]);
+        }
+        return {short: shortOpts, long: longOpts};
+    },
+
     inaAngry: '<:inaAngry:302886932164116480>',
     inaBaka: '<:inaBaka:301529550783774721>',
     inaError: '<:inaError:338904821299937282>',

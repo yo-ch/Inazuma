@@ -28,9 +28,10 @@ Planned:
 ~airing [option]   
     Displays countdowns until the next episode for each anime in your airing list.  
 
-    Options:   a <anilist urls> : Adds the given anime to your airing list.      
-               r <name in list> : Removes the anime from your airing list.     
-               c                : Clears your airing list.
+    Options:
+        a <anilist urls> : Adds the given anime to your airing list.      
+        r <name in list> : Removes the anime from your airing list.     
+        c                : Clears your airing list.
 
 ~anilist | ~ani <anime name>   
     Displays an anime's data, pulled from Anilist.
@@ -66,6 +67,17 @@ Planned:
 
 Supports Youtube and search.
 Requires a #music text channel.
+```
+
+## Moderation
+
+```
+~prune <amount> [options]
+    Prunes the last <amount> messages.
+
+    Options:
+        [--bots]        : Prunes only bot messages.
+        [--pinned | -p] : Also prunes pinned messages. (They are not pruned by default.)
 ```
 
 ## Etc.
