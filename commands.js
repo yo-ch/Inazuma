@@ -92,7 +92,7 @@ has the MOVE_MEMBER permission.
 */
 function cc(msg) {
     if (!msg.member.hasPermission('MOVE_MEMBERS')) {
-        msg.channel.send(`Gomenasai! You\'re not allowed to move users. ${msg.author}`);
+        msg.channel.send(`Gomen, you're not allowed to move users. ${msg.author}`);
         return;
     }
 
@@ -124,7 +124,7 @@ function choose(msg) {
     if (choices.length >= 1)
         msg.channel.send(choices[tool.randint(choices.length)]);
     else
-        msg.channel.send(`I can\'t choose if you don\'t give me any choices! ${tool.inaAngry}`);
+        msg.channel.send(`I can't choose if you don't give me any choices! ${tool.inaAngry}`);
     }
 
 /*
@@ -150,6 +150,7 @@ function prune(msg) {
     var options = tool.parseOptions(msg.content);
 
     var bot = options.long.includes('bots');
+    var user = options.long.includes('user');
     var pin = options.short.includes('p') || options.long.includes('pinned');
 
     if (tool.isInt(amount)) {
@@ -162,6 +163,19 @@ function prune(msg) {
                 if (bot) {
                     msgsToDelete = msgs.filterArray(msg => {
                         return msg.author.bot;
+                    });
+                } else if (user) {
+                    var matchUser = msg.content.match(/--user (\w+)/);
+                    if (!matchUser)
+                        throw 'args';
+                    var name = matchUser[1].toUpperCase();
+                    msgsToDelete = msgs.filterArray(msg => {
+                        var nickname = null;
+                        if (msg.member.nickname) {
+                            console.log('hi')
+                            nickname = msg.member.nickname.toUpperCase();
+                        }
+                        return msg.author.username.toUpperCase() == name || nickname == name;
                     });
                 } else {
                     msgsToDelete = msgs.array().slice(1) //Slice off command.;
@@ -182,13 +196,16 @@ function prune(msg) {
                         msg.channel.send(`Pruned ${tool.wrap('1')} message.`);
                     });
                 } else {
-                    msg.channel.send(`There were no messages to prune.`);
+                    msg.channel.send(`No messages to prune.`);
                 }
-            }).catch(() => {
-                throw 'err';
+            }).catch(err => {
+                throw err.message;
             });
         } catch (err) {
-            msg.channel.send(`Gomen, I couldn't delete your messages. ${tool.inaError}`);
+            if (err.message == 'err')
+                msg.channel.send(`Gomen, I couldn't delete your messages. ${tool.inaError}`);
+            else //err.message == 'args'
+                msg.channel.send(`Invalid syntax. Please check ${tool.wrap('~help prune')}.`)
         }
     }
 }
