@@ -160,25 +160,28 @@ function prune(msg) {
         try {
             msg.channel.fetchMessages({limit: amount}).then(msgs => {
                 var msgsToDelete;
-                if (bot) {
-                    msgsToDelete = msgs.filterArray(msg => {
-                        return msg.author.bot;
-                    });
-                } else if (user) {
-                    var matchUser = msg.content.match(/--user (\w+)/);
-                    if (!matchUser)
-                        throw 'args';
-                    var name = matchUser[1].toUpperCase();
-                    msgsToDelete = msgs.filterArray(msg => {
-                        var nickname = null;
-                        if (msg.member.nickname) {
-                            console.log('hi')
-                            nickname = msg.member.nickname.toUpperCase();
-                        }
-                        return msg.author.username.toUpperCase() == name || nickname == name;
-                    });
-                } else {
-                    msgsToDelete = msgs.array().slice(1) //Slice off command.;
+                if (Object.keys(options.long).length == 0) {
+                    msgsToDelete = msgs.array().slice(1); //Slice off command.
+                } else { //Handle options.
+                    if (bot) {
+                        msgsToDelete = msgs.filterArray(msg => {
+                            return msg.author.bot;
+                        });
+                    }
+                    if (user) {
+                        var matchUser = msg.content.match(/--user (\w+)/);
+                        if (!matchUser)
+                            throw 'args';
+                        var name = matchUser[1].toUpperCase();
+                        msgsToDelete = msgs.filterArray(msg => {
+                            var nickname = null;
+                            if (msg.member.nickname) {
+                                console.log('hi')
+                                nickname = msg.member.nickname.toUpperCase();
+                            }
+                            return msg.author.username.toUpperCase() == name || nickname == name;
+                        });
+                    }
                 }
 
                 if (!pin) { //Filter pinned messages out.
@@ -300,7 +303,9 @@ const commands = {
   Prunes the last <amount> messages.
 
   Options:
-    [--bots]        : Prunes only bot messages.
+    [--bots]        : Only prunes bot messages.
+    [--user <name>] : Only prunes messages by the specified user.
+
     [--pinned | -p] : Also prunes pinned messages. (They are not pruned by default.)`,
 
     'roll': `~roll <int1> [int2]
