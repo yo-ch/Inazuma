@@ -10,9 +10,6 @@ const rp = require('request-promise');
 var guilds = {};
 
 module.exports.processCommand = function (msg) {
-    if (!msg.guild || !msg.guild.available)
-        return;
-
     //Add guild to the guild list.
     if (!guilds[msg.guild.id])
         guilds[msg.guild.id] = {
