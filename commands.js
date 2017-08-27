@@ -142,29 +142,32 @@ function prune(msg) {
     if (!msg.member.hasPermission('MANAGE_MESSAGES'))
         return;
     var args = msg.content.split(/\s+/);
-    var amount = parseInt(args[1]);
+    var amount;
+    if (args.length > 1)
+        amount = parseInt(args[1]);
 
-    if (amount < 2 || amount > 100)
-        return msg.channel.send(`Give me an amount between 2 and 100, onegai.`);
+    if (amount < 1 || amount > 100)
+        return msg.channel.send(`Give me an amount between 1 and 500, onegai.`);
 
     var options = tool.parseOptions(msg.content);
 
     var bot = options.long.includes('bots');
     var user = options.long.includes('user');
+    var filter = options.long.includes('filter');
     var pin = options.short.includes('p') || options.long.includes('pinned');
 
-    if (tool.isInt(amount)) {
+    if (amount) {
         amount = amount < 100
             ? amount + 1
             : amount; //Add extra to account for not deleting the prune command.
+
         try {
             msg.channel.fetchMessages({limit: amount}).then(msgs => {
-                var msgsToDelete;
-                if (Object.keys(options.long).length == 0) {
-                    msgsToDelete = msgs.array().slice(1); //Slice off command.
-                } else { //Handle options.
+                var msgsToDelete = msgs;
+
+                if (options.long.length != 0) { //Handle options.
                     if (bot) {
-                        msgsToDelete = msgs.filterArray(msg => {
+                        msgsToDelete = msgs.filter(msg => {
                             return msg.author.bot;
                         });
                     }
@@ -172,14 +175,23 @@ function prune(msg) {
                         var matchUser = msg.content.match(/--user (\w+)/);
                         if (!matchUser)
                             throw 'args';
-                        var name = matchUser[1].toUpperCase();
-                        msgsToDelete = msgs.filterArray(msg => {
+                        var name = matchUser[1].toLowerCase();
+                        msgsToDelete = msgsToDelete.filter(msg => {
                             var nickname = null;
                             if (msg.member.nickname) {
-                                console.log('hi')
-                                nickname = msg.member.nickname.toUpperCase();
+                                nickname = msg.member.nickname.toLowerCase();
                             }
-                            return msg.author.username.toUpperCase() == name || nickname == name;
+                            return msg.author.username.toLowerCase() == name || nickname == name;
+                        });
+                    }
+                    if (filter) {
+                        var matchFilter = msg.content.match(/--filter (.+)/);
+                        if (!matchFilter)
+                            throw 'args';
+                        var filterString = matchFilter[1].toLowerCase().slice(0, matchFilter[1].indexOf('-')).trim();
+
+                        msgsToDelete = msgsToDelete.filter(msg => {
+                            return msg.content.toLowerCase().indexOf(filterString) >= 0;
                         });
                     }
                 }
@@ -189,6 +201,8 @@ function prune(msg) {
                         return !msg.pinned;
                     });
                 }
+
+                msgsToDelete = msgsToDelete.array().slice(1); //slice command off.
 
                 if (msgsToDelete.length >= 2) {
                     msg.channel.bulkDelete(msgsToDelete, true).then(deleted => {
@@ -216,8 +230,7 @@ function prune(msg) {
 /*
 Rolls a number between 1 and num1 or num1 and num2 inclusive.
 */
-function
-roll(msg) {
+function roll(msg) {
     var args = msg.content.split(/\s+/).slice(1);
     if (args.length > 2)
         return;
@@ -246,8 +259,7 @@ roll(msg) {
 /*
 Interacts with the imgur API to pull a random image link from an album.
 */
-function
-retrieveImgurAlbum(msg) {
+function retrieveImgurAlbum(msg) {
     const albums = {
         'aoba': '4e3Dd',
         'vigne': '90DeF'
