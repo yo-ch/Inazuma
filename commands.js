@@ -146,7 +146,7 @@ function prune(msg) {
     if (args.length > 1)
         amount = parseInt(args[1]);
 
-    if (amount < 1 || amount > 100)
+    if (amount < 1 || amount > 500)
         return msg.channel.send(`Give me an amount between 1 and 500, onegai.`);
 
     var options = tool.parseOptions(msg.content);
@@ -157,67 +157,93 @@ function prune(msg) {
     var pin = options.short.includes('p') || options.long.includes('pinned');
 
     if (amount) {
-        amount = amount < 100
+        amount = amount < 500
             ? amount + 1
             : amount; //Add extra to account for not deleting the prune command.
 
         try {
-            msg.channel.fetchMessages({limit: amount}).then(msgs => {
-                var msgsToDelete = msgs;
+            processAmount(amount, 0);
 
-                if (options.long.length != 0) { //Handle options.
-                    if (bot) {
-                        msgsToDelete = msgs.filter(msg => {
-                            return msg.author.bot;
-                        });
+            /*
+            Recursive function to fetch and delete more than 100 messages if needed.
+            */
+            function processAmount(amount, prunedAmount) {
+                var fetchAmount = amount > 100
+                    ? 100
+                    : amount;
+                msg.channel.fetchMessages({limit: fetchAmount}).then(msgs => {
+                    amount -= 100;
+                    var msgsToDelete = msgs;
+
+                    if (options.long.length != 0) { //Handle options.
+                        if (bot) {
+                            msgsToDelete = msgs.filter(msg => {
+                                return msg.author.bot;
+                            });
+                        }
+                        if (user) {
+                            var matchUser = msg.content.match(/--user (\w+)/);
+                            if (!matchUser)
+                                throw 'args';
+                            var name = matchUser[1].toLowerCase();
+                            msgsToDelete = msgsToDelete.filter(msg => {
+                                var nickname = null;
+                                if (msg.member.nickname) {
+                                    nickname = msg.member.nickname.toLowerCase();
+                                }
+                                return msg.author.username.toLowerCase() == name || nickname == name;
+                            });
+                        }
+                        if (filter) {
+                            var matchFilter = msg.content.match(/--filter (.+)/);
+                            if (!matchFilter)
+                                throw 'args';
+                            var filterString = matchFilter[1].toLowerCase().slice(0, matchFilter[1].indexOf('-')).trim();
+
+                            msgsToDelete = msgsToDelete.filter(msg => {
+                                return msg.content.toLowerCase().indexOf(filterString) >= 0;
+                            });
+                        }
                     }
-                    if (user) {
-                        var matchUser = msg.content.match(/--user (\w+)/);
-                        if (!matchUser)
-                            throw 'args';
-                        var name = matchUser[1].toLowerCase();
+
+                    if (!pin) { //Filter pinned messages out.
                         msgsToDelete = msgsToDelete.filter(msg => {
-                            var nickname = null;
-                            if (msg.member.nickname) {
-                                nickname = msg.member.nickname.toLowerCase();
-                            }
-                            return msg.author.username.toLowerCase() == name || nickname == name;
+                            return !msg.pinned;
                         });
                     }
-                    if (filter) {
-                        var matchFilter = msg.content.match(/--filter (.+)/);
-                        if (!matchFilter)
-                            throw 'args';
-                        var filterString = matchFilter[1].toLowerCase().slice(0, matchFilter[1].indexOf('-')).trim();
 
-                        msgsToDelete = msgsToDelete.filter(msg => {
-                            return msg.content.toLowerCase().indexOf(filterString) >= 0;
+                    msgsToDelete = msgsToDelete.array().slice(1); //slice command off.
+
+                    if (msgsToDelete.length >= 2) {
+                        msg.channel.bulkDelete(msgsToDelete, true).then(deleted => {
+                            nextCall(deleted.size);
                         });
+                    } else if (msgsToDelete.length == 1) {
+                        msgsToDelete[0].delete().then(deleted => {
+                            nextCall(deleted.size);
+                        });
+                    } else {
+                        nextCall(0);
                     }
-                }
 
-                if (!pin) { //Filter pinned messages out.
-                    msgsToDelete = msgsToDelete.filter(msg => {
-                        return !msg.pinned;
-                    });
-                }
+                    function nextCall(deletedSize) {
+                        prunedAmount += deletedSize;
+                        if (amount > 0) {
+                            var lastID = msgs.lastKey();
+                            //Delete next 100 batch of messages.
+                            setTimeout(() => {
+                                processAmount(amount, prunedAmount);
+                            }, 1000);
+                        } else {
+                            //Total number of pruned messages.
+                            msg.channel.send(`Pruned ${tool.wrap(prunedAmount)} messages.`);
+                        }
+                    }
+                }).catch(err => {
+                    throw err.message;
+                });
+            }
 
-                msgsToDelete = msgsToDelete.array().slice(1); //slice command off.
-
-                if (msgsToDelete.length >= 2) {
-                    msg.channel.bulkDelete(msgsToDelete, true).then(deleted => {
-                        msg.channel.send(`Pruned ${tool.wrap(deleted.size)} messages.`);
-                    });
-                } else if (msgsToDelete.length == 1) {
-                    msgsToDelete[0].delete().then(deleted => {
-                        msg.channel.send(`Pruned ${tool.wrap('1')} message.`);
-                    });
-                } else {
-                    msg.channel.send(`No messages to prune.`);
-                }
-            }).catch(err => {
-                throw err.message;
-            });
         } catch (err) {
             if (err.message == 'err')
                 msg.channel.send(`Gomen, I couldn't delete your messages. ${tool.inaError}`);
