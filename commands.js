@@ -143,8 +143,12 @@ function prune(msg) {
         return;
     var args = msg.content.split(/\s+/);
     var amount;
-    if (args.length > 1)
+    if (args.length > 1) {
         amount = parseInt(args[1]);
+    } else {
+        msg.content = '~help prune';
+        return help(msg);
+    }
 
     if (amount < 1 || amount > 500)
         return msg.channel.send(`Give me an amount between 1 and 500, onegai.`);
@@ -341,10 +345,11 @@ const commands = {
   Prunes the last <amount> messages.
 
   Options:
-    [--bots]        : Only prunes bot messages.
-    [--user <name>] : Only prunes messages by the specified user.
+    [--bots]            : Only prunes bot messages.
+    [--user <name>]     : Only prunes messages by the specified user.
+    [--filter <string>] : Only prunes messages with the specified string.
 
-    [--pinned | -p] : Also prunes pinned messages. (They are not pruned by default.)`,
+    [--pinned | -p]     : Also prunes pinned messages.`,
 
     'roll': `~roll <int1> [int2]
   Rolls an integer from 1 to int1 inclusive.

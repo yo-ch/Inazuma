@@ -76,10 +76,11 @@ Requires a #music text channel.
     Prunes the last <amount> messages.
 
     Options:
-        [--bots]          : Only prunes bot messages.
-        [--user <name>]   : Only prunes messages by the specified user.
+        [--bots]            : Only prunes bot messages.
+        [--user <name>]     : Only prunes messages by the specified user.
+        [--filter <string>] : Only prunes messages with the specified string.
 
-        [--pinned | -p]   : Also prunes pinned messages. (They are not pruned by default.)
+        [--pinned | -p]     : Also prunes pinned messages. (They are not pruned by default.)
 ```
 
 ## Etc.
