@@ -13,6 +13,7 @@ module.exports = {
     'choose': choose,
     'gavquote': gavquote,
     'prune': prune,
+    'role': role,
     'roll': roll,
     'retrieveImgurAlbum': retrieveImgurAlbum
 }
@@ -28,9 +29,12 @@ function help(msg) {
     }
 
     if (helpStr) //Display help for requested command.
-        msg.channel.send(helpStr, {'code': true});
+        msg.channel.send(helpStr, {
+            'code': 'css'
+        });
     else //Bring up default help menu.
-        msg.channel.send(`Commands:
+        msg.channel.send(
+            `Commands:
    ~help [command]
 
    ~airing [options]
@@ -49,8 +53,10 @@ function help(msg) {
    ~prune <amount> [options]
    ~cc <voice channel> <@mention>
 
-[] = optional, <> = required, | = or`, {'code': true});
-    }
+[] = optional, <> = required, | = or`, {
+                'code': 'prolog'
+            });
+}
 
 /*
 Shut up weeb.
@@ -77,7 +83,7 @@ function airing(msg) {
         ani.removeAiringAnime(msg);
     else if (args[1] == 'c')
         ani.clearAiringList(msg);
-    }
+}
 
 /*
 Lookup anime data.
@@ -108,7 +114,7 @@ function cc(msg) {
     var userToBanish = msg.mentions.users.first();
     if (userToBanish)
         msg.guild.member(userToBanish).setVoiceChannel(msg.guild.channels.find('name', channel.trim()));
-    }
+}
 
 /*
 Chooses between 1 or more choices given by the user, delimited by '|'.
@@ -125,7 +131,7 @@ function choose(msg) {
         msg.channel.send(choices[tool.randint(choices.length)]);
     else
         msg.channel.send(`I can't choose if you don't give me any choices! ${tool.inaAngry}`);
-    }
+}
 
 /*
 Returns a random Gavin quote.
@@ -161,10 +167,6 @@ function prune(msg) {
     var pin = options.short.includes('p') || options.long.includes('pinned');
 
     if (amount) {
-        amount = amount < 500
-            ? amount + 1
-            : amount; //Add extra to account for not deleting the prune command.
-
         try {
             processAmount(amount, 0);
 
@@ -172,59 +174,73 @@ function prune(msg) {
             Recursive function to fetch and delete more than 100 messages if needed.
             */
             function processAmount(amount, prunedAmount) {
-                var fetchAmount = amount > 100
-                    ? 100
-                    : amount;
-                msg.channel.fetchMessages({limit: fetchAmount}).then(msgs => {
+                var fetchAmount;
+
+                if (amount > 100)
+                    fetchAmount = 100;
+                else if (amount == 1)
+                    fetchAmount = 2; //Set to 2 to account for fetchMessage lower limit.
+                else
+                    fetchAmount = amount;
+
+                msg.channel.fetchMessages({
+                    limit: fetchAmount,
+                    before: msg.id
+                }).then(msgs => {
+                    if (amount == 1) //Delete unneeded message.
+                        msgs.delete(msgs.lastKey());
                     amount -= 100;
-                    var msgsToDelete = msgs;
 
                     if (options.long.length != 0) { //Handle options.
                         if (bot) {
-                            msgsToDelete = msgs.filter(msg => {
+                            msgs = msgs.filter(msg => {
                                 return msg.author.bot;
                             });
                         }
                         if (user) {
-                            var matchUser = msg.content.match(/--user (\w+)/);
+                            var matchUser = msg.content.match(/ --user (\w+)/);
                             if (!matchUser)
                                 throw 'args';
                             var name = matchUser[1].toLowerCase();
-                            msgsToDelete = msgsToDelete.filter(msg => {
+                            msgs = msgs.filter(msg => {
                                 var nickname = null;
                                 if (msg.member.nickname) {
                                     nickname = msg.member.nickname.toLowerCase();
                                 }
-                                return msg.author.username.toLowerCase() == name || nickname == name;
+                                return msg.author.username.toLowerCase() == name ||
+                                    nickname == name;
                             });
                         }
                         if (filter) {
                             var matchFilter = msg.content.match(/--filter (.+)/);
                             if (!matchFilter)
                                 throw 'args';
-                            var filterString = matchFilter[1].toLowerCase().slice(0, matchFilter[1].indexOf('-')).trim();
+                            var filterString = matchFilter[1].toLowerCase().slice(0,
+                                matchFilter[1].indexOf('-')).trim();
 
-                            msgsToDelete = msgsToDelete.filter(msg => {
-                                return msg.content.toLowerCase().indexOf(filterString) >= 0;
+                            msgs = msgs.filter(msg => {
+                                return msg.content.toLowerCase().indexOf(
+                                    filterString) >= 0;
                             });
                         }
                     }
 
                     if (!pin) { //Filter pinned messages out.
-                        msgsToDelete = msgsToDelete.filter(msg => {
+                        msgs = msgs.filter(msg => {
                             return !msg.pinned;
                         });
                     }
 
-                    msgsToDelete = msgsToDelete.array().slice(1); //slice command off.
-
-                    if (msgsToDelete.length >= 2) {
-                        msg.channel.bulkDelete(msgsToDelete, true).then(deleted => {
+                    if (msgs.size >= 2) {
+                        msg.channel.bulkDelete(msgs, true).then(deleted => {
                             nextCall(deleted.size);
+                        }).catch(() => {
+                            //all messages that were to be bulk deleted are older than 2 weeks
+                            nextCall(0);
                         });
-                    } else if (msgsToDelete.length == 1) {
-                        msgsToDelete[0].delete().then(deleted => {
-                            nextCall(deleted.size);
+                    } else if (msgs.size == 1) {
+                        msgs.first().delete().then(deleted => {
+                            nextCall(1);
                         });
                     } else {
                         nextCall(0);
@@ -233,7 +249,6 @@ function prune(msg) {
                     function nextCall(deletedSize) {
                         prunedAmount += deletedSize;
                         if (amount > 0) {
-                            var lastID = msgs.lastKey();
                             //Delete next 100 batch of messages.
                             setTimeout(() => {
                                 processAmount(amount, prunedAmount);
@@ -257,6 +272,8 @@ function prune(msg) {
     }
 }
 
+function role(msg) {}
+
 /*
 Rolls a number between 1 and num1 or num1 and num2 inclusive.
 */
@@ -271,8 +288,7 @@ function roll(msg) {
             msg.channel.send(tool.randint(num) + 1);
         else
             msg.channel.send(`These aren\'t numbers ${tool.tsunNoun()}!`);
-        }
-    else {
+    } else {
         var num1 = parseInt(args[0]);
         var num2 = parseInt(args[1]);
         if (!tool.isInt(num1) || !tool.isInt(num2))
@@ -283,8 +299,8 @@ function roll(msg) {
             msg.channel.send(tool.randint(num1 - num2 + 1) + num2);
         else
             msg.channel.send(tool.randint(num2 - num1 + 1) + num1);
-        }
     }
+}
 
 /*
 Interacts with the imgur API to pull a random image link from an album.
@@ -345,11 +361,32 @@ const commands = {
   Prunes the last <amount> messages.
 
   Options:
-    [--bots]            : Only prunes bot messages.
-    [--user <name>]     : Only prunes messages by the specified user.
-    [--filter <string>] : Only prunes messages with the specified string.
+     [--bots]            : Only prunes bot messages.
+     [--user <name>]     : Only prunes messages by the specified user.
+     [--filter <string>] : Only prunes messages with the specified string.
 
-    [--pinned | -p]     : Also prunes pinned messages.`,
+     [--pinned | -p]     : Also prunes pinned messages.`,
+
+    'role': `[Role Help]
+
+~role give <role[,...]> : Gives role.
+~role take <role[,...]> : Removes role.
+~role modify <role>     : Modifies a role.
+
+#Options
+give|take:
+   [--bots]              : Only change roles for bots.
+   [--users]             : Only change roles for users.
+   [--user <user[,...]>] : Only change roles for specified users.
+
+   [--inrole <role>]     : Change roles for everyone with the role.
+   [--notinrole <role>]  : Change roles for everyone without the role.
+   [--noroles]           : Change roles for users with no roles.
+
+modify:
+   [--name <name>]       : Rename role.
+   [--colour <colour>]   : Change role colour.
+   [--]`,
 
     'roll': `~roll <int1> [int2]
   Rolls an integer from 1 to int1 inclusive.
@@ -358,7 +395,9 @@ const commands = {
     'vigne': `~vigne
   Returns a random picture of Vigne.`,
 
-    'music': `~music | m <command>:
+    'music': `[Music Help]
+
+~music | m <command>:
    play <url> | <search> : Adds the song/playlist to the queue.
    skip                  : Skips the current song.
    pause                 : Pauses the song.
