@@ -38,8 +38,8 @@ module.exports = {
     */
     parseOptions(argString) {
         var matches;
-        var shortRegex = /-(\w+)/g;
-        var longRegex = /--(\w+)/g;
+        var shortRegex = / -(\w+)/g;
+        var longRegex = / --(\w+)/g;
         var shortOpts = [];
         var longOpts = [];
         while (matches = shortRegex.exec(argString)) {

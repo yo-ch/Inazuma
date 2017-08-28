@@ -118,12 +118,13 @@ function processSearch(msg, guild, searchQuery) {
             url: info.url,
             type: 'search'
         });
-        guild.musicChannel.send(`Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`);
+        guild.musicChannel.send(
+            `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+        );
 
         if (guild.status != 'playing')
             playSong(msg, guild);
-        }
-    );
+    });
 }
 
 /*
@@ -146,11 +147,12 @@ const youtube = {
                 type: 'youtube'
             });
 
-            guild.musicChannel.send(`Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`);
+            guild.musicChannel.send(
+                `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+            );
             if (guild.status != 'playing')
                 playSong(msg, guild);
-            }
-        );
+        });
     },
 
     /*
@@ -161,7 +163,10 @@ const youtube = {
     processPlaylist(msg, guild, playlistId) {
         const youtubeApiUrl = 'https://www.googleapis.com/youtube/v3/';
 
-        getPlaylistInfo([], null).then(playlistItems => processPlaylistInfo(playlistItems)).catch(() => guild.musicChannel.send(`${tool.inaError} Gomen, I couldn't add your playlist to the queue. Try again later.`));
+        getPlaylistInfo([], null).then(playlistItems => processPlaylistInfo(playlistItems)).catch(
+            () => guild.musicChannel.send(
+                `${tool.inaError} Gomen, I couldn't add your playlist to the queue. Try again later.`
+            ));
 
         /*
         A recursive function that retrieves the metadata (id and title) of each video in the playlist using the Youtube API.
@@ -173,9 +178,9 @@ const youtube = {
         */
         function getPlaylistInfo(playlistItems, pageToken) {
             return new Promise((resolve, reject) => {
-                pageToken = pageToken
-                    ? `&pageToken=${pageToken}`
-                    : '';
+                pageToken = pageToken ?
+                    `&pageToken=${pageToken}` :
+                    '';
 
                 var options;
                 options = {
@@ -183,14 +188,16 @@ const youtube = {
                 }
                 rp(options).then(body => {
                     var playlist = JSON.parse(body);
-                    playlistItems = playlistItems.concat(playlist.items.filter(item => item.snippet.title != 'Deleted video'));
+                    playlistItems = playlistItems.concat(playlist.items.filter(
+                        item => item.snippet.title != 'Deleted video'));
 
                     if (playlist.hasOwnProperty('nextPageToken'))
-                        getPlaylistInfo(playlistItems, playlist.nextPageToken).then(playlistItems => resolve(playlistItems)).catch(reject);
+                        getPlaylistInfo(playlistItems, playlist.nextPageToken).then(
+                            playlistItems => resolve(playlistItems)).catch(
+                            reject);
                     else
                         resolve(playlistItems);
-                    }
-                ).catch(reject);
+                }).catch(reject);
             });
         }
 
@@ -216,12 +223,13 @@ const youtube = {
 
             rp(options).then(body => { //Get playlist name.
                 var playlistTitle = JSON.parse(body).items[0].snippet.title;
-                guild.musicChannel.send(`Enqueued ${tool.wrap(playlistItems.length)} songs from ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`);
+                guild.musicChannel.send(
+                    `Enqueued ${tool.wrap(playlistItems.length)} songs from ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+                );
 
                 if (guild.status != 'playing')
                     playSong(msg, guild);
-                }
-            )
+            })
         }
     },
 
@@ -255,9 +263,8 @@ function queueSong(msg, guild, song) {
         index = arguments[3];
 
     var songInfo = {
-        title: song.title
-            ? song.title.trim()
-            : 'N/A',
+        title: song.title ?
+            song.title.trim() : 'N/A',
         url: song.url,
         type: song.type
     }
@@ -313,7 +320,9 @@ function playSong(msg, guild) {
                 });
             }).catch(() => {});
         }).catch(() => {
-            msg.channel.send(`Please summon me using ${tool.wrap('~music join')} to start playing the queue.`);
+            msg.channel.send(
+                `Please summon me using ${tool.wrap('~music join')} to start playing the queue.`
+            );
         });
     }
 
@@ -324,11 +333,10 @@ function playSong(msg, guild) {
     */
     function joinVoiceChannel() {
         return new Promise((resolve, reject) => {
-            if (guild.voiceConnection) {
+            if (guild.voiceConnection)
                 resolve();
-            } else {
+            else
                 reject();
-            }
         });
     }
 }
@@ -349,22 +357,21 @@ function skipSong(guild) {
 Pauses the dispatcher.
 */
 function pauseSong(guild) {
-    if (guild.dispatch) {
+    if (guild.dispatch)
         guild.dispatch.pause();
-    } else {
+    else
         guild.musicChannel.send(`Nothing is playing right now. ${tool.inaBaka}`);
-    }
 }
 
 /*
 Resumes the dispatcher.
 */
 function resumeSong(guild) {
-    if (guild.dispatch) {
+    if (guild.dispatch)
         guild.dispatch.resume();
-    } else {
+    else
         guild.musicChannel.send(`Nothing is playing right now. ${tool.inaBaka}`);
-    }
+
 }
 
 /*
@@ -378,10 +385,14 @@ function printQueue(guild) {
                 queueString += `${i + 1}. ${guild.queue[i].title}\n`;
             if (guild.queue.length > 15)
                 queueString += `\nand ${guild.queue.length - 15} more.`;
-            guild.musicChannel.send(queueString, {'code': true});
+            guild.musicChannel.send(queueString, {
+                'code': true
+            });
         } catch (err) {
             console.log('ERROR CAUGHT:\n' + err);
-            guild.musicChannel.send(`${tool.inaError} Gomen, I can't display the queue right now. Try again in a few moments onegai.`);
+            guild.musicChannel.send(
+                `${tool.inaError} Gomen, I can't display the queue right now. Try again in a few moments onegai.`
+            );
         }
     } else {
         guild.musicChannel.send(`There are no songs in the queue!`);
@@ -404,7 +415,7 @@ function nowPlaying(msg, guild) {
         guild.musicChannel.send(`:notes: Now playing ${tool.wrap(guild.queue[0].title)}.`);
     else
         guild.musicChannel.send('Nothing is playing right now.');
-    }
+}
 
 /*
 Sets the volume of the dispatcher.
@@ -435,8 +446,7 @@ function join(msg, guild) {
             changeStatus(guild, 'stopped');
             if (guild.queue.length > 0)
                 playSong(msg, guild);
-            }
-        )
+        })
     } else {
         msg.channel.send(`You\'re not in a voice channel! ${tool.inaBaka}`);
     }
@@ -474,9 +484,9 @@ Changes the status of the bot.
 */
 function changeStatus(guild, status) {
     guild.status = status;
-    guild.inactivityTimer = status == 'paused'
-        ? 600
-        : 60;
+    guild.inactivityTimer = status == 'paused' ?
+        600 :
+        60;
 }
 
 /*
