@@ -75,7 +75,7 @@ Processes ~airing commands.
 */
 function airing(msg) {
     var args = msg.content.split(/\s+/);
-    if (!args[1])
+    if (!args.length > 1)
         ani.retrieveAiringData(msg);
     else if (args[1] == 'a')
         ani.addAiringAnime(msg);
@@ -101,15 +101,7 @@ function cc(msg) {
         msg.channel.send(`Gomen, you're not allowed to move users. ${msg.author}`);
         return;
     }
-
-    var args = msg.content.split(/\s+/).slice(1);
-    var length = args.length;
-    var channel = '';
-    var i;
-
-    for (i = 0; i < length && !args[i].startsWith('<@'); i++) {
-        channel += args[i] + ' ';
-    }
+    var channel = msg.content.slice(config.prefix.length + 3, msg.content.indexOf('<@'));
 
     var userToBanish = msg.mentions.users.first();
     if (userToBanish)
@@ -120,7 +112,7 @@ function cc(msg) {
 Chooses between 1 or more choices given by the user, delimited by '|'.
 */
 function choose(msg) {
-    var args = msg.content.split("|");
+    var args = msg.content.split('|');
 
     args[0] = args[0].slice(8); //Slice off command string.
     var choices = args.filter((arg) => { //Filter out empty/whitespace args, and trim options.
@@ -146,7 +138,7 @@ Prunes the specified number of messages from a channel.
 */
 function prune(msg) {
     if (!msg.member.hasPermission('MANAGE_MESSAGES'))
-        return;
+        return msg.channel.send(`You don't have permission to manage messages.`);
     var args = msg.content.split(/\s+/);
     var amount;
     if (args.length > 1) {
@@ -161,13 +153,34 @@ function prune(msg) {
 
     var options = tool.parseOptions(msg.content);
 
-    var bot = options.long.includes('bots');
-    var user = options.long.includes('user');
-    var filter = options.long.includes('filter');
-    var pin = options.short.includes('p') || options.long.includes('pinned');
+    var botOption = options.long.includes('bots');
+    var userOption = options.long.includes('user');
+    var filterOption = options.long.includes('filter');
+    var pinOption = options.short.includes('p') || options.long.includes('pinned');
 
     if (amount) {
         try {
+            var name;
+            var nickname;
+            if (userOption) {
+                var matchUser = msg.content.match(/ --user (\w+)/);
+                if (!matchUser)
+                    throw 'args';
+                name = matchUser[1].toLowerCase();
+                if (msg.member.nickname) {
+                    nickname = msg.member.nickname.toLowerCase();
+                }
+            }
+            var stringToFilter;
+            if (filterOption) {
+                var matchFilter = msg.content.match(/--filter (.+)/);
+                if (!matchFilter)
+                    throw 'args';
+                var nextArgIndex = matchFilter[1].indexOf('-') > 0 ? matchFilter[1].indexOf('-') :
+                    matchFilter[1].length;
+                stringToFilter = matchFilter[1].toLowerCase().slice(0,
+                    nextArgIndex).trim();
+            }
             processAmount(amount, 0);
 
             /*
@@ -178,10 +191,10 @@ function prune(msg) {
 
                 if (amount > 100)
                     fetchAmount = 100;
-                else if (amount == 1)
-                    fetchAmount = 2; //Set to 2 to account for fetchMessage lower limit.
-                else
+                else if (amount > 1)
                     fetchAmount = amount;
+                else
+                    fetchAmount = 2; //Set to 2 to account for fetchMessage lower limit.
 
                 msg.channel.fetchMessages({
                     limit: fetchAmount,
@@ -191,43 +204,20 @@ function prune(msg) {
                         msgs.delete(msgs.lastKey());
                     amount -= 100;
 
-                    if (options.long.length != 0) { //Handle options.
-                        if (bot) {
-                            msgs = msgs.filter(msg => {
-                                return msg.author.bot;
-                            });
-                        }
-                        if (user) {
-                            var matchUser = msg.content.match(/ --user (\w+)/);
-                            if (!matchUser)
-                                throw 'args';
-                            var name = matchUser[1].toLowerCase();
-                            msgs = msgs.filter(msg => {
-                                var nickname = null;
-                                if (msg.member.nickname) {
-                                    nickname = msg.member.nickname.toLowerCase();
-                                }
-                                return msg.author.username.toLowerCase() == name ||
-                                    nickname == name;
-                            });
-                        }
-                        if (filter) {
-                            var matchFilter = msg.content.match(/--filter (.+)/);
-                            if (!matchFilter)
-                                throw 'args';
-                            var filterString = matchFilter[1].toLowerCase().slice(0,
-                                matchFilter[1].indexOf('-')).trim();
-
-                            msgs = msgs.filter(msg => {
-                                return msg.content.toLowerCase().indexOf(
-                                    filterString) >= 0;
-                            });
-                        }
-                    }
-
-                    if (!pin) { //Filter pinned messages out.
+                    if (options.long.length > 0 || options.short.length > 0) {
                         msgs = msgs.filter(msg => {
-                            return !msg.pinned;
+                            //Evaluate filter if option enabled, else default to true, since we aren't filtering for it.
+                            var botPass = botOption ? msg.author.bot : true;
+                            var userPass = userOption ? msg.author.username.toLowerCase() ==
+                                name || nickname == name : true;
+                            var filterPass = filterOption ? msg.content.toLowerCase()
+                                .indexOf(
+                                    stringToFilter) >= 0 : true;
+                            var pinnedPass = pinOption ? !msg.pinned : true;
+
+                            //Need to pass all filters.
+                            return botPass && userPass && filterPass &&
+                                pinnedPass;
                         });
                     }
 
@@ -253,7 +243,7 @@ function prune(msg) {
                             setTimeout(() => {
                                 processAmount(amount, prunedAmount);
                             }, 1000);
-                        } else {
+                        } else { //Done pruning.
                             //Total number of pruned messages.
                             msg.channel.send(`Pruned ${tool.wrap(prunedAmount)} messages.`);
                         }
@@ -262,7 +252,6 @@ function prune(msg) {
                     throw err.message;
                 });
             }
-
         } catch (err) {
             if (err.message == 'err')
                 msg.channel.send(`Gomen, I couldn't delete your messages. ${tool.inaError}`);
