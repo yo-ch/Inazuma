@@ -56,7 +56,19 @@ module.exports = {
         while (matches = longRegex.exec(argString)) {
             longOpts.push(matches[1]);
         }
-        return {short: shortOpts, long: longOpts};
+        return {
+            short: shortOpts,
+            long: longOpts
+        };
+    },
+
+    /*
+    Gets the index of the next argument/option. Usually used to chop off that argument.
+    If next argument does not exist, index = argString.length.
+    */
+    getNextArgIndex(argString) {
+        var nextArgIndex = argString.indexOf('-');
+        return nextArgIndex == -1 ? argString.length : nextArgIndex;
     },
 
     inaAngry: '<:inaAngry:302886932164116480>',

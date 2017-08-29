@@ -37,21 +37,22 @@ function help(msg) {
             `Commands:
    ~help [command]
 
-   ~airing [options]
-   ~anilist <anime name>
-   ~choose <arg1> | [arg2] ...
-   ~roll <int1> [int2]
+   ~airing
+   ~anilist
+   ~choose
+   ~roll
 
-   ~music <command>
+   ~music
 
-   ~andy [@mention]
+   ~andy
    ~gavquote
 
    ~aoba
    ~vigne
 
-   ~prune <amount> [options]
-   ~cc <voice channel> <@mention>
+   ~prune
+   ~role
+   ~cc
 
 [] = optional, <> = required, | = or`, {
                 'code': 'prolog'
@@ -166,10 +167,7 @@ function prune(msg) {
                 var matchUser = msg.content.match(/ --user (\w+)/);
                 if (!matchUser)
                     throw 'args';
-                name = matchUser[1].toLowerCase();
-                if (msg.member.nickname) {
-                    nickname = msg.member.nickname.toLowerCase();
-                }
+                name = matchUser[1].toLowerCase().trim();
             }
             var stringToFilter;
             if (filterOption) {
@@ -182,76 +180,6 @@ function prune(msg) {
                     nextArgIndex).trim();
             }
             processAmount(amount, 0);
-
-            /*
-            Recursive function to fetch and delete more than 100 messages if needed.
-            */
-            function processAmount(amount, prunedAmount) {
-                var fetchAmount;
-
-                if (amount > 100)
-                    fetchAmount = 100;
-                else if (amount > 1)
-                    fetchAmount = amount;
-                else
-                    fetchAmount = 2; //Set to 2 to account for fetchMessage lower limit.
-
-                msg.channel.fetchMessages({
-                    limit: fetchAmount,
-                    before: msg.id
-                }).then(msgs => {
-                    if (amount == 1) //Delete unneeded message.
-                        msgs.delete(msgs.lastKey());
-                    amount -= 100;
-
-                    if (options.long.length > 0 || options.short.length > 0) {
-                        msgs = msgs.filter(msg => {
-                            //Evaluate filter if option enabled, else default to true, since we aren't filtering for it.
-                            var botPass = botOption ? msg.author.bot : true;
-                            var userPass = userOption ? msg.author.username.toLowerCase() ==
-                                name || nickname == name : true;
-                            var filterPass = filterOption ? msg.content.toLowerCase()
-                                .indexOf(
-                                    stringToFilter) >= 0 : true;
-                            var pinnedPass = pinOption ? !msg.pinned : true;
-
-                            //Need to pass all filters.
-                            return botPass && userPass && filterPass &&
-                                pinnedPass;
-                        });
-                    }
-
-                    if (msgs.size >= 2) {
-                        msg.channel.bulkDelete(msgs, true).then(deleted => {
-                            nextCall(deleted.size);
-                        }).catch(() => {
-                            //all messages that were to be bulk deleted are older than 2 weeks
-                            nextCall(0);
-                        });
-                    } else if (msgs.size == 1) {
-                        msgs.first().delete().then(deleted => {
-                            nextCall(1);
-                        });
-                    } else {
-                        nextCall(0);
-                    }
-
-                    function nextCall(deletedSize) {
-                        prunedAmount += deletedSize;
-                        if (amount > 0) {
-                            //Delete next 100 batch of messages.
-                            setTimeout(() => {
-                                processAmount(amount, prunedAmount);
-                            }, 1000);
-                        } else { //Done pruning.
-                            //Total number of pruned messages.
-                            msg.channel.send(`Pruned ${tool.wrap(prunedAmount)} messages.`);
-                        }
-                    }
-                }).catch(err => {
-                    throw err.message;
-                });
-            }
         } catch (err) {
             if (err.message == 'err')
                 msg.channel.send(`Gomen, I couldn't delete your messages. ${tool.inaError}`);
@@ -259,9 +187,385 @@ function prune(msg) {
                 msg.channel.send(`Invalid syntax. Please check ${tool.wrap('~help prune')}.`)
         }
     }
+
+    /*
+    Recursive function to fetch and delete more than 100 messages if needed.
+    */
+    function processAmount(amount, prunedAmount) {
+        var fetchAmount;
+
+        if (amount > 100)
+            fetchAmount = 100;
+        else if (amount > 1)
+            fetchAmount = amount;
+        else
+            fetchAmount = 2; //Set to 2 to account for fetchMessage lower limit.
+
+        msg.channel.fetchMessages({
+            limit: fetchAmount,
+            before: msg.id
+        }).then(msgs => {
+            if (amount == 1) //Delete unneeded message.
+                msgs.delete(msgs.lastKey());
+            amount -= 100;
+
+            if (options.long.length > 0 || options.short.length > 0) {
+                msgs = msgs.filter(msg => {
+                    //Evaluate filter if option enabled, else default to true, since we aren't filtering for it.
+                    if (msg.member.nickname) {
+                        nickname = msg.member.nickname.toLowerCase();
+                    }
+
+                    var botPass = botOption ? msg.author.bot : true;
+                    var userPass = userOption ? msg.author.username.toLowerCase() ==
+                        name || nickname == name : true;
+                    var filterPass = filterOption ? msg.content.toLowerCase()
+                        .indexOf(
+                            stringToFilter) >= 0 : true;
+                    var pinnedPass = pinOption ? !msg.pinned : true;
+
+                    return botPass && userPass && filterPass &&
+                        pinnedPass;
+                });
+            }
+
+            if (msgs.size >= 2) {
+                msg.channel.bulkDelete(msgs, true).then(deleted => {
+                    nextCall(deleted.size);
+                }).catch(() => {
+                    //all messages that were to be bulk deleted are older than 2 weeks
+                    nextCall(0);
+                });
+            } else if (msgs.size == 1) {
+                msgs.first().delete().then(deleted => {
+                    nextCall(1);
+                });
+            } else {
+                nextCall(0);
+            }
+
+            function nextCall(deletedSize) {
+                prunedAmount += deletedSize;
+                if (amount > 0) {
+                    //Delete next 100 batch of messages.
+                    setTimeout(() => {
+                        processAmount(amount, prunedAmount);
+                    }, 1000);
+                } else { //Done pruning.
+                    //Total number of pruned messages.
+                    msg.channel.send(`Pruned ${tool.wrap(prunedAmount)} messages.`);
+                }
+            }
+        }).catch(err => {
+            throw err.message;
+        });
+    }
 }
 
-function role(msg) {}
+/*
+Role interface.
+*/
+function role(msg) {
+    if (!msg.guild.available) return;
+    if (!msg.member.hasPermission('MANAGE_ROLES')) {
+        return msg.channel.send(`You don't have permission to manage roles. ${tool.inaBaka}`);
+    }
+
+    var args = msg.content.split(/\s+/).slice(1);
+    if (args.length < 1 || (args[0] != 'give' && args[0] != 'take' && args[0] != 'modify')) {
+        return msg.channel.send(
+            `Invalid arguments. Please refer to ${tool.wrap('~help role')}.`);
+    }
+
+    //Function params.
+    var enabledOptions;
+    var roles;
+
+    var roleNames = args[1].split(',');
+    if (roleNames.length == 0) {
+        return msg.channel.send(`You haven't specified any roles to give or take.`);
+    }
+    roles = validateRoleChanges(roleNames);
+    if (roles.length == 0) {
+        return msg.channel.send(`Unable to find matching roles.`);
+    }
+
+    var options = tool.parseOptions(msg.content);
+    if (options) {
+        enabledOptions = validateOptions(options);
+        if (!enabledOptions) return;
+    }
+    switch (args[0]) {
+        case 'give':
+            return processRoleChanges('give');
+        case 'take':
+            return processRoleChanges('take');
+        case 'modify':
+            if (roles.length == 1)
+                modifyRole();
+            else
+                return;
+            break;
+    }
+
+    /*
+    Filters users for give|take functions according to the specified optinos.
+    */
+    function processRoleChanges(type) {
+        var members = msg.guild.members;
+        if (enabledOptions.user) { //This option ignores other options.
+            var name = enabledOptions.user;
+            var user = members.find(member => member.user.username.toLowerCase() == name.toLowerCase());
+
+            if (user) {
+                changeRoles(user, roles, type);
+            } else {
+                msg.channel.send(`Unable to find matching user.`);
+            }
+            return;
+        }
+
+        var membersToChange = members.array();
+        if (enabledOptions.bots) {
+            membersToChange = membersToChange.filter(member => {
+                return member.user.bot;
+            });
+        } else if (enabledOptions.users) {
+            membersToChange = membersToChange.filter(member => {
+                return !member.user.bot;
+            });
+        }
+
+        if (enabledOptions.inrole) {
+            var roleName = enabledOptions.inrole;
+            membersToChange = membersToChange.filter(member => {
+                return member.roles.exists(role => role.name.toLowerCase() ==
+                    roleName); //Has specified role.
+            });
+        } else if (enabledOptions.notinrole) {
+            var roleName = enabledOptions.notinrole;
+            membersToChange = membersToChange.filter(member => {
+                return !member.roles.exists(role => role.name.toLowerCase() ==
+                    roleName); //Doesn't have specified role.
+            });
+        } else if (enabledOptions.noroles) {
+            membersToChange = membersToChange.filter(member => {
+                return member.roles.size == 1; //Only has @everyone role.
+            });
+        }
+        changeRoles(membersToChange, type);
+    }
+
+    /*
+    Add/remove roles for each user.
+    */
+    function changeRoles(users, type) {
+        //If type != 'give', type = 'take'.
+        var changeFunction = type == 'give' ? 'addRoles' : 'removeRoles';
+
+        /*
+          Filter according to change type.
+          Make sure user doesn't have role if adding roles. ('give')
+          Make sure user has role if removing roles. ('take')
+        */
+        if (Array.isArray(users)) { //Multiple users.
+            users.forEach(user => {
+                user[changeFunction](roles.filter(role => {
+                    return !user.roles.has(role.id) && type == 'give' ||
+                        user.roles.has(role.id) && type == 'take';
+                }));
+            });
+            msg.channel.send(`Modified roles of ${tool.wrap(users.length)} users.`);
+        } else { //Single user.
+            users[changeFunction](roles.filter(role => {
+                return !users.roles.has(role.id) && type == 'give' ||
+                    users.roles.has(role.id) && type == 'take';
+            }));
+            msg.channel.send(`Modified roles of ${tool.wrap('1')} user.`);
+        }
+    }
+
+    /*
+    Changes the name or colour of the specified role.
+    */
+    function modifyRole() {
+        var role = roles[0];
+        if (enabledOptions.name) {
+            role.setName(enabledOptions.name);
+        }
+        if (enabledOptions.color) {
+            role.setColor(enabledOptions.color);
+        }
+        msg.channel.send(`The role ${tool.wrap(role.name)} has been modified.`);
+    }
+
+    /*
+    Validate that the bot and user have permission to modify/assign the specified roles.
+    */
+    function validateRoleChanges(roleNames) {
+        var roles = [];
+        roleNames.forEach(roleName => {
+            var roleObj = msg.guild.roles.find(role => role.name.toLowerCase() ==
+                roleName.toLowerCase());
+            if (!roleObj) return;
+            var botPositionHigher = roleObj.calculatedPosition < msg.guild.me.highestRole
+                .calculatedPosition;
+            var userPositionHigher = roleObj.calculatedPosition < msg.member.highestRole
+                .calculatedPosition ||
+                msg.guild.ownerID == msg.author.id;
+            if (!botPositionHigher)
+                msg.channel.send(
+                    `Inazuma is in a lower or the same ranked role compared to the role you are trying to modify.`
+                );
+            else if (!userPositionHigher)
+                msg.channel.send(
+                    `You are in a lower or same ranked role compared to the role you are trying to modify.`
+                );
+            else
+                roles.push(roleObj);
+        })
+        return roles;
+    }
+
+    /*
+    Validates the options of the command and gets their arguments if applicable.
+    enabledOptions stores included options as properties, as 'true' or as the corresponding argument to the option.
+
+    i.e;
+    if one of the options was --bots, enabledOptions.bots = true.
+    if one of the options was --user <user>, enabledOptions.user = <user>.
+    */
+    function validateOptions(options) {
+        var enabledOptions = {};
+
+        //Validate options for 'give|take' or 'modify'.
+        if (args[0] == 'give' || args[0] == 'take') {
+            //Get options.
+            var optionCounter = {
+                type1: {},
+                type2: {}
+            }
+            for (let i = 0; i < options.long.length; i++) {
+                if (options.long[i] == 'bots' || options.long[i] == 'users' || options.long[i] ==
+                    'user') {
+                    optionCounter.type1[options.long[i]] = true;
+                } else if (options.long[i] == 'inrole' || options.long[i] == 'notinrole' ||
+                    options.long[
+                        i] ==
+                    'noroles') {
+                    optionCounter.type2[options.long[i]] = true;
+                }
+                enabledOptions[options.long[i]] = true;
+            }
+
+            //Make sure options selected are valid, and that there are no conflicting options.
+            var optionLength1 = Object.keys(optionCounter.type1).length;
+            var optionLength2 = Object.keys(optionCounter.type2).length;
+            if (optionLength1 > 1) {
+                msg.channel.send(
+                    `You may only use one of ${tool.wrap('--bots, --users, --user')} ${tool.inaBaka}`
+                );
+                return null;
+            }
+            if (optionLength2 > 1) {
+                msg.channel.send(
+                    `You may only use one of ${tool.wrap('--inrole, --notinrole, --noroles')} ${tool.inaBaka}`
+                );
+                return null;
+            }
+            if (optionLength1 == 0 && optionLength2 == 0) {
+                msg.channel.send(`You didn't specify any options.`);
+                return null;
+            }
+
+            //Get arguments for options that take arguments.
+            if (enabledOptions.user) {
+                var nameMatch = msg.content.match(/ --user (\w+)/);
+                if (nameMatch) {
+                    var nextArgIndex = tool.getNextArgIndex(nameMatch[1]);
+                    enabledOptions.user = nameMatch[1].slice(0, nextArgIndex).trim().toLowerCase();
+                } else {
+                    msg.channel.send(`User not specified. ${tool.wrap('--user <user>')}`);
+                    return null;
+                }
+            }
+            if (enabledOptions.inrole) {
+                var roleMatch = msg.content.match(/ --inrole (\w+)/);
+                if (roleMatch) {
+                    var nextArgIndex = tool.getNextArgIndex(roleMatch[1]);
+                    enabledOptions.inrole = roleMatch[1].slice(0, nextArgIndex).trim().toLowerCase();
+                    if (!msg.guild.roles.exists(role => role.name.toLowerCase() == enabledOptions.inrole)) {
+                        //Check that role actually exists.
+                        msg.channel.send(`Gomen, I couldn't find a matching role.`)
+                        return null;
+                    }
+                } else {
+                    msg.channel.send(`You didn't specify a role! ${tool.wrap('--inrole <role>')}`);
+                    return null;
+                }
+            }
+            if (enabledOptions.notinrole) {
+                var roleMatch = msg.content.match(/ --notinrole (\w+)/);
+                if (roleMatch) {
+                    var nextArgIndex = tool.getNextArgIndex(roleMatch[1]);
+                    enabledOptions.notinrole = roleMatch[1].slice(0, nextArgIndex).trim().toLowerCase();
+                    if (!msg.guild.roles.exists(role => role.name.toLowerCase() == enabledOptions.notinrole)) {
+                        //Check that role actually exists.
+                        msg.channel.send(`Gomen, I couldn't find a matching role.`)
+                        return null;
+                    }
+                } else {
+                    msg.channel.send(
+                        `You didn't specify a role! ${tool.wrap('--notinrole <role>')}`);
+                    return null;
+                }
+            }
+        } else { // (args[0] == 'modify')
+            //Get options and make sure at least one option was specified.
+            for (let i = 0; i < options.long.length; i++) {
+                enabledOptions[options.long[i]] = true;
+            }
+            if (!enabledOptions.name && !enabledOptions.colo) {
+                msg.channel.send(`You didn't specify any options.`);
+                return null;
+            }
+
+            //Get option arguments.
+            if (enabledOptions.name) {
+                var nameMatch = msg.content.match(/ --name (.+)/);
+                if (nameMatch) {
+                    var nextArgIndex = tool.getNextArgIndex(nameMatch[1]);
+                    enabledOptions.name = nameMatch[1].slice(0, nextArgIndex).trim().toLowerCase();
+                } else {
+                    msg.channel.send(
+                        `You didn't specify a new name for the role! ${tool.wrap('--name <name>')}`
+                    );
+                    return null;
+                }
+            }
+            if (enabledOptions.color) {
+                var colorMatch = msg.content.match(/ --color (.+)/);
+                if (colorMatch) {
+                    var nextArgIndex = tool.getNextArgIndex(roleMatch[1]);
+                    var hexCode = colorMatch[1].slice(0, nextArgIndex).trim().toUpperCase();
+                    if (hexCode.indexOf('#') == 0) hexCode = hexCode.slice(1);
+                    var decimalCode = parseInt(hexCode, 16);
+                    if (hexCode.length != 6 || isNaN(decimalCode)) {
+                        msg.channel.send(`Invalid hex code!`);
+                        return null;
+                    }
+                    enabledOptions.color = hexCode;
+                } else {
+                    msg.channel.send(
+                        `You didn't specify a color! ${tool.wrap('--color <color>')}`
+                    );
+                    return null;
+                }
+            }
+        }
+        return enabledOptions;
+    }
+}
 
 /*
 Rolls a number between 1 and num1 or num1 and num2 inclusive.
@@ -363,19 +667,18 @@ const commands = {
 ~role modify <role>     : Modifies a role.
 
 #Options
-give|take:
+give|take
    [--bots]              : Only change roles for bots.
    [--users]             : Only change roles for users.
    [--user <user[,...]>] : Only change roles for specified users.
 
    [--inrole <role>]     : Change roles for everyone with the role.
    [--notinrole <role>]  : Change roles for everyone without the role.
-   [--noroles]           : Change roles for users with no roles.
+   [--noroles]           : Change roles for everyone with no roles.
 
-modify:
+modify
    [--name <name>]       : Rename role.
-   [--colour <colour>]   : Change role colour.
-   [--]`,
+   [--color <color>]     : Change role color. (6 digit HEX)`,
 
     'roll': `~roll <int1> [int2]
   Rolls an integer from 1 to int1 inclusive.

@@ -57,6 +57,8 @@ bot.on('message', msg => {
             return cmds.gavquote(msg);
         case 'prune':
             return cmds.prune(msg);
+        case 'role':
+            return cmds.role(msg);
         case 'roll':
             return cmds.roll(msg);
         case 'vigne':
