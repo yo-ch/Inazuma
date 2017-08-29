@@ -10,6 +10,7 @@ const rp = require('request-promise');
 var guilds = {};
 
 module.exports.processCommand = function (msg) {
+    if (!msg.guild.available) return;
     //Add guild to the guild list.
     if (!guilds[msg.guild.id])
         guilds[msg.guild.id] = {
@@ -138,15 +139,17 @@ const youtube = {
     */
     processSong(msg, guild, url) {
         ytdl.getInfo(url, (err, info) => {
-            if (err)
+            if (err) {
                 console.log(info);
+                msg.channel.send(`Gomen I couldn't enqueue your song. ${tool.inaError}`);
+                return;
+            }
 
             queueSong(msg, guild, {
                 title: info.title,
                 url: url,
                 type: 'youtube'
             });
-
             guild.musicChannel.send(
                 `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
             );
