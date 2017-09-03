@@ -79,8 +79,10 @@ bot.on('guildMemberRemove', member => {
     member.guild.defaultChannel.send(`S-Sayonara. ${member.user}`);
 });
 
-// catch errors bot.on('error', (e) => console.error(e)); bot.on('warn', (e) =>
-// console.warn(e)); bot.on('debug', (e) => console.info(e)); log our bot in
+bot.on('error', (e) => console.error(e));
+bot.on('warn', (e) => console.warn(e));
+// bot.on('debug', (e) => console.info(e));
+
 bot.login(config.token);
 
 function reply(msg) {

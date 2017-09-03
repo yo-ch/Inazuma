@@ -76,7 +76,8 @@ Processes ~airing commands.
 */
 function airing(msg) {
     var args = msg.content.split(/\s+/);
-    if (!args.length > 1)
+
+    if (args.length == 1)
         ani.retrieveAiringData(msg);
     else if (args[1] == 'a')
         ani.addAiringAnime(msg);
@@ -406,7 +407,7 @@ function role(msg) {
         var roles = [];
         roleNames.forEach(roleName => {
             var roleObj = msg.guild.roles.find(role => role.name.toLowerCase() ==
-                roleName.toLowerCase());
+                roleName.toLowerCase().trim());
             if (!roleObj) return;
             var botPositionHigher = roleObj.calculatedPosition < msg.guild.me.highestRole
                 .calculatedPosition;

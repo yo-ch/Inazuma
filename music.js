@@ -348,7 +348,7 @@ function playSong(msg, guild) {
 Skips the current song.
 */
 function skipSong(guild) {
-    if (guild.dispatch) {
+    if (guild.dispatch && guild.queue[0]) {
         guild.musicChannel.send(`:fast_forward: Skipped ${tool.wrap(guild.queue[0].title)}`);
         guild.dispatch.end();
     } else {

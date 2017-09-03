@@ -84,24 +84,24 @@ Requires a #music text channel.
 ```
 
 ```
-~role give <role[,...]> : Gives role(s).
-~role take <role[,...]> : Removes role(s).
-~role modify <role>     : Modifies a role.
+~role give <role[,...]>       : Gives role(s).
+~role take <role[,...]>       : Removes role(s).
+~role modify <role>           : Modifies a role.
 
 Options:
-  give|take:
-    [--all]               : Changes roles for everyone.
-    [--bots]              : Only change roles for bots.
-    [--users]             : Only change roles for users.
-    [--user <user[,...]>] : Only change roles for specified users.
+    give|take:
+        [--all]               : Changes roles for everyone.
+        [--bots]              : Only change roles for bots.
+        [--users]             : Only change roles for users.
+        [--user <user[,...]>] : Only change roles for specified users.
 
-    [--inrole <role>]     : Change roles for everyone with the role.
-    [--notinrole <role>]  : Change roles for everyone without the role.
-    [--noroles]           : Change roles for everyone with no roles.
+        [--inrole <role>]     : Change roles for everyone with the role.
+        [--notinrole <role>]  : Change roles for everyone without the role.
+        [--noroles]           : Change roles for everyone with no roles.
 
-  modify:
-    [--name <name>]       : Rename role.
-    [--color <color>]     : Change role color. (6 digit HEX)
+    modify:
+        [--name <name>]       : Rename role.
+        [--color <color>]     : Change role color. (6 digit HEX)
 ```
 
 ## Etc.
