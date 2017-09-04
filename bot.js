@@ -49,6 +49,10 @@ bot.on('message', msg => {
         case 'ani':
         case 'anilist':
             return cmds.anilist(msg);
+        case 'ban':
+            return cmds.ban(msg);
+        case 'kick':
+            return cmds.kick(msg);
         case 'cc':
             return cmds.cc(msg);
         case 'choose':

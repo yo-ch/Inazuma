@@ -9,9 +9,11 @@ module.exports = {
     'andy': andy,
     'airing': airing,
     'anilist': anilist,
+    'ban': ban,
     'cc': cc,
     'choose': choose,
     'gavquote': gavquote,
+    'kick': kick,
     'prune': prune,
     'role': role,
     'roll': roll,
@@ -34,28 +36,29 @@ function help(msg) {
         });
     else //Bring up default help menu.
         msg.channel.send(
-            `Commands:
+            `[Commands Menu]
    ~help [command]
 
-   ~airing
-   ~anilist
-   ~choose
-   ~roll
-
-   ~music
-
-   ~andy
-   ~gavquote
-
-   ~aoba
-   ~vigne
-
-   ~prune
-   ~role
-   ~cc
+   #Utility
+      ~airing
+      ~anilist
+      ~choose
+      ~roll
+      ~music
+   #Moderation
+      ~ban
+      ~kick
+      ~prune
+      ~role
+      ~cc
+   #Etc.
+      ~andy
+      ~gavquote
+      ~aoba
+      ~vigne
 
 [] = optional, <> = required, | = or`, {
-                'code': 'prolog'
+                'code': 'css'
             });
 }
 
@@ -95,19 +98,55 @@ function anilist(msg) {
 }
 
 /*
+Bans specified user provided that the caller is allowed to ban that user.
+*/
+function ban(msg) {
+    if (!msg.member.hasPermission('BAN_MEMBERS')) {
+        return msg.channel.send(`You don't have permission to ban members! ${tool.inaAngry}`);
+    }
+    var memberToBan = msg.mentions.members.first();
+    if (memberToBan && memberToBan.bannable && (msg.member.highestRole.calculatedPosition >
+            memberToBan.highestRole.calculatedPosition || msg.guild.ownerID == msg.author.id)) {
+        //Parse arguments to options, if they exist.
+        var reason = tool.parseOptionArg('reason', msg.content);
+        var days = parseInt(tool.parseOptionArg('days', msg.content));
+
+        var banOptions = {
+            days: days ? days : 0,
+            reason: reason ? reason : 'none'
+        };
+        memberToBan.ban(banOptions);
+    }
+}
+
+/*
+Kicks specified user provided that the caller is allowed to kick that user.
+*/
+function kick(msg) {
+    if (!msg.member.hasPermission('KICK_MEMBERS')) {
+        return msg.channel.send(`You don't have permission to kick members! ${tool.inaAngry}`);
+    }
+    var memberToKick = msg.mentions.members.first();
+    if (memberToKick && memberToKick.kickable && (msg.member.highestRole.calculatedPosition >
+            memberToBan.highestRole.calculatedPosition || msg.guild.ownerID == msg.author.id)) {
+        var reason = tool.parseOptionArg('reason', msg.content);
+        memberToKick.kick(reason ? reason : 'none');
+    }
+}
+
+/*
 Sets the voice channel of the mentioned user if the author of the message
 has the MOVE_MEMBER permission.
 */
 function cc(msg) {
     if (!msg.member.hasPermission('MOVE_MEMBERS')) {
-        msg.channel.send(`Gomen, you're not allowed to move users. ${msg.author}`);
-        return;
+        return msg.channel.send(`Gomen, you're not allowed to move users. ${msg.author}`);
     }
     var channel = msg.content.slice(config.prefix.length + 3, msg.content.indexOf('<@'));
 
-    var userToBanish = msg.mentions.users.first();
-    if (userToBanish)
-        msg.guild.member(userToBanish).setVoiceChannel(msg.guild.channels.find('name', channel.trim()));
+    var memberToBanish = msg.mentions.members.first();
+    if (memberToBanish)
+        memberToBanish.setVoiceChannel(msg.guild.channels.find('name', channel.trim()));
 }
 
 /*
@@ -117,7 +156,7 @@ function choose(msg) {
     var args = msg.content.split('|');
 
     args[0] = args[0].slice(8); //Slice off command string.
-    var choices = args.filter((arg) => { //Filter out empty/whitespace args, and trim options.
+    var choices = args.filter(arg => { //Filter out empty/whitespace args, and trim options.
         return arg.trim() != '';
     });
 
@@ -495,13 +534,15 @@ function role(msg) {
                 if (roleMatch) {
                     var nextArgIndex = tool.getNextArgIndex(roleMatch[1]);
                     enabledOptions.inrole = roleMatch[1].slice(0, nextArgIndex).trim().toLowerCase();
-                    if (!msg.guild.roles.exists(role => role.name.toLowerCase() == enabledOptions.inrole)) {
+                    if (!msg.guild.roles.exists(role => role.name.toLowerCase() ==
+                            enabledOptions.inrole)) {
                         //Check that role actually exists.
                         msg.channel.send(`Gomen, I couldn't find a matching role.`)
                         return null;
                     }
                 } else {
-                    msg.channel.send(`You didn't specify a role! ${tool.wrap('--inrole <role>')}`);
+                    msg.channel.send(
+                        `You didn't specify a role! ${tool.wrap('--inrole <role>')}`);
                     return null;
                 }
             }
@@ -510,7 +551,8 @@ function role(msg) {
                 if (roleMatch) {
                     var nextArgIndex = tool.getNextArgIndex(roleMatch[1]);
                     enabledOptions.notinrole = roleMatch[1].slice(0, nextArgIndex).trim().toLowerCase();
-                    if (!msg.guild.roles.exists(role => role.name.toLowerCase() == enabledOptions.notinrole)) {
+                    if (!msg.guild.roles.exists(role => role.name.toLowerCase() ==
+                            enabledOptions.notinrole)) {
                         //Check that role actually exists.
                         msg.channel.send(`Gomen, I couldn't find a matching role.`)
                         return null;
@@ -620,52 +662,52 @@ function retrieveImgurAlbum(msg) {
 
 const commands = {
     'help': `~help [command]
-  Brings up the command page. Pass a command for further information.`,
+   Brings up the command page. Pass a command for further information.`,
     'tasukete': `~tasukete [command]
-  Brings up the command page. Pass a command for further information.`,
+   Brings up the command page. Pass a command for further information.`,
 
-    'andy': `~andy [@mention]
-  Shut up weeb. Mentions user, if included.`,
+    'andy': `~andy [mention]
+   Shut up weeb. Mentions user, if included.`,
 
     'aoba': `~aoba
-  Returns a random picture of Aoba.`,
+   Returns a random picture of Aoba.`,
 
     'airing': `~airing [option]
-  Displays countdowns until the next episode for each anime in your airing list.
+   Displays countdowns until the next episode for each anime in your airing list.
 
-    Options:
+   Options:
       a <anilist urls> : Adds the given anime to your airing list.
       r <name in list> : Removes the anime from your airing list.
       c                : Clears your airing list.`,
 
     'anilist': `~anilist | ~ani <anime name>
-  Displays an anime\'s data, pulled from Anilist.
-  If multiple choices are given, simply reply with the number.`,
+   Displays an anime\'s data, pulled from Anilist.
+   If multiple choices are given, simply reply with the number.`,
 
-    'cc': `~cc <voice channel> <@mention>
-  Changes the mentioned user\'s voice channel to the given channel.`,
+    'cc': `~cc <voice channel> <mention>
+   Changes the mentioned user\'s voice channel to the given channel.`,
 
     'choose': `~choose <arg1> | [arg2] ...
-  Randomly chooses between the provided choice(s).`,
+   Randomly chooses between the provided choice(s).`,
 
     'gavquote': `~gavquote
-  Returns a random Gavin quote.`,
+   Returns a random Gavin quote.`,
 
     'prune': `~prune <amount> [options]
-  Prunes the last <amount> messages.
+   Prunes the last <amount> messages.
 
-  Options:
-     [--bots]            : Only prunes bot messages.
-     [--user <name>]     : Only prunes messages by the specified user.
-     [--filter <string>] : Only prunes messages with the specified string.
+   Options:
+      [--bots]            : Only prunes bot messages.
+      [--user <name>]     : Only prunes messages by the specified user.
+      [--filter <string>] : Only prunes messages with the specified string.
 
-     [--pinned | -p]     : Also prunes pinned messages.`,
+      [--pinned | -p]     : Also prunes pinned messages.`,
 
     'role': `[Role Help]
 
-~role give <role[,...]> : Gives role.
-~role take <role[,...]> : Removes role.
-~role modify <role>     : Modifies a role.
+~role give <role[,...]>  : Gives role(s).
+~role take <role[,...]>  : Removes role(s).
+~role modify <role>      : Modifies a role.
 
 #Options
 give|take
@@ -682,11 +724,11 @@ modify
    [--color <color>]     : Change role color. (6 digit HEX)`,
 
     'roll': `~roll <int1> [int2]
-  Rolls an integer from 1 to int1 inclusive.
-  If int2 is given, rolls an integer between int1 and int2 inclusive.`,
+   Rolls an integer from 1 to int1 inclusive.
+   If int2 is given, rolls an integer between int1 and int2 inclusive.`,
 
     'vigne': `~vigne
-  Returns a random picture of Vigne.`,
+   Returns a random picture of Vigne.`,
 
     'music': `[Music Help]
 
@@ -705,5 +747,20 @@ modify
    join                  : Joins your voice channel.
    leave                 : Leaves voice channel.
 
-Requires a #music text channel.`
+Requires a #music text channel.`,
+
+    'ban': `~ban <mention> [options]
+   Bans the mentioned user.
+   You cannot ban users in a higher role than Inazuma or yourself.
+
+   Options:
+      [--days <number>]   : Deletes the message history of the user.
+      [--reason <reason>] : Specifies a reason for banning the user.`,
+
+    'kick': `~kick <mention> [options]
+   Kicks the mentioned user.
+   You cannot kick users in a higher role than Inazuma or yourself.
+
+   Options:
+      [--reason <reason>] : Specifies a reason for kicking the user.`
 }

@@ -34,15 +34,15 @@ module.exports = {
     },
 
     /*
-    Parses '--' (long) and '-' (short) arguments for command strings.
+    Parses '--' (long) and '-' (short) options for command strings.
     */
-    parseOptions(argString) {
+    parseOptions(commandString) {
         var matches;
         var shortRegex = / -(\w+)/g;
         var longRegex = / --(\w+)/g;
         var shortOpts = [];
         var longOpts = [];
-        while (matches = shortRegex.exec(argString)) {
+        while (matches = shortRegex.exec(commandString)) {
             if (matches.input.indexOf('--') == -1) {
                 if (matches[1].length > 1) { //Parse combined short args. ex: '-abc' where a, b, c are options.
                     for (let i = 0; i < matches[1].length; i++) {
@@ -53,13 +53,27 @@ module.exports = {
                 }
             }
         }
-        while (matches = longRegex.exec(argString)) {
+        while (matches = longRegex.exec(commandString)) {
             longOpts.push(matches[1]);
         }
         return {
             short: shortOpts,
             long: longOpts
         };
+    },
+
+    /*
+    Parse the argument for the specified option.
+    */
+    parseOptionArg(option, commandString) {
+        var regex = new RegExp(`--${option} (.+)`);
+
+        var matchArg = commandString.match(regex);
+        if (matchArg) {
+            return matchArg[1].slice(0, this.getNextArgIndex(matchArg[1])).trim();
+        } else {
+            return null;
+        }
     },
 
     /*

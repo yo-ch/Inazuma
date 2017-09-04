@@ -7,7 +7,7 @@ Includes anime lookup (Anilist) and a music player.
 ```
 Planned:
     Soundcloud music when API registration opens back up.
-    Airing list notifications.
+    ~airing command rework.
     Moderation tools.
 ```
 
@@ -70,6 +70,25 @@ Requires a #music text channel.
 ```
 
 ## Moderation
+
+```
+~ban <mention> [options]
+    Bans the mentioned user.
+    You cannot ban users in a higher role than Inazuma or yourself.
+
+    Options:
+        [--days <number>]   : Deletes the message history of the user.
+        [--reason <reason>] : Specifies a reason for banning the user.
+```
+
+```
+~kick <mention> [options]
+    Kicks the mentioned user.
+    You cannot kick users in a higher role than Inazuma or yourself.
+
+    Options:
+        [--reason <reason>] : Specifies a reason for kicking the user.
+```
 
 ```
 ~prune <amount> [options]
