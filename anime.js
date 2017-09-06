@@ -52,6 +52,7 @@ function retrieveAnimeData(msg) {
         var variables = {
             'search': search
         }
+        
         var options = {
             method: 'POST',
             url: `https://graphql.anilist.co`,
@@ -108,10 +109,7 @@ function anilistChoose(msg, choice) {
         var ais = animeInfoString(anime.title.romaji, anime.averageScore, anime.format, anime.episodes,
             anime.description, `https://anilist.co/anime/${anime.id}/`);
         msg.channel.send(ais);
-
-        setTimeout(() => { //Delete request after 5 minutes. (Used for adding to airing list).
-            delete searchRequests[msg.author.id];
-        }, 300000);
+        delete searchRequests[msg.author.id];
     }
 }
 
