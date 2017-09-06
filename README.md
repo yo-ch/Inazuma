@@ -72,19 +72,17 @@ Requires a #music text channel.
 ## Moderation
 
 ```
-~ban <mention> [options]
+~ban <@mention> [options]
     Bans the mentioned user.
-    You cannot ban users in a higher role than Inazuma or yourself.
+    You cannot ban users in a role higher than Inazuma or yourself.
 
     Options:
         [--days <number>]   : Deletes the message history of the user.
         [--reason <reason>] : Specifies a reason for banning the user.
-```
 
-```
-~kick <mention> [options]
+~kick <@mention> [options]
     Kicks the mentioned user.
-    You cannot kick users in a higher role than Inazuma or yourself.
+    You cannot kick users in a role higher than Inazuma or yourself.
 
     Options:
         [--reason <reason>] : Specifies a reason for kicking the user.
@@ -103,8 +101,8 @@ Requires a #music text channel.
 ```
 
 ```
-~role give <role[,...]>       : Gives role(s).
-~role take <role[,...]>       : Removes role(s).
+~role give <role[role,...]>   : Gives role(s).
+~role take <role[role,...]>   : Removes role(s).
 ~role modify <role>           : Modifies a role.
 
 Options:
@@ -123,6 +121,11 @@ Options:
         [--color <color>]     : Change role color. (6 digit HEX)
 ```
 
+```
+~cc <voice channel> <@mention>
+    Changes the mentioned user's voice channel to the given channel.
+```
+
 ## Etc.
 
 ```
@@ -139,11 +142,6 @@ Options:
 
 ~vigne   
     Returns a random picture of Vigne.
-```
-
-```
-~cc <voice channel> <@mention>
-    Changes the mentioned user's voice channel to the given channel.
 ```
 
 # JSON Sample Files

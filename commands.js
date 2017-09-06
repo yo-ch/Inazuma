@@ -36,7 +36,7 @@ function help(msg) {
         });
     else //Bring up default help menu.
         msg.channel.send(
-            `[Commands Menu]
+            `[Help Menu]
    ~help [command]
 
    #Utility
@@ -751,7 +751,7 @@ Requires a #music text channel.`,
 
     'ban': `~ban <mention> [options]
    Bans the mentioned user.
-   You cannot ban users in a higher role than Inazuma or yourself.
+   You cannot ban users in a role higher than Inazuma or yourself.
 
    Options:
       [--days <number>]   : Deletes the message history of the user.
@@ -759,7 +759,7 @@ Requires a #music text channel.`,
 
     'kick': `~kick <mention> [options]
    Kicks the mentioned user.
-   You cannot kick users in a higher role than Inazuma or yourself.
+   You cannot kick users in a role higher than Inazuma or yourself.
 
    Options:
       [--reason <reason>] : Specifies a reason for kicking the user.`

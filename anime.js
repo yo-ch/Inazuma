@@ -27,8 +27,7 @@ Common Params:
 Retrieve the specified anime from Anilist.
 */
 function retrieveAnilistData(msg) {
-    updateAccessToken().then(() => {
-        var search = msg.content.split(/\s+/).slice(1);
+        var search = msg.content.split(/\s+/).slice(1).join('+');
         if (search.length >= 1) { //A search query was given.
             var options = {
                 url: `https://anilist.co/api/anime/search/${search}?access_token=${anilistToken}`
@@ -60,9 +59,6 @@ function retrieveAnilistData(msg) {
         } else {
             msg.channel.send(`Give me an anime to search for, ${tool.tsunNoun()}!`);
         }
-    }).catch(err => {
-        msg.channel.send('Gomen, anime search is offline right now, please try again later.');
-    });
 }
 
 /*
