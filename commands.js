@@ -3,6 +3,7 @@ const config = require('./config.json');
 const ani = require('./anime.js');
 const tool = require('./tool.js');
 const rp = require('request-promise');
+const stripIndent = require('strip-indent');
 
 module.exports = {
     'help': help,
@@ -35,31 +36,34 @@ function help(msg) {
             'code': 'css'
         });
     else //Bring up default help menu.
-        msg.channel.send(
-            `[Help Menu]
-   ~help [command]
+        msg.channel.send(stripIndent(
+            `
+            [Help Menu]
+               ~help [command]
 
-   #Utility
-      ~airing
-      ~anilist
-      ~choose
-      ~roll
-      ~music
-   #Moderation
-      ~ban
-      ~kick
-      ~prune
-      ~role
-      ~cc
-   #Etc.
-      ~andy
-      ~gavquote
-      ~aoba
-      ~vigne
+               #Utility
+                  ~airing
+                  ~anilist
+                  ~choose
+                  ~roll
+                  ~music
+               #Moderation
+                  ~ban
+                  ~kick
+                  ~prune
+                  ~role
+                  ~cc
+               #Etc.
+                  ~andy
+                  ~gavquote
+                  ~aoba
+                  ~vigne
 
-[] = optional, <> = required, | = or`, {
-                'code': 'css'
-            });
+            [] = optional, <> = required, | = or
+            `
+        ), {
+            'code': 'css'
+        });
 }
 
 /*
@@ -94,7 +98,7 @@ function airing(msg) {
 Lookup anime data.
 */
 function anilist(msg) {
-    ani.retrieveAnilistData(msg);
+    ani.retrieveAnimeData(msg);
 }
 
 /*
