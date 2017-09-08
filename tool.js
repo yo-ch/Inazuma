@@ -70,7 +70,7 @@ module.exports = {
 
         var matchArg = commandString.match(regex);
         if (matchArg) {
-            return matchArg[1].slice(0, this.getNextArgIndex(matchArg[1])).trim();
+            return matchArg[1].slice(0, this.getNextArgIndex(matchArg[1])).trim().toLowerCase();
         } else {
             return null;
         }

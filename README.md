@@ -25,13 +25,16 @@ Planned:
 ## Utility
 
 ```
-~airing [option]   
-    Displays countdowns until the next episode for each anime in your airing list.  
+~airing [function]   
+    Displays the time until the next episode airs for each anime in your airing list.  
 
-    Options:
-        a <anilist urls> : Adds the given anime to your airing list.      
-        r <name in list> : Removes the anime from your airing list.     
-        c                : Clears your airing list.
+    Functions:
+        add <url[,...]>         : Adds the given anime to your airing list.     
+        remove <name in list>   : Removes the anime from your airing list.     
+        clear                   : Clears your airing list.
+        sync <anilist username> : Sync your Anilist anime list with your airing list.
+
+    URLs should link to an anime page on Anilist.
 
 ~anilist | ~ani <anime name>   
     Displays an anime's data, pulled from Anilist.
@@ -98,6 +101,7 @@ Requires a #music text channel.
         [--filter <string>] : Only prunes messages with the specified string.
 
         [--pinned | -p]     : Also prunes pinned messages. (They are not pruned by default.)
+        [--silent | -s]     : Deletes the command and does not display results of prune.
 ```
 
 ```

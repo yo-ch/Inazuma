@@ -489,11 +489,11 @@ function changeStatus(guild, status) {
     guild.status = status;
     guild.inactivityTimer = status == 'paused' ?
         600 :
-        60;
+        120;
 }
 
 /*
-Timer for inactivity. Leave voice channel after 1 minute of inactivity.
+Timer for inactivity. Leave voice channel after inactivity timer expires.
 */
 function timer() {
     for (var guildId in guilds) {
