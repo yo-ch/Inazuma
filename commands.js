@@ -86,12 +86,14 @@ function airing(msg) {
 
     if (args.length == 1)
         ani.retrieveAiringData(msg);
-    else if (args[1] == 'a')
+    else if (args[1] == 'add')
         ani.addAiringAnime(msg);
-    else if (args[1] == 'r')
+    else if (args[1] == 'remove')
         ani.removeAiringAnime(msg);
-    else if (args[1] == 'c')
+    else if (args[1] == 'clear')
         ani.clearAiringList(msg);
+    else if (args[1] == 'sync')
+        ani.syncList(msg);
 }
 
 /*
@@ -201,27 +203,24 @@ function prune(msg) {
     var botOption = options.long.includes('bots');
     var userOption = options.long.includes('user');
     var filterOption = options.long.includes('filter');
+    var silentOption = option.short.includes('s') || options.long.includes('silent');
     var pinOption = options.short.includes('p') || options.long.includes('pinned');
 
     if (amount) {
         try {
             var name;
             var nickname;
-            if (userOption) {
-                var matchUser = msg.content.match(/ --user (\w+)/);
-                if (!matchUser)
-                    throw 'args';
-                name = matchUser[1].toLowerCase().trim();
-            }
             var stringToFilter;
+            if (userOption) {
+                name = tool.parseOptionArg('user', msg.content);
+                if (!name)
+                    throw 'args';
+            }
+
             if (filterOption) {
-                var matchFilter = msg.content.match(/--filter (.+)/);
+                stringToFilter = tool.parseOptionArg('filter', msg.content);
                 if (!matchFilter)
                     throw 'args';
-                var nextArgIndex = matchFilter[1].indexOf('-') > 0 ? matchFilter[1].indexOf('-') :
-                    matchFilter[1].length;
-                stringToFilter = matchFilter[1].toLowerCase().slice(0,
-                    nextArgIndex).trim();
             }
             processAmount(amount, 0);
         } catch (err) {
@@ -264,8 +263,7 @@ function prune(msg) {
                     var userPass = userOption ? msg.author.username.toLowerCase() ==
                         name || nickname == name : true;
                     var filterPass = filterOption ? msg.content.toLowerCase()
-                        .indexOf(
-                            stringToFilter) >= 0 : true;
+                        .indexOf(stringToFilter) >= 0 : true;
                     var pinnedPass = pinOption ? !msg.pinned : true;
 
                     return botPass && userPass && filterPass &&
@@ -297,11 +295,15 @@ function prune(msg) {
                     }, 1000);
                 } else { //Done pruning.
                     //Total number of pruned messages.
-                    msg.channel.send(`Pruned ${tool.wrap(prunedAmount)} messages.`);
+                    if (silentOption) {
+                        msg.delete();
+                    } else {
+                        msg.channel.send(`Pruned ${tool.wrap(prunedAmount)} messages.`);
+                    }
                 }
             }
         }).catch(err => {
-            throw err.message;
+            throw 'err';
         });
     }
 }
@@ -353,7 +355,7 @@ function role(msg) {
     }
 
     /*
-    Filters users for give|take functions according to the specified optinos.
+    Filters users for give|take functions according to the specified options.
     */
     function processRoleChanges(type) {
         var members = msg.guild.members;
@@ -450,7 +452,7 @@ function role(msg) {
         var roles = [];
         roleNames.forEach(roleName => {
             var roleObj = msg.guild.roles.find(role => role.name.toLowerCase() ==
-                roleName.toLowerCase().trim());
+                roleName.toLowerCase());
             if (!roleObj) return;
             var botPositionHigher = roleObj.calculatedPosition < msg.guild.me.highestRole
                 .calculatedPosition;
@@ -459,11 +461,11 @@ function role(msg) {
                 msg.guild.ownerID == msg.author.id;
             if (!botPositionHigher)
                 msg.channel.send(
-                    `Inazuma is in a lower or the same ranked role compared to the role you are trying to modify.`
+                    `Inazuma is in a lower or equal ranked role compared to the role you are trying to modify.`
                 );
             else if (!userPositionHigher)
                 msg.channel.send(
-                    `You are in a lower or same ranked role compared to the role you are trying to modify.`
+                    `You are in a lower or equal ranked role compared to the role you are trying to modify.`
                 );
             else
                 roles.push(roleObj);
@@ -524,20 +526,13 @@ function role(msg) {
 
             //Get arguments for options that take arguments.
             if (enabledOptions.user) {
-                var nameMatch = msg.content.match(/ --user (\w+)/);
-                if (nameMatch) {
-                    var nextArgIndex = tool.getNextArgIndex(nameMatch[1]);
-                    enabledOptions.user = nameMatch[1].slice(0, nextArgIndex).trim().toLowerCase();
-                } else {
+                if (!(enabledOptions.user = tool.parseOptionArg('user', msg.content))) {
                     msg.channel.send(`User not specified. ${tool.wrap('--user <user>')}`);
                     return null;
                 }
             }
             if (enabledOptions.inrole) {
-                var roleMatch = msg.content.match(/ --inrole (\w+)/);
-                if (roleMatch) {
-                    var nextArgIndex = tool.getNextArgIndex(roleMatch[1]);
-                    enabledOptions.inrole = roleMatch[1].slice(0, nextArgIndex).trim().toLowerCase();
+                if (enabledOptions.inrole = tool.parseOptionArg('inrole', msg.content)) {
                     if (!msg.guild.roles.exists(role => role.name.toLowerCase() ==
                             enabledOptions.inrole)) {
                         //Check that role actually exists.
@@ -551,10 +546,7 @@ function role(msg) {
                 }
             }
             if (enabledOptions.notinrole) {
-                var roleMatch = msg.content.match(/ --notinrole (\w+)/);
-                if (roleMatch) {
-                    var nextArgIndex = tool.getNextArgIndex(roleMatch[1]);
-                    enabledOptions.notinrole = roleMatch[1].slice(0, nextArgIndex).trim().toLowerCase();
+                if (enabledOptions.notinrole = tool.parseOptionArg('notinrole', msg.content)) {
                     if (!msg.guild.roles.exists(role => role.name.toLowerCase() ==
                             enabledOptions.notinrole)) {
                         //Check that role actually exists.
@@ -572,18 +564,14 @@ function role(msg) {
             for (let i = 0; i < options.long.length; i++) {
                 enabledOptions[options.long[i]] = true;
             }
-            if (!enabledOptions.name && !enabledOptions.colo) {
+            if (!enabledOptions.name && !enabledOptions.color) {
                 msg.channel.send(`You didn't specify any options.`);
                 return null;
             }
 
             //Get option arguments.
             if (enabledOptions.name) {
-                var nameMatch = msg.content.match(/ --name (.+)/);
-                if (nameMatch) {
-                    var nextArgIndex = tool.getNextArgIndex(nameMatch[1]);
-                    enabledOptions.name = nameMatch[1].slice(0, nextArgIndex).trim().toLowerCase();
-                } else {
+                if (!(enabledOptions.name = tool.parseOptionArg('name'), msg.content)) {
                     msg.channel.send(
                         `You didn't specify a new name for the role! ${tool.wrap('--name <name>')}`
                     );
@@ -591,10 +579,8 @@ function role(msg) {
                 }
             }
             if (enabledOptions.color) {
-                var colorMatch = msg.content.match(/ --color (.+)/);
-                if (colorMatch) {
-                    var nextArgIndex = tool.getNextArgIndex(roleMatch[1]);
-                    var hexCode = colorMatch[1].slice(0, nextArgIndex).trim().toUpperCase();
+                var hexCode;
+                if (hexCode = tool.parseOptionArg('color', msg.content)) {
                     if (hexCode.indexOf('#') == 0) hexCode = hexCode.slice(1);
                     var decimalCode = parseInt(hexCode, 16);
                     if (hexCode.length != 6 || isNaN(decimalCode)) {
@@ -676,13 +662,16 @@ const commands = {
     'aoba': `~aoba
    Returns a random picture of Aoba.`,
 
-    'airing': `~airing [option]
-   Displays countdowns until the next episode for each anime in your airing list.
+    'airing': `~airing [function]
+   Displays the time until the next episode airs for anime in your airing list.
 
-   Options:
-      a <anilist urls> : Adds the given anime to your airing list.
-      r <name in list> : Removes the anime from your airing list.
-      c                : Clears your airing list.`,
+   Functions:
+      add <url[,...]>         : Adds the given anime to your airing list.
+      remove <name in list>   : Removes the anime from your airing list.
+      clear                   : Clears your airing list.
+      sync <anilist name>     : Sync your Anilist to your airing list.
+
+URLs should link to an anime page on Anilist.`,
 
     'anilist': `~anilist | ~ani <anime name>
    Displays an anime\'s data, pulled from Anilist.
@@ -705,7 +694,8 @@ const commands = {
       [--user <name>]     : Only prunes messages by the specified user.
       [--filter <string>] : Only prunes messages with the specified string.
 
-      [--pinned | -p]     : Also prunes pinned messages.`,
+      [--pinned | -p]     : Also prunes pinned messages.
+      [--silent | -s]     : Deletes command and doesn't display results.`,
 
     'role': `[Role Help]
 
@@ -736,7 +726,7 @@ modify
 
     'music': `[Music Help]
 
-~music | m <command>:
+~music | m <function>
    play <url> | <search> : Adds the song/playlist to the queue.
    skip                  : Skips the current song.
    pause                 : Pauses the song.
