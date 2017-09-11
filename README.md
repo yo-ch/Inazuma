@@ -5,10 +5,14 @@ A personal Discord bot written using discord.js.
 Includes anime lookup (Anilist) and a music player.
 
 ```
-Planned:
+indev:
+    ~airing command rework
+    migration to Anilist api v2 (graphql)
+
+planned:
     Soundcloud music when API registration opens back up.
-    ~airing command rework.
-    Moderation tools.
+    More moderation tools.
+    Message embeds for current commands.
 ```
 
 # Commands
