@@ -414,14 +414,13 @@ function role(msg) {
                     return !user.roles.has(role.id) && type == 'give' ||
                         user.roles.has(role.id) && type == 'take';
                 }));
-            });
-            msg.channel.send(`Modified roles of ${tool.wrap(users.length)} users.`);
+            }).then(()=>msg.channel.send(`Modified roles of ${tool.wrap(users.length)} users.`));
+
         } else { //Single user.
             users[changeFunction](roles.filter(role => {
                 return !users.roles.has(role.id) && type == 'give' ||
                     users.roles.has(role.id) && type == 'take';
-            }));
-            msg.channel.send(`Modified roles of ${tool.wrap('1')} user.`);
+            })).then(() => msg.channel.send(`Modified roles of ${tool.wrap('1')} user.`));
         }
     }
 
