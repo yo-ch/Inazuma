@@ -326,9 +326,11 @@ function role(msg) {
         return msg.channel.send(`You haven't specified any roles to give or take.`);
     }
     roles = validateRoleChanges(roleNames);
-    if (roles.length == 0) {
+    if (roles == null)
+        return;
+    if (roles.length === 0)
         return msg.channel.send(`Unable to find matching roles.`);
-    }
+
 
     var options = tool.parseOptions(msg.content);
     if (options) {
@@ -358,7 +360,7 @@ function role(msg) {
             var user = members.find(member => member.user.username.toLowerCase() == name.toLowerCase());
 
             if (user) {
-                changeRoles(user, roles, type);
+                changeRoles(user, type);
             } else {
                 msg.channel.send(`Unable to find matching user.`);
             }
@@ -399,7 +401,7 @@ function role(msg) {
     /*
     Add/remove roles for each user.
     */
-    function changeRoles(users, type) {
+    function changeRoles(users,  type) {
         //If type != 'give', type = 'take'.
         var changeFunction = type == 'give' ? 'addRoles' : 'removeRoles';
 
@@ -414,8 +416,8 @@ function role(msg) {
                     return !user.roles.has(role.id) && type == 'give' ||
                         user.roles.has(role.id) && type == 'take';
                 }));
-            }).then(()=>msg.channel.send(`Modified roles of ${tool.wrap(users.length)} users.`));
-
+            }).then(() => msg.channel.send(
+                `Modified roles of ${tool.wrap(users.length)} users.`));
         } else { //Single user.
             users[changeFunction](roles.filter(role => {
                 return !users.roles.has(role.id) && type == 'give' ||
@@ -443,7 +445,8 @@ function role(msg) {
     */
     function validateRoleChanges(roleNames) {
         var roles = [];
-        roleNames.forEach(roleName => {
+        for (let i = 0; i < roleNames.length; i++) {
+            var roleName = roleNames[i];
             var roleObj = msg.guild.roles.find(role => role.name.toLowerCase() ==
                 roleName.toLowerCase().trim());
             if (!roleObj) return;
@@ -452,17 +455,20 @@ function role(msg) {
             var userPositionHigher = roleObj.calculatedPosition < msg.member.highestRole
                 .calculatedPosition ||
                 msg.guild.ownerID == msg.author.id;
-            if (!botPositionHigher)
+            if (!botPositionHigher) {
                 msg.channel.send(
                     `Inazuma is in a lower or the same ranked role compared to the role you are trying to modify.`
                 );
-            else if (!userPositionHigher)
+                return null;
+            } else if (!userPositionHigher) {
                 msg.channel.send(
                     `You are in a lower or same ranked role compared to the role you are trying to modify.`
                 );
-            else
+                return null;
+            } else {
                 roles.push(roleObj);
-        })
+            }
+        }
         return roles;
     }
 
