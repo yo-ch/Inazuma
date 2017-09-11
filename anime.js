@@ -154,11 +154,13 @@ function syncList(msg) {
                     'NOT_YET_RELEASED')) {
                 if (!seasonalAnimeList.hasOwnProperty(entry.media.id)) {
                     seasonalAnimeList[entry.media.id] = {
-                        title: entry.media.title.romaji,
+                        title: entry.media.title.romaji ? entry.media.title.romaji : entry
+                            .media.title.english,
                         schedule: entry.media.airingSchedule.nodes.length > 0 ? entry.media
                             .airingSchedule
                             .nodes : null,
-                        nextEpisode: entry.media.nextAiringEpisode.episode,
+                        nextEpisode: entry.media.nextAiringEpisode ? entry.media.nextAiringEpisode
+                            .episode : 1,
                         users: {}
                     }
                 }
@@ -183,12 +185,13 @@ function syncList(msg) {
         fs.writeFile('seasonalAnime.json', JSON.stringify(seasonalAnimeList));
 
         //Add/modify Anilist username of the message author.
-        if (!anilistUsers.hasOwnProperty(msg.author.id)) {
+        if (!anilistUsers.hasOwnProperty(msg.author.id) || anilistUsers[msg.author.id] != username) {
             anilistUsers[msg.author.id] = username;
             fs.writeFile('anilistUsers.json', JSON.stringify(anilistUsers));
         }
         msg.channel.send(`Sync success! ${tool.inaHappy}`);
     }).catch((err) => {
+        console.log(err.message);
         msg.channel.send(
             `Gomen, I couldn't sync your Anilist. Try again later. ${tool.inaError}`
         );
@@ -318,14 +321,16 @@ function retrieveAiringData(msg) {
     var info = [];
     for (currentAnime of subscribedAnime) {
         let nextEpisode = currentAnime.nextEpisode;
-        let countdown = currentAnime.schedule[nextEpisode - 1].airingAt - unixts;
+        let countdown = currentAnime.schedule ? currentAnime.schedule[nextEpisode - 1].airingAt -
+            unixts : null;
 
         var title = currentAnime.title.length > 43 ?
             `${currentAnime.title.substring(0, 43)}...` :
             currentAnime.title; //Cut off anime title if needed.
-
         //Push tuple of string and airing countdown, which is used to sort by airing countdown.
-        if (currentAnime.schedule.length < nextEpisode)
+        if (countdown == null)
+            info.push([sprintf('%-50s [ SCHEDULE N/A ]\n', title), Infinity]);
+        else if (currentAnime.schedule.length < nextEpisode)
             info.push([
                 sprintf('%-50s [  DONE AIRING  ]\n', title),
                 Infinity
@@ -365,10 +370,10 @@ function retrieveAiringData(msg) {
 Adds anime to the airing list of the user using the anime's URLs.
 */
 function addAiringAnime(msg) {
-    var animeToAdd = msg.content.slice(config.prefix.length+10).split(',');
+    var animeToAdd = msg.content.slice(config.prefix.length + 10).split(',');
     if (!animeToAdd || animeToAdd.length == 0)
 
-    var ids = [];
+        var ids = [];
     for (var i = 0; i < animeToAdd.length; i++) {
         var id = animeToAdd[i].match(/\/(\d+)\//);
         if (!id) { //No matches in regex.
