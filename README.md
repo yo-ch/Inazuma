@@ -167,13 +167,21 @@ Options:
 }
 ```
 
-## airing_anime.json
+## seasonalAnime.json
 
 ```
 {
-    "User1ID": [],
-    "User2ID": [],
-    ...
+  {
+    "21856": {
+      "title": "Boku no Hero Academia 2",
+      "schedule": [
+      {"airingAt": 1491585000, "episode": 1},
+      {"airingAt": 1492189800, "episode": 2},
+      ...],
+      "nextEpisode": 22,
+      "users": {"userid1": null, "userid2": null, ...}"
+    }, ...
+  }
 }
 ```
 
@@ -183,6 +191,7 @@ Options:
 {
     "quotes": [
     "Quote 1",
-    "Quote 2" ]
+    "Quote 2",
+    ... ]
 }
 ```

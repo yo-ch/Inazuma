@@ -23,7 +23,7 @@ bot.on('message', msg => {
     //Replies to non-commands.
     if (msg.content.toLowerCase().match(/^ay{2,}$/)) //Ayy lmao.
         msg.channel.send('lmao');
-    else if (msg.content.toLowerCase().search(/same*$/)>=0) //same.
+    else if (msg.content.toLowerCase().search(/^same*$/)>=0) //same.
         msg.channel.send('same');
     else if (msg.content.toLowerCase().indexOf('inazuma') >= 0) //Tehe~.
         msg.channel.send('<:inaTehe:301555244330909697>');
