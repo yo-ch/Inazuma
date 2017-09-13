@@ -86,14 +86,13 @@ function airing(msg) {
 
     if (args.length == 1)
         ani.retrieveAiringData(msg);
-    else if (args[1] == 'add')
-        ani.addAiringAnime(msg);
-    else if (args[1] == 'remove')
-        ani.removeAiringAnime(msg);
-    else if (args[1] == 'clear')
-        ani.clearAiringList(msg);
     else if (args[1] == 'sync')
         ani.syncList(msg);
+    else if (args[1] == 'clear')
+        ani.clearAiringList(msg);
+    else if (args[1] == 'seasonal') {
+        ani.retrieveSeasonalAnime(msg);
+    }
 }
 
 /*
@@ -666,10 +665,9 @@ const commands = {
    Displays the time until the next episode airs for anime in your airing list.
 
    Functions:
-      add <url[,...]>         : Adds the given anime to your airing list.
-      remove <name in list>   : Removes the anime from your airing list.
-      clear                   : Clears your airing list.
       sync <anilist name>     : Sync your Anilist to your airing list.
+      seasonal                : Display a list of current season anime.
+      clear                   : Clears your airing list.
 
 URLs should link to an anime page on Anilist.`,
 
