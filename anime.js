@@ -12,7 +12,8 @@ module.exports = {
     'retrieveAiringData': retrieveAiringData,
     'clearAiringList': clearAiringList,
     'syncList': syncList,
-    'retrieveSeasonalAnime': retrieveSeasonalAnime
+    'retrieveSeasonalAnime': retrieveSeasonalAnime,
+    'requestMissingSchedules': requestMissingSchedules
 }
 
 var searchRequests = {}; //Stores search requests that have multiple results.
@@ -124,6 +125,7 @@ function syncList(msg) {
                 status
                 title {
                   romaji
+                  english
                 }
                 nextAiringEpisode {
                   episode
@@ -202,24 +204,6 @@ function syncList(msg) {
     });
 }
 
-function queryAnilist(query, variables) {
-    return new Promise((resolve, reject) => {
-        var options = {
-            method: 'POST',
-            url: `https://graphql.anilist.co`,
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                query: query,
-                variables: variables
-            })
-        }
-        rp(options).then(body => resolve(body)).catch(reject);
-    });
-}
-
 /*
 Replies with specified anime data after user has chosen a number.
 
@@ -265,20 +249,7 @@ function retrieveSeasonalAnime(msg) {
         'season': season.season
     }
 
-    var options = {
-        method: 'POST',
-        url: `https://graphql.anilist.co`,
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-            query: query,
-            variables: variables
-        })
-    }
-
-    rp(options).then(body => {
+    queryAnilist(query, variables).then(body => {
         var seasonalAnime = JSON.parse(body).data.Page.media;
         var response = `[   ${season.season} ${season.year}    ]\n`;
         var seasonalAnimeListNew = {};
@@ -397,6 +368,27 @@ UTILITY FUNCTIONS
 */
 
 /*
+Send request to Anilist api with provided query and variables.
+*/
+function queryAnilist(query, variables) {
+    return new Promise((resolve, reject) => {
+        var options = {
+            method: 'POST',
+            url: `https://graphql.anilist.co`,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                query: query,
+                variables: variables
+            })
+        }
+        rp(options).then(body => resolve(body)).catch(reject);
+    });
+}
+
+/*
 Formats the given anime information.
 
 @params String
@@ -475,5 +467,64 @@ function getCurrentSeason(seconds) {
                 season: 'FALL',
                 year: year
             };
+    }
+}
+
+function requestMissingSchedules() {
+    var subscribedAnime = JSON.parse(fs.readFileSync('subscribedAnime.json'));
+
+    var query = stripIndent(
+        `
+        query ($id: Int){
+          Media(id: $id, type: ANIME){
+            id
+            status
+            nextAiringEpisode{
+              episode
+            }
+            airingSchedule{
+              nodes{
+                airingAt
+                episode
+              }
+            }
+          }
+        }
+        `
+    );
+    var variables = {
+        'id': 0
+    }
+    var processedCount = 0;
+    var noToProcess = 0;
+    for (let animeId in subscribedAnime) {
+        if (subscribedAnime[animeId].schedule == null) noToProcess++;
+    }
+    for (let animeId in subscribedAnime) {
+        if (subscribedAnime[animeId].schedule != null) continue;
+        if (processedCount == noToProcess) break;
+
+        processedCount++;
+        variables.id = parseInt(animeId); //Request airing schedule for anime with this id.
+        queryAnilist(query, variables).then(body => {
+            var animeSchedule = JSON.parse(body).data.Media;
+
+            if (animeSchedule.status != 'RELEASING' && animeSchedule.status !=
+                'NOT_YET_RELEASED') {
+                subscribedAnime[animeId].schedule = []; //Empty schedule to signify airing completion.
+            } else if (animeSchedule.airingSchedule.nodes.length > 0) { //Schedule available and anime still airing.
+                subscribedAnime[animeId].schedule = animeSchedule.airingSchedule.nodes;
+                subscribedAnime[animeId].nextEpisode = animeSchedule.nextAiringEpisode ?
+                    animeSchedule.nextAiringEpisode.episode : 1;
+            } else {
+                return;
+            }
+
+            console.log(`Updated schedule of an anime! ID: ${animeSchedule.id}`);
+            if (processedCount == noToProcess) {
+                fs.writeFile('subscribedAnime.json', JSON.stringify(subscribedAnime));
+                console.log('writing to file');
+            }
+        }).catch(err => console.log(err.message));
     }
 }

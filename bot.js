@@ -14,6 +14,9 @@ bot.on('ready', () => {
     console.log(`Serving ${bot.guilds.size} guilds.`);
 
     bot.user.setGame('~help');
+
+    ani.requestMissingSchedules();
+    setInterval(ani.requestMissingSchedules, 86400000); //Request updates every 24 hours.
 });
 
 bot.on('message', msg => {
