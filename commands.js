@@ -85,7 +85,7 @@ function airing(msg) {
     var args = msg.content.split(/\s+/);
 
     if (args.length == 1)
-        ani.retrieveAiringData(msg);
+        ani.getAiringList(msg);
     else if (args[1] == 'sync')
         ani.syncList(msg);
     else if (args[1] == 'clear')

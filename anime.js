@@ -9,15 +9,16 @@ const fs = require('fs');
 module.exports = {
     'retrieveAnimeData': retrieveAnimeData,
     'anilistChoose': anilistChoose,
-    'retrieveAiringData': retrieveAiringData,
+    'getAiringList': getAiringList,
     'clearAiringList': clearAiringList,
     'syncList': syncList,
     'retrieveSeasonalAnime': retrieveSeasonalAnime,
-    'requestMissingSchedules': requestMissingSchedules
+    'requestMissingSchedules': requestMissingSchedules,
+    'passClient': passClient
 }
 
 var searchRequests = {}; //Stores search requests that have multiple results.
-
+var discordClient = null;
 /*
 Common Params:
 @param Object msg - The message that called the command.
@@ -109,7 +110,7 @@ function syncList(msg) {
     if (args[2]) {
         username = args[2];
     } else if (anilistUsers.hasOwnProperty(msg.author.id)) {
-        username = anilistUsers[msg.author.id];
+        username = anilistUsers[msg.author.id].username;
     } else {
         return msg.channel.send(`You didn't give me a username! ${tool.inaBaka}`);
     }
@@ -189,10 +190,13 @@ function syncList(msg) {
 
         fs.writeFile('subscribedAnime.json', JSON.stringify(subscribedAnimeList));
 
-        //Add/modify Anilist username of the message author.
+        //Add/modify user to list of anilist users.
         if (!anilistUsers.hasOwnProperty(msg.author.id) || anilistUsers[msg.author.id] !=
             username) {
-            anilistUsers[msg.author.id] = username;
+            anilistUsers[msg.author.id] = {
+                username: username,
+                notifications: true
+            }
             fs.writeFile('anilistUsers.json', JSON.stringify(anilistUsers));
         }
         msg.channel.send(`Sync success! ${tool.inaHappy}`);
@@ -278,7 +282,7 @@ function retrieveSeasonalAnime(msg) {
 /*
 Displays airing data of anime in the user's airing list.
 */
-function retrieveAiringData(msg) {
+function getAiringList(msg) {
     var subscribedAnime = JSON.parse(fs.readFileSync('subscribedAnime.json'));
 
     //Get anime that user is subscribed to, and update next episode counter if applicable.
@@ -291,6 +295,7 @@ function retrieveAiringData(msg) {
         if (currentAnime.schedule) {
             while (unixts > currentAnime.schedule[currentAnime.nextEpisode - 1].airingAt &&
                 currentAnime.nextEpisode < currentAnime.schedule.length) {
+                notifyAnimeAired(currentAnime, currentAnime.nextEpisode);
                 currentAnime.nextEpisode++;
             }
         }
@@ -336,7 +341,7 @@ function retrieveAiringData(msg) {
 
     var airing = `${msg.author.username}'s Airing List\n`;
     airing += "=".repeat(airing.trim().length) + '\n';
-    for (let i = 0; i < info.length; i++) //Add info to airing string.
+    for (let i = 0; i < info.length; i++) //Add info of each anime to airing string.
         airing += info[i][0];
 
     var airingListPromise = msg.channel.send(`${airing}`, {
@@ -361,6 +366,59 @@ function clearAiringList(msg) {
     idJSON[msg.author.id] = [];
     fs.writeFile('airing_anime.json', JSON.stringify(idJSON));
     msg.channel.send('Your airing list has been cleared!');
+}
+
+/*
+NOTIFICATION FUNCTIONS
+*/
+
+/*
+Periodically updates the episode count in the airing list. (Every 15 mins).
+*/
+setInterval(checkAnimeAired, 900000);
+
+function checkAnimeAired() {
+    console.log('checking air');
+    var subscribedAnime = JSON.parse(fs.readFileSync('subscribedAnime.json'));
+    var unixts = Math.round((new Date()).getTime() / 1000);
+
+    for (let animeId in subscribedAnime) {
+        let currentAnime = subscribedAnime[animeId];
+        if (currentAnime.schedule) {
+            while (unixts > currentAnime.schedule[currentAnime.nextEpisode - 1].airingAt &&
+                currentAnime.nextEpisode < currentAnime.schedule.length) {
+                notifyAnimeAired(currentAnime, currentAnime.nextEpisode);
+                currentAnime.nextEpisode++;
+            }
+        }
+    }
+    fs.writeFile('subscribedAnime.json', JSON.stringify(subscribedAnime));
+}
+
+/*
+Notifies subscribed users that an anime has aired if they have notifications on.
+*/
+function notifyAnimeAired(airedAnime, episode) {
+    var anilistUsers = JSON.parse(fs.readFileSync('anilistUsers.json'));
+
+    for (let userId in airedAnime.users) {
+        if (anilistUsers.hasOwnProperty(userId) && anilistUsers[userId].notifications == true) { //Notifications on.
+            discordClient.fetchUser(userId).then(user => {
+                user.createDM().then(dm =>
+                    dm.send(
+                        `${tool.wrap(airedAnime.title)} **Episode ${episode}** has aired!`
+                    ));
+            }).catch(err => console.log(err.message));
+        }
+    }
+}
+
+function setNotificationOption(user, on) {
+    var anilistUsers = JSON.parse(fs.readFileSync('anilistUsers.json'));
+    if (anilistUsers.hasOwnProperty(user.id)) {
+        anilistUsers[user.id].notifications = on;
+    }
+    fs.writeFile('anilistUsers.json', JSON.stringify(anilistUsers));
 }
 
 /*
@@ -504,7 +562,7 @@ function requestMissingSchedules() {
         if (subscribedAnime[animeId].schedule != null) continue;
         if (processedCount == noToProcess) break;
 
-        processedCount++;
+        processedCount++; //Could also use Promises.all here instead.
         variables.id = parseInt(animeId); //Request airing schedule for anime with this id.
         queryAnilist(query, variables).then(body => {
             var animeSchedule = JSON.parse(body).data.Media;
@@ -527,4 +585,12 @@ function requestMissingSchedules() {
             }
         }).catch(err => console.log(err.message));
     }
+}
+
+/*
+Receive discord client instance.
+*/
+function passClient(client) {
+    console.log('client passed');
+    discordClient = client;
 }
