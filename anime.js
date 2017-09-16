@@ -14,6 +14,7 @@ module.exports = {
     'syncList': syncList,
     'retrieveSeasonalAnime': retrieveSeasonalAnime,
     'requestMissingSchedules': requestMissingSchedules,
+    'setNotificationOption': setNotificationOption,
     'passClient': passClient
 }
 
@@ -416,7 +417,7 @@ function notifyAnimeAired(airedAnime, episode) {
 function setNotificationOption(user, on) {
     var anilistUsers = JSON.parse(fs.readFileSync('anilistUsers.json'));
     if (anilistUsers.hasOwnProperty(user.id)) {
-        anilistUsers[user.id].notifications = on;
+        anilistUsers[user.id].notifications = on == 'on' ? true : false;
     }
     fs.writeFile('anilistUsers.json', JSON.stringify(anilistUsers));
 }

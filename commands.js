@@ -92,6 +92,13 @@ function airing(msg) {
         ani.clearAiringList(msg);
     else if (args[1] == 'seasonal') {
         ani.retrieveSeasonalAnime(msg);
+    } else if (args[1] == 'notifications') {
+        let on;
+        if (args[2] && args[2] == 'on' || args[2] == 'off')
+            on = args[2];
+        else
+            return;
+        ani.setNotificationOption(msg.author, on);
     }
 }
 
