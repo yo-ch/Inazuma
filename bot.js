@@ -21,7 +21,7 @@ bot.on('ready', () => {
 });
 
 bot.on('message', msg => {
-    if (msg.author.bot || !msg.channel.type == 'text')
+    if (msg.author.bot || msg.channel.type != 'text')
         return; // Do not respond to messages from bots or messages that are not from guilds.
 
     //Replies to non-commands.
