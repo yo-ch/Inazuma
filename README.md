@@ -6,13 +6,13 @@ Includes anime lookup (Anilist) and a music player.
 
 ```
 indev:
-    ~airing command rework
-    migration to Anilist api v2 (graphql)
+    -More and better documentation. (JSDocs)
 
 planned:
-    Soundcloud music when API registration opens back up.
-    More moderation tools.
-    Message embeds for current commands.
+    -Soundcloud music when API registration opens back up.
+    -More moderation tools.
+    -Message embeds for current commands.
+    -Cache .json files, periodically writing to them, instead of constantly reading and writing to them.
 ```
 
 # Commands
@@ -26,32 +26,25 @@ planned:
 [] = optional, <> = required, | = or
 ```
 
-## Utility
+## Anime
 
 ```
 ~airing [function]   
-    Displays the time until the next episode airs for each anime in your airing list.  
+    Displays your airing list.
 
     Functions:
-        add <url[,...]>         : Adds the given anime to your airing list.     
-        remove <name in list>   : Removes the anime from your airing list.     
+        sync [anilist username] : Sync your Anilist anime list with your airing list.
+                                  You only need to include your username the first time.
         clear                   : Clears your airing list.
-        sync <anilist username> : Sync your Anilist anime list with your airing list.
+        seasonal                : Displays a list of the current season of anime.
+        notifications <on|off>  : Sets airing notifications on/off. (On by default).
 
-    URLs should link to an anime page on Anilist.
+The airing list shows the time until the next episode airs for each anime in your list.
+Airing notifications are sent to subscribed users when an anime airs.  
 
 ~anilist | ~ani <anime name>   
     Displays an anime's data, pulled from Anilist.
     If multiple choices are given, simply reply with the number.
-```
-
-```
-~choose <arg1> | [arg2] ...
-    Randomly chooses between the provided choice(s).
-
-~roll <int1> [int2]   
-    Rolls an integer from 1 to int1 inclusive.
-    If int2 is given, rolls an integer between int1 and int2 inclusive.
 ```
 
 ## Music
@@ -74,6 +67,17 @@ planned:
 
 Supports Youtube and search.
 Requires a #music text channel.
+```
+
+## Utility
+
+```
+~choose <arg1> | [arg2] ...
+    Randomly chooses between the provided choice(s).
+
+~roll <int1> [int2]   
+    Rolls an integer from 1 to int1 inclusive.
+    If int2 is given, rolls an integer between int1 and int2 inclusive.
 ```
 
 ## Moderation
@@ -169,19 +173,32 @@ Options:
 
 ## seasonalAnime.json
 
+Empty json file initially.
+
 ```
 {
-  {
-    "21856": {
-      "title": "Boku no Hero Academia 2",
-      "schedule": [
-      {"airingAt": 1491585000, "episode": 1},
-      {"airingAt": 1492189800, "episode": 2},
-      ...],
-      "nextEpisode": 22,
-      "users": {"userid1": null, "userid2": null, ...}"
-    }, ...
-  }
+  "21856": {
+    "title": "Boku no Hero Academia 2",
+    "schedule": [
+    {"airingAt": 1491585000, "episode": 1},
+    {"airingAt": 1492189800, "episode": 2},
+    ...],
+    "nextEpisode": 22,
+    "users": {"userid1": null, "userid2": null, ...}"
+  }, ...
+}
+```
+
+# anilistUsers.json
+
+Empty json file initially.
+
+```
+{
+  "discordId": {
+    "username": "anilistUsername",
+    "notifications": true
+  }, ...
 }
 ```
 
