@@ -19,12 +19,13 @@ const commands = module.exports = {
    Displays your airing list.
 
    Functions:
-      sync <anilist name>     : Sync your Anilist to your airing list.
+      sync [anilist name]     : Sync your Anilist to your airing list.
+                                   Name is only required the first time.
       clear                   : Clears your airing list.
       seasonal                : Display a list of current season anime.
       notifications <on|off>  : Sets airing notifications on/off. (On by default).
 
-The airing list shows the time until the next episode airs for each anime in your list.\n
+The airing list shows the time until the next episode airs for each anime in your list.
 Airing notifications are sent to subscribed users when an anime airs.`,
 
     'anilist': `
