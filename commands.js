@@ -210,7 +210,7 @@ function prune(msg) {
     var botOption = options.long.includes('bots');
     var userOption = options.long.includes('user');
     var filterOption = options.long.includes('filter');
-    var silentOption = option.short.includes('s') || options.long.includes('silent');
+    var silentOption = options.short.includes('s') || options.long.includes('silent');
     var pinOption = options.short.includes('p') || options.long.includes('pinned');
 
     if (amount) {
@@ -226,7 +226,7 @@ function prune(msg) {
 
             if (filterOption) {
                 stringToFilter = tool.parseOptionArg('filter', msg.content);
-                if (!matchFilter)
+                if (!stringToFilter)
                     throw 'args';
             }
             processAmount(amount, 0);
