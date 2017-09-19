@@ -287,7 +287,7 @@ function playSong(msg, guild) {
         guild.musicChannel.send('Queue complete.');
         changeStatus(guild, 'stopped');
     } else {
-        joinVoiceChannel().then(() => {
+        resolveVoiceChannel().then(() => {
             var song = guild.queue[0];
             var stream;
             if (song.type == 'youtube')
@@ -334,7 +334,7 @@ function playSong(msg, guild) {
 
     @return Promise - resolved if the bot is connected to a voice channel, and rejected if not.
     */
-    function joinVoiceChannel() {
+    function resolveVoiceChannel() {
         return new Promise((resolve, reject) => {
             if (guild.voiceConnection)
                 resolve();
