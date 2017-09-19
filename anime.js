@@ -293,13 +293,16 @@ function getAiringList(msg) {
     for (let i = 0; i < subscribedAnimeIds.length; i++) {
         let currentAnime = subscribedAnime[subscribedAnimeIds[i]];
 
-        if (currentAnime.schedule) {
+        if (currentAnime.schedule && currentAnime.schedule.length > 0) {
             while (unixts > currentAnime.schedule[currentAnime.nextEpisode - 1].airingAt &&
-                currentAnime.nextEpisode < currentAnime.schedule.length) {
+                currentAnime.nextEpisode <= currentAnime.schedule.length) {
                 notifyAnimeAired(currentAnime, currentAnime.nextEpisode);
                 currentAnime.nextEpisode++;
             }
+            if (currentAnime.nextEpisode - 1 == currentAnime.schedule.length)
+                currentAnime.schedule = []; //Empty schedule signifies airing completion.
         }
+
 
         if (currentAnime.users.hasOwnProperty(msg.author.id)) {
             airingListAnime.push(currentAnime);
@@ -314,8 +317,14 @@ function getAiringList(msg) {
     var info = [];
     for (let currentAnime of airingListAnime) {
         let nextEpisode = currentAnime.nextEpisode;
-        let countdown = currentAnime.schedule ? currentAnime.schedule[nextEpisode - 1].airingAt -
-            unixts : null;
+        let countdown = null;
+        if (currentAnime.schedule) {
+            if (currentAnime.schedule.length == 0) {
+                countdown = Infinity; //Empty schedule means done airing. Infinity makes sense in this case.
+            } else {
+                countdown = currentAnime.schedule[nextEpisode - 1].airingAt - unixts;
+            }
+        }
 
         var title = currentAnime.title.length > 43 ?
             `${currentAnime.title.substring(0, 43)}...` :
@@ -323,7 +332,7 @@ function getAiringList(msg) {
         //Push tuple of string and airing countdown, which is used to sort by airing countdown.
         if (countdown == null)
             info.push([sprintf('%-50s [ SCHEDULE N/A ]\n', title), Infinity]);
-        else if (currentAnime.schedule.length < nextEpisode)
+        else if (countdown == Infinity)
             info.push([
                 sprintf('%-50s [  DONE AIRING  ]\n', title),
                 Infinity
@@ -385,11 +394,14 @@ function checkAnimeAired() {
 
     for (let animeId in subscribedAnime) {
         let currentAnime = subscribedAnime[animeId];
-        if (currentAnime.schedule) {
+        if (currentAnime.schedule && currentAnime.schedule.length > 0) {
             while (unixts > currentAnime.schedule[currentAnime.nextEpisode - 1].airingAt &&
-                currentAnime.nextEpisode < currentAnime.schedule.length) {
+                currentAnime.nextEpisode <= currentAnime.schedule.length) {
                 notifyAnimeAired(currentAnime, currentAnime.nextEpisode);
                 currentAnime.nextEpisode++;
+            }
+            if (currentAnime.nextEpisode - 1 == currentAnime.schedule.length) {
+                currentAnime.schedule = []; //Empty schedule signifies airing completion.
             }
         }
     }
