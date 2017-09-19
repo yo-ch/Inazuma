@@ -292,20 +292,7 @@ function getAiringList(msg) {
     var unixts = Math.round((new Date()).getTime() / 1000);
     for (let i = 0; i < subscribedAnimeIds.length; i++) {
         let currentAnime = subscribedAnime[subscribedAnimeIds[i]];
-        console.log(currentAnime.title);
-        if (currentAnime.schedule && currentAnime.schedule.length > 0) {
-            while (currentAnime.nextEpisode <= currentAnime.schedule.length && unixts >
-                currentAnime.schedule[currentAnime.nextEpisode - 1].airingAt
-            ) {
-                notifyAnimeAired(currentAnime, currentAnime.nextEpisode);
-                currentAnime.nextEpisode++;
-
-            }
-            if (currentAnime.nextEpisode - 1 == currentAnime.schedule.length)
-                currentAnime.schedule = []; //Empty schedule signifies airing completion.
-        }
-
-
+        updateAnimeStatus(currentAnime, unixts);
         if (currentAnime.users.hasOwnProperty(msg.author.id)) {
             airingListAnime.push(currentAnime);
         }
@@ -396,16 +383,7 @@ function checkAnimeAired() {
 
     for (let animeId in subscribedAnime) {
         let currentAnime = subscribedAnime[animeId];
-        if (currentAnime.schedule && currentAnime.schedule.length > 0) {
-            while (
-                currentAnime.nextEpisode <= currentAnime.schedule.length&&unixts > currentAnime.schedule[currentAnime.nextEpisode - 1].airingAt ) {
-                notifyAnimeAired(currentAnime, currentAnime.nextEpisode);
-                currentAnime.nextEpisode++;
-            }
-            if (currentAnime.nextEpisode - 1 == currentAnime.schedule.length) {
-                currentAnime.schedule = []; //Empty schedule signifies airing completion.
-            }
-        }
+        updateAnimeStatus(currentAnime, unixts);
     }
     fs.writeFile('subscribedAnime.json', JSON.stringify(subscribedAnime));
 }
@@ -428,6 +406,22 @@ function notifyAnimeAired(airedAnime, episode) {
     }
 }
 
+/*
+Update the status of the airing list. (Episode count/Airing status)
+*/
+function updateAnimeStatus(anime, unixts) {
+    if (anime.schedule && anime.schedule.length > 0) {
+        while (anime.nextEpisode <= anime.schedule.length && unixts >
+            anime.schedule[anime.nextEpisode - 1].airingAt
+        ) {
+            notifyAnimeAired(anime, anime.nextEpisode);
+            anime.nextEpisode++;
+        }
+        if (anime.nextEpisode - 1 == anime.schedule.length)
+            anime.schedule = []; //Empty schedule signifies airing completion.
+    }
+}
+
 function setNotificationOption(user, on) {
     var anilistUsers = JSON.parse(fs.readFileSync('anilistUsers.json'));
     if (anilistUsers.hasOwnProperty(user.id)) {
@@ -444,21 +438,19 @@ UTILITY FUNCTIONS
 Send request to Anilist api with provided query and variables.
 */
 function queryAnilist(query, variables) {
-    return new Promise((resolve, reject) => {
-        var options = {
-            method: 'POST',
-            url: `https://graphql.anilist.co`,
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                query: query,
-                variables: variables
-            })
-        }
-        rp(options).then(body => resolve(body)).catch(reject);
-    });
+    var options = {
+        method: 'POST',
+        url: `https://graphql.anilist.co`,
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            query: query,
+            variables: variables
+        })
+    }
+    return rp(options);
 }
 
 /*
@@ -606,6 +598,5 @@ function requestMissingSchedules() {
 Receive discord client instance.
 */
 function passClient(client) {
-    console.log('client passed');
     discordClient = client;
 }
