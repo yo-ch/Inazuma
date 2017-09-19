@@ -292,12 +292,14 @@ function getAiringList(msg) {
     var unixts = Math.round((new Date()).getTime() / 1000);
     for (let i = 0; i < subscribedAnimeIds.length; i++) {
         let currentAnime = subscribedAnime[subscribedAnimeIds[i]];
-
+        console.log(currentAnime.title);
         if (currentAnime.schedule && currentAnime.schedule.length > 0) {
-            while (unixts > currentAnime.schedule[currentAnime.nextEpisode - 1].airingAt &&
-                currentAnime.nextEpisode <= currentAnime.schedule.length) {
+            while (currentAnime.nextEpisode <= currentAnime.schedule.length && unixts >
+                currentAnime.schedule[currentAnime.nextEpisode - 1].airingAt
+            ) {
                 notifyAnimeAired(currentAnime, currentAnime.nextEpisode);
                 currentAnime.nextEpisode++;
+
             }
             if (currentAnime.nextEpisode - 1 == currentAnime.schedule.length)
                 currentAnime.schedule = []; //Empty schedule signifies airing completion.
@@ -395,8 +397,8 @@ function checkAnimeAired() {
     for (let animeId in subscribedAnime) {
         let currentAnime = subscribedAnime[animeId];
         if (currentAnime.schedule && currentAnime.schedule.length > 0) {
-            while (unixts > currentAnime.schedule[currentAnime.nextEpisode - 1].airingAt &&
-                currentAnime.nextEpisode <= currentAnime.schedule.length) {
+            while (
+                currentAnime.nextEpisode <= currentAnime.schedule.length&&unixts > currentAnime.schedule[currentAnime.nextEpisode - 1].airingAt ) {
                 notifyAnimeAired(currentAnime, currentAnime.nextEpisode);
                 currentAnime.nextEpisode++;
             }
