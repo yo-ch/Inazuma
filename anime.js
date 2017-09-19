@@ -15,11 +15,15 @@ module.exports = {
     'retrieveSeasonalAnime': retrieveSeasonalAnime,
     'requestMissingSchedules': requestMissingSchedules,
     'setNotificationOption': setNotificationOption,
-    'passClient': passClient
+    'passClient': passClient,
+    'writeFiles': writeFiles
 }
 
-var searchRequests = {}; //Stores search requests that have multiple results.
 var discordClient = null;
+const searchRequests = {}; //Stores search requests that have multiple results.
+const subscribedAnime = JSON.parse(fs.readFileSync('subscribedAnime.json'));
+const anilistUsers = JSON.parse(fs.readFileSync('anilistUsers.json'));
+const seasonalAnime = JSON.parse(fs.readFileSync('seasonalAnime.json'));
 /*
 Common Params:
 @param Object msg - The message that called the command.
@@ -40,6 +44,7 @@ function retrieveAnimeData(msg) {
                   title{
                     romaji
                   }
+                  season
                   description
                   format
                   episodes
@@ -50,10 +55,9 @@ function retrieveAnimeData(msg) {
             `
         );
         var choice;
-        if (choice = parseInt(search)) {
-            var seasonalAnimeNames = JSON.parse(fs.readFileSync('seasonalAnime.json'));
-            if (seasonalAnimeNames.hasOwnProperty(search)) {
-                search = seasonalAnimeNames[search];
+        if (choice = parseInt(search)) { //Search using number from ~airing seasonal instead.
+            if (seasonalAnime.hasOwnProperty(search)) {
+                search = seasonalAnime[search];
             }
         }
         var variables = {
@@ -106,7 +110,6 @@ Syncs the anime list of the given Anilist user to the Discord user, for use with
 */
 function syncList(msg) {
     var args = msg.content.split(/\s+/);
-    var anilistUsers = JSON.parse(fs.readFileSync('anilistUsers.json'));
     var username;
     if (args[2]) {
         username = args[2];
@@ -152,15 +155,14 @@ function syncList(msg) {
         var watchingAnime = JSON.parse(body).data.MediaListCollection.statusLists.current;
         var toBeSubscribed = {}; //IDs for anime that are airing/to be aired, that we will subscribe the user to.
 
-        var subscribedAnimeList = JSON.parse(fs.readFileSync('subscribedAnime.json'));
         //Process anime in the user's watching list.
         for (let i = 0; i < watchingAnime.length; i++) {
             let entry = watchingAnime[i];
             if ((entry.media.status == 'RELEASING' || entry.media.status ==
                     'NOT_YET_RELEASED')) {
                 //Add anime that are not in the subscribedAnime list yet.
-                if (!subscribedAnimeList.hasOwnProperty(entry.media.id)) {
-                    subscribedAnimeList[entry.media.id] = {
+                if (!subscribedAnime.hasOwnProperty(entry.media.id)) {
+                    subscribedAnime[entry.media.id] = {
                         title: entry.media.title.romaji ? entry.media.title.romaji : entry
                             .media.title.english,
                         schedule: entry.media.airingSchedule.nodes.length > 0 ? entry.media
@@ -177,19 +179,17 @@ function syncList(msg) {
         }
 
         //Iterate through subscribedAnime list. Subscribe user to new anime and unsubscribe user from all other anime.
-        var seasonalAnimeIds = Object.keys(subscribedAnimeList);
+        var seasonalAnimeIds = Object.keys(subscribedAnime);
         for (let i = 0; i < seasonalAnimeIds.length; i++) {
             let id = seasonalAnimeIds[i];
             if (toBeSubscribed.hasOwnProperty(id)) {
                 //Subscribe user.
-                subscribedAnimeList[id].users[msg.author.id] = null;
+                subscribedAnime[id].users[msg.author.id] = null;
             } else { //User is not/no longer subscribed to this anime.
                 //Unsubscribe user.
-                delete subscribedAnimeList[id].users[msg.author.id];
+                delete subscribedAnime[id].users[msg.author.id];
             }
         }
-
-        fs.writeFile('subscribedAnime.json', JSON.stringify(subscribedAnimeList));
 
         //Add/modify user to list of anilist users.
         if (!anilistUsers.hasOwnProperty(msg.author.id) || anilistUsers[msg.author.id] !=
@@ -198,7 +198,6 @@ function syncList(msg) {
                 username: username,
                 notifications: true
             }
-            fs.writeFile('anilistUsers.json', JSON.stringify(anilistUsers));
         }
         msg.channel.send(`Sync success! ${tool.inaHappy}`);
     }).catch((err) => {
@@ -255,28 +254,20 @@ function retrieveSeasonalAnime(msg) {
     }
 
     queryAnilist(query, variables).then(body => {
-        var seasonalAnime = JSON.parse(body).data.Page.media;
-        var response = `[   ${season.season} ${season.year}    ]\n`;
-        var seasonalAnimeListNew = {};
-        response += '='.repeat(response.trim().length) + '\n';
-        for (let i = 0; i < seasonalAnime.length; i++) {
-            response += sprintf('%03s %1s\n', (i + 1).toString() + '.', seasonalAnime[i]
+        var data = JSON.parse(body).data.Page.media;
+        var msgResponse = `[   ${season.season} ${season.year}    ]\n`;
+        msgResponse += '='.repeat(msgResponse.trim().length) + '\n';
+        for (let i = 0; i < data.length; i++) {
+            msgResponse += sprintf('%03s %1s\n', (i + 1).toString() + '.', data[i]
                 .title
                 .romaji);
-            seasonalAnimeListNew[i + 1] = seasonalAnime[i].title.romaji;
+            seasonalAnime[i + 1] = data[i].title.romaji;
         }
-        msg.channel.send(response, {
+        msg.channel.send(msgResponse, {
             code: 'md'
         });
         msg.channel.send(tool.wrap(
             'Get more info on an anime using ~anilist <name|number>.'));
-
-        //Update seasonalAnime list if applicable.
-        seasonalAnimeListNew = JSON.stringify(seasonalAnimeListNew);
-        var seasonalAnimeList = fs.readFileSync('seasonalAnime.json');
-        if (seasonalAnimeList != seasonalAnimeListNew) {
-            fs.writeFile('seasonalAnime.json', seasonalAnimeListNew);
-        }
     }).catch(err => console.log(err.message));
 }
 
@@ -284,8 +275,6 @@ function retrieveSeasonalAnime(msg) {
 Displays airing data of anime in the user's airing list.
 */
 function getAiringList(msg) {
-    var subscribedAnime = JSON.parse(fs.readFileSync('subscribedAnime.json'));
-
     //Get anime that user is subscribed to, and update next episode counter if applicable.
     var subscribedAnimeIds = Object.keys(subscribedAnime);
     var airingListAnime = [];
@@ -347,8 +336,6 @@ function getAiringList(msg) {
         'code': 'md'
     });
 
-    fs.writeFile('subscribedAnime.json', JSON.stringify(subscribedAnime)); //Update file.
-
     setTimeout(() => { //Delete airing message after 5 minutes.
         airingListPromise.then(airingMsg => {
             msg.delete();
@@ -361,10 +348,12 @@ function getAiringList(msg) {
 Clears the user's airing list.
 */
 function clearAiringList(msg) {
-    var subscribedAnime = JSON.parse(fs.readFileSync('subscribedAnime.json'));
-    idJSON[msg.author.id] = [];
-    fs.writeFile('airing_anime.json', JSON.stringify(idJSON));
-    msg.channel.send('Your airing list has been cleared!');
+    for (let animeId in subscribedAnime) {
+        if (subscribedAnime[animeId].users.hasOwnProperty(msg.author.id)) {
+            delete subscribedAnime[animeId].users[msg.author.id];
+        }
+    }
+    msg.channel.send(`Your airing list has been cleared! ${tool.inaHappy}`);
 }
 
 /*
@@ -374,34 +363,12 @@ NOTIFICATION FUNCTIONS
 /*
 Periodically updates the episode count in the airing list. (Every 15 mins).
 */
-setInterval(checkAnimeAired, 900000);
-
 function checkAnimeAired() {
-    var subscribedAnime = JSON.parse(fs.readFileSync('subscribedAnime.json'));
     var unixts = Math.round((new Date()).getTime() / 1000);
 
     for (let animeId in subscribedAnime) {
         let currentAnime = subscribedAnime[animeId];
         updateAnimeStatus(currentAnime, unixts);
-    }
-    fs.writeFile('subscribedAnime.json', JSON.stringify(subscribedAnime));
-}
-
-/*
-Notifies subscribed users that an anime has aired if they have notifications on.
-*/
-function notifyAnimeAired(airedAnime, episode) {
-    var anilistUsers = JSON.parse(fs.readFileSync('anilistUsers.json'));
-
-    for (let userId in airedAnime.users) {
-        if (anilistUsers.hasOwnProperty(userId) && anilistUsers[userId].notifications == true) { //Notifications on.
-            discordClient.fetchUser(userId).then(user => {
-                user.createDM().then(dm =>
-                    dm.send(
-                        `${tool.wrap(airedAnime.title)} **Episode ${episode}** has aired!`
-                    ));
-            }).catch(err => console.log(err.message));
-        }
     }
 }
 
@@ -416,22 +383,44 @@ function updateAnimeStatus(anime, unixts) {
             notifyAnimeAired(anime, anime.nextEpisode);
             anime.nextEpisode++;
         }
-        if (anime.nextEpisode - 1 == anime.schedule.length)
+        if (anime.nextEpisode > anime.schedule.length)
             anime.schedule = []; //Empty schedule signifies airing completion.
     }
 }
 
+/*
+Notifies subscribed users that an anime has aired if they have notifications on.
+*/
+function notifyAnimeAired(airedAnime, episode) {
+    for (let userId in airedAnime.users) {
+        if (anilistUsers.hasOwnProperty(userId) && anilistUsers[userId].notifications == true) { //Notifications on.
+            discordClient.fetchUser(userId).then(user => {
+                user.createDM().then(dm =>
+                    dm.send(
+                        `${tool.wrap(airedAnime.title)} **Episode ${episode}** has aired!`
+                    ));
+            }).catch(err => console.log(err.message));
+        }
+    }
+}
+
 function setNotificationOption(user, on) {
-    var anilistUsers = JSON.parse(fs.readFileSync('anilistUsers.json'));
     if (anilistUsers.hasOwnProperty(user.id)) {
         anilistUsers[user.id].notifications = on == 'on' ? true : false;
     }
-    fs.writeFile('anilistUsers.json', JSON.stringify(anilistUsers));
 }
 
 /*
 UTILITY FUNCTIONS
 */
+
+/*
+Periodically write stored data to files, and check if any anime have aired. (15 mins)
+*/
+setInterval(function periodicalFuncts() {
+    writeFiles();
+    checkAnimeAired();
+}, 900000);
 
 /*
 Send request to Anilist api with provided query and variables.
@@ -535,8 +524,6 @@ function getCurrentSeason(seconds) {
 }
 
 function requestMissingSchedules() {
-    var subscribedAnime = JSON.parse(fs.readFileSync('subscribedAnime.json'));
-
     var query = stripIndent(
         `
         query ($id: Int){
@@ -583,14 +570,24 @@ function requestMissingSchedules() {
             } else {
                 return;
             }
-
             console.log(`Updated schedule of an anime! ID: ${animeSchedule.id}`);
-            if (processedCount == noToProcess) {
-                fs.writeFile('subscribedAnime.json', JSON.stringify(subscribedAnime));
-                console.log('writing to file');
-            }
         }).catch(err => console.log(err.message));
     }
+}
+
+/*
+Write data in memory to JSON files.
+*/
+function writeFiles() {
+    var wfPromises = [fs.writeFile('subscribedAnime.json', JSON.stringify(subscribedAnime)),
+        fs.writeFile('anilistUsers.json', JSON.stringify(anilistUsers)),
+        fs.writeFile('seasonalAnime.json', JSON.stringify(seasonalAnime))
+    ];
+    var allPromises = Promise.all(wfPromises);
+    allPromises.then(() => console.log('JSON files saved!')).catch(err => console.log(
+        'Error saving JSON files: ' + err.message));
+
+    return allPromises;
 }
 
 /*

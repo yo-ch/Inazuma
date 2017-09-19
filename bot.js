@@ -6,6 +6,9 @@ const cmds = require('./commands.js');
 const ani = require('./anime.js');
 const music = require('./music.js');
 const tool = require('./tool.js');
+const prompt = require('prompt');
+prompt.message = '';
+prompt.delimiter = '';
 
 const bot = new Discord.Client();
 
@@ -18,6 +21,23 @@ bot.on('ready', () => {
     ani.passClient(bot);
     ani.requestMissingSchedules();
     setInterval(ani.requestMissingSchedules, 86400000); //Request updates every 24 hours.
+
+    //Internal bot commands.
+    startPrompt();
+
+    function startPrompt() {
+        prompt.start({
+            noHandleSIGINT: true
+        });
+        prompt.get(['\\Inazuma>'], function (err, result) {
+            if (!err) {
+                if (result['\\Inazuma>'] == 'save') {
+                    ani.writeFiles()
+                }
+                setTimeout(startPrompt, 0);
+            }
+        });
+    }
 });
 
 bot.on('message', msg => {
@@ -27,7 +47,7 @@ bot.on('message', msg => {
     //Replies to non-commands.
     if (msg.content.toLowerCase().match(/^ay{2,}$/)) //Ayy lmao.
         msg.channel.send('lmao');
-    else if (msg.content.toLowerCase().search(/^same*$/)>=0) //same.
+    else if (msg.content.toLowerCase().search(/^same*$/) >= 0) //same.
         msg.channel.send('same');
     else if (msg.content.toLowerCase().indexOf('inazuma') >= 0) //Tehe~.
         msg.channel.send('<:inaTehe:301555244330909697>');
