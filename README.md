@@ -7,12 +7,13 @@ Includes anime lookup (Anilist) and a music player.
 ```
 indev:
     -More and better documentation. (JSDocs)
+    -Cache .json files, periodically writing to them, instead of constantly reading and writing to them.
 
 planned:
     -Soundcloud music when API registration opens back up.
     -More moderation tools.
     -Message embeds for current commands.
-    -Cache .json files, periodically writing to them, instead of constantly reading and writing to them.
+
 ```
 
 # Commands
@@ -190,7 +191,7 @@ Empty json file initially.
 }
 ```
 
-# anilistUsers.json
+## anilistUsers.json
 
 Empty json file initially.
 
