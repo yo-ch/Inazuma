@@ -34,7 +34,8 @@ planned:
 
     Functions:
         sync [anilist username] : Sync your Anilist anime list with your airing list.
-                                      (You only need to include your username the first time).
+                                      You only need to include your username the first time.
+                                      This only syncs to be aired/airing anime.
         clear                   : Clears your airing list.
         seasonal                : Displays a list of the current season of anime.
         notifications <on|off>  : Sets airing notifications on/off. (On by default).
