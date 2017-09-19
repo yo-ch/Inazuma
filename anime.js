@@ -377,7 +377,6 @@ Periodically updates the episode count in the airing list. (Every 15 mins).
 setInterval(checkAnimeAired, 900000);
 
 function checkAnimeAired() {
-    console.log('checking air');
     var subscribedAnime = JSON.parse(fs.readFileSync('subscribedAnime.json'));
     var unixts = Math.round((new Date()).getTime() / 1000);
 
