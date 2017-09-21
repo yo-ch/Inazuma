@@ -9,8 +9,6 @@ const stripIndent = require('strip-indent');
 module.exports = {
     'help': help,
     'andy': andy,
-    'airing': airing,
-    'anilist': anilist,
     'ban': ban,
     'cc': cc,
     'choose': choose,
@@ -22,6 +20,9 @@ module.exports = {
     'retrieveImgurAlbum': retrieveImgurAlbum
 }
 
+/*
+Displays the general help menu, or the help text for a specific command if requested.
+*/
 function help(msg) {
     var args = msg.content.split(/\s+/).slice(1);
 
@@ -77,37 +78,6 @@ function andy(msg) {
         msg.channel.send(`Shut up weeb. ${user}`);
     else
         msg.channel.send(`Shut up weeb.`)
-}
-
-/*
-Processes ~airing commands.
-*/
-function airing(msg) {
-    var args = msg.content.split(/\s+/);
-
-    if (args.length == 1)
-        ani.getAiringList(msg);
-    else if (args[1] == 'sync')
-        ani.syncList(msg);
-    else if (args[1] == 'clear')
-        ani.clearAiringList(msg);
-    else if (args[1] == 'seasonal') {
-        ani.retrieveSeasonalAnime(msg);
-    } else if (args[1] == 'notifications') {
-        let on;
-        if (args[2] && args[2] == 'on' || args[2] == 'off')
-            on = args[2];
-        else
-            return;
-        ani.setNotificationOption(msg.author, on);
-    }
-}
-
-/*
-Lookup anime data.
-*/
-function anilist(msg) {
-    ani.retrieveAnimeData(msg);
 }
 
 /*
@@ -240,6 +210,9 @@ function prune(msg) {
 
     /*
     Recursive function to fetch and delete more than 100 messages if needed.
+    Deletes the most recent <amount> messages in each call.
+    @param {Number} amount The amount of messages to delete.
+    @param {Number} prunedAmount The number of messages pruned off so far.
     */
     function processAmount(amount, prunedAmount) {
         var fetchAmount;
@@ -293,6 +266,10 @@ function prune(msg) {
                 nextCall(0);
             }
 
+            /*
+            Calls the next processAmount call or ends the recursion and replies with results.
+            @param {Number} deletedSize The number of messages deleted in this iteration of processAmount.
+            */
             function nextCall(deletedSize) {
                 prunedAmount += deletedSize;
                 if (amount > 0) {
@@ -365,6 +342,7 @@ function role(msg) {
 
     /*
     Filters users for give|take functions according to the specified options.
+    @param {String} type The type of role change. 'give' or 'take' operation.
     */
     function processRoleChanges(type) {
         var members = msg.guild.members;
@@ -413,6 +391,8 @@ function role(msg) {
 
     /*
     Add/remove roles for each user.
+    @param {Array|Object} users An array of users, or a single User object.
+    @param {String} type The type of role change. 'give' or 'take'.
     */
     function changeRoles(users, type) {
         //If type != 'give', type = 'take'.
@@ -455,6 +435,7 @@ function role(msg) {
 
     /*
     Validate that the bot and user have permission to modify/assign the specified roles.
+    @param {Array} roleNames The supplied names of roles.
     */
     function validateRoleChanges(roleNames) {
         var roles = [];
@@ -486,8 +467,9 @@ function role(msg) {
     }
 
     /*
-    Validates the options of the command and gets their arguments if applicable.
-    enabledOptions stores included options as properties, as 'true' or as the corresponding argument to the option.
+    Check if options and their args are valid, and also if this specific combination of options is valid.
+    @param {Object} options The options parsed from the command.
+    @return {Object} enabledOptions An object with key/value pairs of <option name, true|argument to the option>.
 
     i.e;
     if one of the options was --bots, enabledOptions.bots = true.
@@ -498,11 +480,7 @@ function role(msg) {
 
         //Validate options for 'give|take' or 'modify'.
         if (args[0] == 'give' || args[0] == 'take') {
-            //Get options.
-            var optionCounter = {
-                type1: {},
-                type2: {}
-            }
+            //Get options and their type counts.
             for (let i = 0; i < options.long.length; i++) {
                 if (options.long[i] == 'bots' || options.long[i] == 'users' || options.long[i] ==
                     'user') {
@@ -516,7 +494,7 @@ function role(msg) {
                 enabledOptions[options.long[i]] = true;
             }
 
-            //Make sure options selected are valid, and that there are no conflicting options.
+            //Make sure there is a valid combo of options.
             var optionLength1 = Object.keys(optionCounter.type1).length;
             var optionLength2 = Object.keys(optionCounter.type2).length;
             if (optionLength1 > 1) {

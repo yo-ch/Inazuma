@@ -9,6 +9,9 @@ const rp = require('request-promise');
 
 var guilds = {};
 
+/*
+The music command handler.
+*/
 module.exports.processCommand = function (msg) {
     if (!msg.guild.available) return;
     //Add guild to the guild list.
@@ -68,7 +71,6 @@ module.exports.processCommand = function (msg) {
 
 /*
 Common Params:
-@param Object msg - The message that called the command.
 @param Object guild - The guild that the message is from.
 
 Song object:
@@ -79,7 +81,6 @@ Song object:
 
 /*
 Processes user input for ~play command calls.
-
 Determines what kind of input (search query, youtube video/playlist, soundcloud song/playlist) has been given, and proceeds accordingly.
 */
 function processInput(msg, guild) {
@@ -106,8 +107,7 @@ function processInput(msg, guild) {
 
 /*
 Processes a search using youtube-dl, pushing the resulting song to the queue.
-
-@param String seachQuery - The search query.
+@param {String} seachQuery The search query.
 */
 function processSearch(msg, guild, searchQuery) {
     searchQuery = 'gvsearch1:' + searchQuery;
@@ -134,8 +134,7 @@ Processing functions for Youtube links.
 const youtube = {
     /*
     Processes a new song, pushing it to the queue.
-
-    @param String url - The URL of the new song.
+    @param {String} url The URL of the new song.
     */
     processSong(msg, guild, url) {
         ytdl.getInfo(url, (err, info) => {
@@ -160,8 +159,7 @@ const youtube = {
 
     /*
     Processes a Youtube playlist.
-
-    @param String playlistId - the ID of the Youtube playlist.
+    @param {String} playlistId The ID of the Youtube playlist.
     */
     processPlaylist(msg, guild, playlistId) {
         const youtubeApiUrl = 'https://www.googleapis.com/youtube/v3/';
@@ -173,11 +171,9 @@ const youtube = {
 
         /*
         A recursive function that retrieves the metadata (id and title) of each video in the playlist using the Youtube API.
-
-        @param Array playlistItems - The metadata of each video in the playlist.
-        @param String pageToken - The next page token response for the playlist if applicable.
-
-        @return Promise - Resolved if playlist metadata succesfully retrieved, rejected if not.
+        @param {Array} playlistItems Array storing metadata of each video in the playlist.
+        @param {String} pageToken The next page token response for the playlist if applicable.
+        @return {Promise} Resolved if playlist metadata succesfully retrieved, rejected if not.
         */
         function getPlaylistInfo(playlistItems, pageToken) {
             return new Promise((resolve, reject) => {
@@ -196,8 +192,7 @@ const youtube = {
 
                     if (playlist.hasOwnProperty('nextPageToken'))
                         getPlaylistInfo(playlistItems, playlist.nextPageToken).then(
-                            playlistItems => resolve(playlistItems)).catch(
-                            reject);
+                            playlistItems => resolve(playlistItems));
                     else
                         resolve(playlistItems);
                 }).catch(reject);
@@ -206,8 +201,7 @@ const youtube = {
 
         /*
         Processes the playlist metadata, adding songs to the queue.
-
-        @param Array playlistItems - The metadata of each video in the playlist.
+        @param {Array} playlistItems The metadata of each video in the playlist.
         */
         function processPlaylistInfo(playlistItems) {
             var queueLength = guild.queue.length;
@@ -238,8 +232,7 @@ const youtube = {
 
     /*
     Gets the readable stream of the given song.
-
-    @param Object song - The song to get the stream of.
+    @param {Object} song The song to get the stream of.
     */
     getStream(song) {
         if (song) {
@@ -257,8 +250,8 @@ const youtube = {
 Adds the song to the queue.
 If an index argument is included, insert the song at that index instead of pushing it to the queue.
 
-@param Object song - The song to queue.
-@param Number [index] - The index to insert the song at.
+@param {Object} song The song to queue.
+@param {Number} [index] The index to insert the song at.
 */
 function queueSong(msg, guild, song) {
     var index;
@@ -484,6 +477,7 @@ function hime(msg, guild) {
 
 /*
 Changes the status of the bot.
+@param {String} status The status to set the bot to.
 */
 function changeStatus(guild, status) {
     guild.status = status;

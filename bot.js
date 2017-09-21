@@ -1,12 +1,14 @@
 'use strict';
 const Discord = require('discord.js');
-const config = require('./config.json');
 
+const config = require('./config.json');
 const cmds = require('./commands.js');
 const ani = require('./anime.js');
 const music = require('./music.js');
 const tool = require('./tool.js');
+
 const prompt = require('prompt');
+const colors = require('colors');
 prompt.message = '';
 prompt.delimiter = '';
 
@@ -20,24 +22,10 @@ bot.on('ready', () => {
 
     ani.passClient(bot);
     ani.requestMissingSchedules();
-    setInterval(ani.requestMissingSchedules, 86400000); //Request updates every 24 hours.
+    setInterval(ani.requestMissingSchedules, 86400000); //Request every 24 hours.
 
     //Internal bot commands.
-    startPrompt();
-
-    function startPrompt() {
-        prompt.start({
-            noHandleSIGINT: true
-        });
-        prompt.get(['\\Inazuma>'], function (err, result) {
-            if (!err) {
-                if (result['\\Inazuma>'] == 'save') {
-                    ani.writeFiles()
-                }
-                setTimeout(startPrompt, 0);
-            }
-        });
-    }
+    promptInternalCmd();
 });
 
 bot.on('message', msg => {
@@ -69,10 +57,10 @@ bot.on('message', msg => {
         case 'andy':
             return cmds.andy(msg);
         case 'airing':
-            return cmds.airing(msg);
+            return ani.airing(msg);
         case 'ani':
         case 'anilist':
-            return cmds.anilist(msg);
+            return ani.anilist(msg);
         case 'ban':
             return cmds.ban(msg);
         case 'kick':
@@ -125,3 +113,26 @@ function reply(msg) {
     ];
     msg.channel.send(replies[tool.randint(replies.length)]);
 }
+
+/*
+Server-side command prompts.
+*/
+function promptInternalCmd() {
+    prompt.start({
+        noHandleSIGINT: true
+    });
+    prompt.get([colors.green('\\Inazuma>')], function (err, result) {
+        if (!err) {
+            let cmd = result[colors.green('\\Inazuma>')];
+            if (cmd == 'save') { //Manually save anime JSON files.
+                ani.writeFiles().then(() => console.log('JSON files saved!'));
+            }
+            setTimeout(promptInternalCmd, 0);
+        }
+    });
+}
+
+/*
+Common Params:
+@param {Object} msg The message that called the command.
+*/
