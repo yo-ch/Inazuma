@@ -20,8 +20,8 @@ module.exports = {
     'writeFiles': writeFiles
 }
 
-var discordClient = null;
-const searchRequests = {}; //Stores search requests that have multiple results.
+let discordClient = null;
+let searchRequests = {}; //Stores search requests that have multiple results.
 const subscribedAnime = JSON.parse(fs.readFileSync('subscribedAnime.json'));
 const anilistUsers = JSON.parse(fs.readFileSync('anilistUsers.json'));
 const seasonalAnime = JSON.parse(fs.readFileSync('seasonalAnime.json'));
@@ -30,9 +30,9 @@ const seasonalAnime = JSON.parse(fs.readFileSync('seasonalAnime.json'));
 Display the specified anime's info, from Anilist.
 */
 function retrieveAnimeData(msg) {
-    var search = msg.content.split(/\s+/).slice(1).join(' ').trim();
+    let search = msg.content.split(/\s+/).slice(1).join(' ').trim();
     if (search.length >= 1) { //A search query was given.
-        var query = stripIndent(
+        let query = stripIndent(
             `
             query ($search: String) {
               Page (page: 1, perPage: 15) {
@@ -51,35 +51,22 @@ function retrieveAnimeData(msg) {
             }
             `
         );
-        var choice;
+        let choice;
         if (choice = parseInt(search)) { //Search using number from ~airing seasonal instead.
-            if (seasonalAnime.hasOwnProperty(search)) {
-                search = seasonalAnime[search];
+            if (seasonalAnime.hasOwnProperty(choice)) {
+                search = seasonalAnime[choice];
             }
         }
-        var variables = {
+        let variables = {
             'search': search
         }
 
-        var options = {
-            method: 'POST',
-            url: `https://graphql.anilist.co`,
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                query: query,
-                variables: variables
-            })
-        }
-
-        rp(options).then(body => {
-            var searchResults = JSON.parse(body).data.Page.media;
+        queryAnilist(query, variables).then(body => {
+            let searchResults = JSON.parse(body).data.Page.media;
 
             if (searchResults.length == 1) { //Send results.
-                var anime = searchResults[0];
-                var ais = animeInfoString(anime.title.romaji, anime.averageScore,
+                let anime = searchResults[0];
+                let ais = animeInfoString(anime.title.romaji, anime.averageScore,
                     anime.format, anime.episodes, anime.description,
                     `https://anilist.co/anime/${anime.id}/`);
                 msg.channel.send(ais);
@@ -87,14 +74,18 @@ function retrieveAnimeData(msg) {
                 //Store results to retrieve when user replies with a choice.
                 searchRequests[msg.author.id] = searchResults;
 
-                var choiceString = 'Choose a number onegai!\n\n';
-                for (var i = 0; i < searchResults.length; i++)
+                let choiceString = 'Choose a number onegai!\n\n';
+                for (let i = 0; i < searchResults.length; i++)
                     choiceString +=
                     `${tool.wrap(`${i + 1} - ${searchResults[i].title.romaji}`)}\n`;
                 msg.channel.send(choiceString);
+            } else {
+                throw {
+                    message: 'No results.'
+                };
             }
         }).catch(err => {
-            console.log(err);
+            console.log(err.message);
             msg.channel.send('Gomen, I couldn\'t find anything!');
         });
     } else {
@@ -107,14 +98,14 @@ Replies with specified anime data after user has chosen a number.
 @param {Number} choice The user's choice.
 */
 function anilistChoose(msg, choice) {
-    var results = searchRequests[msg.author.id];
+    let results = searchRequests[msg.author.id];
     if (!results)
         return; //User does not have a search active.
 
     if (choice > 0 && choice <= results.length) {
-        var anime = results[choice - 1];
+        let anime = results[choice - 1];
 
-        var ais = animeInfoString(anime.title.romaji, anime.averageScore, anime.format, anime.episodes,
+        let ais = animeInfoString(anime.title.romaji, anime.averageScore, anime.format, anime.episodes,
             anime.description, `https://anilist.co/anime/${anime.id}/`);
         msg.channel.send(ais);
         delete searchRequests[msg.author.id];
@@ -125,7 +116,7 @@ function anilistChoose(msg, choice) {
 Parses ~airing commands and calls the corresponding function.
 */
 function airingHandler(msg) {
-    var args = msg.content.split(/\s+/);
+    let args = msg.content.split(/\s+/);
 
     if (args.length == 1)
         getAiringList(msg);
@@ -145,13 +136,13 @@ Displays user's airing list.
 */
 function getAiringList(msg) {
     //Get anime that user is subscribed to, and update next episode counter if applicable.
-    var subscribedAnimeIds = Object.keys(subscribedAnime);
-    var airingListAnime = [];
-    var unixts = Math.round((new Date()).getTime() / 1000);
+    let subscribedAnimeIds = Object.keys(subscribedAnime);
+    let airingListAnime = [];
+    let unixts = Math.round((new Date()).getTime() / 1000);
     for (let i = 0; i < subscribedAnimeIds.length; i++) {
         let currentAnime = subscribedAnime[subscribedAnimeIds[i]];
         updateAnimeStatuses(currentAnime, unixts);
-        if (currentAnime.users.hasOwnProperty(msg.author.id)) {
+        if (currentAnime.users.hasOwnProperty(msg.author.id)) { //If user is subscribed, add anime to list.
             airingListAnime.push(currentAnime);
         }
     }
@@ -161,7 +152,7 @@ function getAiringList(msg) {
             `There aren\'t any anime in your airing list, ${tool.tsunNoun()}.`);
     }
 
-    var info = [];
+    let info = [];
     for (let currentAnime of airingListAnime) {
         let nextEpisode = currentAnime.nextEpisode;
         let countdown = null;
@@ -173,7 +164,7 @@ function getAiringList(msg) {
             }
         }
 
-        var title = currentAnime.title.length > 43 ?
+        let title = currentAnime.title.length > 43 ?
             `${currentAnime.title.substring(0, 43)}...` :
             currentAnime.title; //Cut off anime title if needed.
         //Push tuple of string and airing countdown, which is used to sort by airing countdown.
@@ -196,12 +187,12 @@ function getAiringList(msg) {
         return a[1] - b[1]; //compare countdowns.
     });
 
-    var airing = `${msg.author.username}'s Airing List\n`;
+    let airing = `${msg.author.username}'s Airing List\n`;
     airing += "=".repeat(airing.trim().length) + '\n';
     for (let i = 0; i < info.length; i++) //Add info of each anime to airing string.
         airing += info[i][0];
 
-    var airingListPromise = msg.channel.send(`${airing}`, {
+    let airingListPromise = msg.channel.send(`${airing}`, {
         'code': 'md'
     });
 
@@ -217,8 +208,8 @@ function getAiringList(msg) {
 Syncs the anime list of the given Anilist user to the Discord user, for use with the airing list functions.
 */
 function syncList(msg) {
-    var args = msg.content.split(/\s+/);
-    var username;
+    let args = msg.content.split(/\s+/);
+    let username;
     if (args[2]) {
         username = args[2];
     } else if (anilistUsers.hasOwnProperty(msg.author.id)) {
@@ -228,7 +219,7 @@ function syncList(msg) {
     }
 
     //Get user anime list.
-    var query = stripIndent(
+    let query = stripIndent(
         `
         query ($userName: String) {
           MediaListCollection(userName: $userName, type:ANIME) {
@@ -255,13 +246,13 @@ function syncList(msg) {
         }
         `
     );
-    var variables = {
+    let variables = {
         'userName': username
     }
     queryAnilist(query, variables).then(body => {
         //Anime user is currently watching.
-        var watchingAnime = JSON.parse(body).data.MediaListCollection.statusLists.current;
-        var toBeSubscribed = {}; //IDs for anime that are airing/to be aired, that we will subscribe the user to.
+        let watchingAnime = JSON.parse(body).data.MediaListCollection.statusLists.current;
+        let toBeSubscribed = {}; //IDs for anime that are airing/to be aired, that we will subscribe the user to.
 
         //Process anime in the user's watching list.
         for (let i = 0; i < watchingAnime.length; i++) {
@@ -287,7 +278,7 @@ function syncList(msg) {
         }
 
         //Iterate through subscribedAnime list. Subscribe user to new anime and unsubscribe user from all other anime.
-        var seasonalAnimeIds = Object.keys(subscribedAnime);
+        let seasonalAnimeIds = Object.keys(subscribedAnime);
         for (let i = 0; i < seasonalAnimeIds.length; i++) {
             let id = seasonalAnimeIds[i];
             if (toBeSubscribed.hasOwnProperty(id)) {
@@ -332,8 +323,8 @@ function clearAiringList(msg) {
 Display currently airing anime from Anilist.
 */
 function retrieveSeasonalAnime(msg) {
-    var season = getCurrentSeason();
-    var query = stripIndent(
+    let season = getCurrentSeason();
+    let query = stripIndent(
         `
         query ($season: MediaSeason){
           Page (page: 1, perPage: 50) {
@@ -349,13 +340,13 @@ function retrieveSeasonalAnime(msg) {
         `
     );
 
-    var variables = {
+    let variables = {
         'season': season.season
     }
 
     queryAnilist(query, variables).then(body => {
-        var data = JSON.parse(body).data.Page.media;
-        var msgResponse = `[   ${season.season} ${season.year}    ]\n`;
+        let data = JSON.parse(body).data.Page.media;
+        let msgResponse = `[   ${season.season} ${season.year}    ]\n`;
         msgResponse += '='.repeat(msgResponse.trim().length) + '\n';
         for (let i = 0; i < data.length; i++) {
             msgResponse += sprintf('%03s %1s\n', (i + 1).toString() + '.', data[i]
@@ -380,7 +371,7 @@ Updates the status of all anime in subscribedAnime.
 Removes anime that have no more subscribers and is done airing.
 */
 function updateAnimeStatuses() {
-    var unixts = Math.round((new Date()).getTime() / 1000);
+    let unixts = Math.round((new Date()).getTime() / 1000);
 
     for (let animeId in subscribedAnime) {
         let currentAnime = subscribedAnime[animeId];
@@ -421,7 +412,7 @@ function notifyAnimeAired(airedAnime, episode) {
 Sets the notification option of the user.
 */
 function setNotificationOption(msg) {
-    var args = msg.content.split(/\s+/);
+    let args = msg.content.split(/\s+/);
     if (anilistUsers.hasOwnProperty(msg.author.id)) {
         let on;
         if (args[2] && args[2] == 'on' || args[2] == 'off') {
@@ -452,7 +443,7 @@ Send request to Anilist api with provided query and variables.
 @param {Object} variables The variables for the GraphQL query.
 */
 function queryAnilist(query, variables) {
-    var options = {
+    let options = {
         method: 'POST',
         url: `https://graphql.anilist.co`,
         headers: {
@@ -484,7 +475,7 @@ function animeInfoString(name, score, type, episodes, synopsis, url) {
     }
     type = formatType[type] ? formatType[type] : type;
 
-    var syn = synopsis.replace(/<br>\\n|<br>/g, '\n');
+    let syn = synopsis.replace(/<br>\\n|<br>/g, '\n');
     syn = syn.replace(/<i>|<\/i>/g, '*');
     syn = syn.slice(0, syn.indexOf('(Source:')).trim(); //Remove source information.
     return `**${name}** (${url})\n**Score:** ${score}\n**Type:** ${type}\n**Episodes:** ${episodes}\n\n${syn}\n\n`;
@@ -495,8 +486,8 @@ Converts a countdown in seconds to days/hours/minutes.
 @param {Number} seconds The number of seconds.
 */
 function secondsToCountdown(seconds) {
-    var days = Math.floor(seconds / 86400);
-    var hours = Math.floor((seconds % 86400) / 3600);
+    let days = Math.floor(seconds / 86400);
+    let hours = Math.floor((seconds % 86400) / 3600);
     days = (days == 0) ?
         '' :
         days + 'd ';
@@ -516,10 +507,9 @@ Returns the current anime season.
 @return {Object} An object with a season and year property.
 */
 function getCurrentSeason() {
-    var date = new Date();
-
-    var month = date.getMonth();
-    var year = date.getFullYear();
+    let date = new Date();
+    let month = date.getMonth();
+    let year = date.getFullYear();
 
     switch (month) {
         case 0: //Jan - March
@@ -557,7 +547,7 @@ function getCurrentSeason() {
 Requests airing schedules for anime missing them.
 */
 function requestMissingSchedules() {
-    var query = stripIndent(
+    let query = stripIndent(
         `
         query ($id: Int){
           Media(id: $id, type: ANIME){
@@ -576,11 +566,11 @@ function requestMissingSchedules() {
         }
         `
     );
-    var variables = {
+    let variables = {
         'id': 0
     }
-    var processedCount = 0;
-    var noToProcess = 0;
+    let processedCount = 0;
+    let noToProcess = 0;
     for (let animeId in subscribedAnime) {
         if (subscribedAnime[animeId].schedule == null) noToProcess++;
     }
@@ -591,7 +581,7 @@ function requestMissingSchedules() {
         processedCount++; //Could also use Promises.all here instead.
         variables.id = parseInt(animeId); //Request airing schedule for anime with this id.
         queryAnilist(query, variables).then(body => {
-            var animeSchedule = JSON.parse(body).data.Media;
+            let animeSchedule = JSON.parse(body).data.Media;
 
             if (animeSchedule.status != 'RELEASING' && animeSchedule.status !=
                 'NOT_YET_RELEASED') {
@@ -612,14 +602,13 @@ function requestMissingSchedules() {
 Write data in memory to JSON files.
 */
 function writeFiles() {
-    var wfPromises = [fs.writeFile('subscribedAnime.json', JSON.stringify(subscribedAnime)),
+    let wfPromises = Promises.all([fs.writeFile('subscribedAnime.json', JSON.stringify(
+            subscribedAnime)),
         fs.writeFile('anilistUsers.json', JSON.stringify(anilistUsers)),
         fs.writeFile('seasonalAnime.json', JSON.stringify(seasonalAnime))
-    ];
-    var allPromises = Promise.all(wfPromises);
-    allPromises.catch(err => console.log('Error saving JSON files: ' + err.message));
-
-    return allPromises;
+    ]);
+    wfPromises.catch(err => console.log('Error saving JSON files: ' + err.message));
+    return wfPromises;
 }
 
 /*
