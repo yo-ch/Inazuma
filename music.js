@@ -295,14 +295,12 @@ function playSong(msg, guild) {
                 });
 
                 guild.dispatch.on('error', error => {
-                    console.log('error:' + error);
                     guild.dispatch = null;
                     guild.queue.shift();
                     playSong(msg, guild);
                 });
 
                 guild.dispatch.on('end', reason => {
-                    console.log('end:' + reason);
                     guild.dispatch = null;
                     guild.queue.shift();
                     if (reason != 'leave') {
