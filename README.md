@@ -6,13 +6,14 @@ Includes anime lookup (Anilist) and a music player.
 
 ```
 indev:
-    -More and better documentation. (JSDocs)
+
 
 planned:
     -Soundcloud music when API registration opens back up.
     -More moderation tools.
     -Message embeds for current commands.
     -"Lettify" variables.
+    -Constructors/classes for objects that are reused frequently.
 ```
 
 # Commands
