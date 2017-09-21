@@ -7,7 +7,7 @@ const youtubeDL = require('youtube-dl');
 const ytdl = require('ytdl-core');
 const rp = require('request-promise');
 
-var guilds = {};
+let guilds = {};
 
 /*
 The music command handler.
@@ -26,7 +26,7 @@ module.exports.processCommand = function (msg) {
             inactivityTimer: 60
         };
 
-    var guild = guilds[msg.guild.id];
+    let guild = guilds[msg.guild.id];
 
     if (!guild.musicChannel) {
         guild.musicChannel = msg.guild.channels.find('name', 'music');
@@ -36,7 +36,7 @@ module.exports.processCommand = function (msg) {
         }
     }
 
-    var musicCmd = msg.content.split(/\s+/)[1];
+    let musicCmd = msg.content.split(/\s+/)[1];
     if (musicCmd)
         musicCmd.toLowerCase();
     switch (musicCmd) {
@@ -84,12 +84,12 @@ Processes user input for ~play command calls.
 Determines what kind of input (search query, youtube video/playlist, soundcloud song/playlist) has been given, and proceeds accordingly.
 */
 function processInput(msg, guild) {
-    var url = msg.content.split(/\s+/).slice(2).join(' ');
+    let url = msg.content.split(/\s+/).slice(2).join(' ');
     if (url) {
         if (!url.startsWith('http')) { //Assume its a search.
             processSearch(msg, guild, url);
         } else if (url.search('youtube.com')) { //Youtube.
-            var playlist = url.match(/list=(\S+?)(&|\s|$|#)/); //Match playlist id.
+            let playlist = url.match(/list=(\S+?)(&|\s|$|#)/); //Match playlist id.
             if (playlist) { //Playlist.
                 youtube.processPlaylist(msg, guild, playlist[1]);
             } else if (url.search(/v=(\S+?)(&|\s|$|#)/)) { //Video.
@@ -181,12 +181,11 @@ const youtube = {
                     `&pageToken=${pageToken}` :
                     '';
 
-                var options;
-                options = {
+                let options = {
                     url: `${youtubeApiUrl}playlistItems?playlistId=${playlistId}${pageToken}&part=snippet&fields=nextPageToken,items(snippet(title,resourceId/videoId))&maxResults=50&key=${config.youtube_api_key}`
                 }
                 rp(options).then(body => {
-                    var playlist = JSON.parse(body);
+                    let playlist = JSON.parse(body);
                     playlistItems = playlistItems.concat(playlist.items.filter(
                         item => item.snippet.title != 'Deleted video'));
 
@@ -204,22 +203,22 @@ const youtube = {
         @param {Array} playlistItems The metadata of each video in the playlist.
         */
         function processPlaylistInfo(playlistItems) {
-            var queueLength = guild.queue.length;
+            let queueLength = guild.queue.length;
 
             for (let i = 0; i < playlistItems.length; i++) {
-                var info = {
+                let info = {
                     title: playlistItems[i].snippet.title,
                     url: `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`,
                     type: 'youtube'
                 }
                 queueSong(msg, guild, info, i + queueLength);
             }
-            var options = {
+            let options = {
                 url: `${youtubeApiUrl}playlists?id=${playlistId}&part=snippet&key=${config.youtube_api_key}`
             }
 
             rp(options).then(body => { //Get playlist name.
-                var playlistTitle = JSON.parse(body).items[0].snippet.title;
+                let playlistTitle = JSON.parse(body).items[0].snippet.title;
                 guild.musicChannel.send(
                     `Enqueued ${tool.wrap(playlistItems.length)} songs from ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
                 );
@@ -236,7 +235,7 @@ const youtube = {
     */
     getStream(song) {
         if (song) {
-            var stream = ytdl(song.url, {
+            let stream = ytdl(song.url, {
                 retries: 7,
                 highWaterMark: 32768,
                 filter: 'audioonly'
@@ -254,11 +253,11 @@ If an index argument is included, insert the song at that index instead of pushi
 @param {Number} [index] The index to insert the song at.
 */
 function queueSong(msg, guild, song) {
-    var index;
+    let index;
     if (arguments.length == 4)
         index = arguments[3];
 
-    var songInfo = {
+    let songInfo = {
         title: song.title ?
             song.title.trim() : 'N/A',
         url: song.url,
@@ -281,8 +280,8 @@ function playSong(msg, guild) {
         changeStatus(guild, 'stopped');
     } else {
         resolveVoiceChannel().then(() => {
-            var song = guild.queue[0];
-            var stream;
+            let song = guild.queue[0];
+            let stream;
             if (song.type == 'youtube')
                 stream = youtube.getStream(song);
             else //(song.type == 'soundcloud' || song.type =='search')
@@ -376,8 +375,8 @@ Prints the queue.
 function printQueue(guild) {
     if (guild.queue.length > 0) {
         try {
-            var queueString = '';
-            for (var i = 0; i < guild.queue.length && i < 15; i++)
+            let queueString = '';
+            for (let i = 0; i < guild.queue.length && i < 15; i++)
                 queueString += `${i + 1}. ${guild.queue[i].title}\n`;
             if (guild.queue.length > 15)
                 queueString += `\nand ${guild.queue.length - 15} more.`;
@@ -417,7 +416,7 @@ function nowPlaying(msg, guild) {
 Sets the volume of the dispatcher.
 */
 function setVolume(msg, guild) {
-    var vol = parseInt(msg.content.split(/\s+/)[2]) / 100;
+    let vol = parseInt(msg.content.split(/\s+/)[2]) / 100;
     if (vol && (vol >= 0 && vol <= 1)) {
         if (guild.dispatch) {
             guild.dispatch.setVolume(vol);
@@ -490,10 +489,10 @@ function changeStatus(guild, status) {
 Timer for inactivity. Leave voice channel after inactivity timer expires.
 */
 function timer() {
-    for (var guildId in guilds) {
-        var guild = guilds[guildId];
+    for (let guildId in guilds) {
+        let guild = guilds[guildId];
         if (guild.status == 'stopped' || guild.status == 'paused')
-            guild.inactivityTimer -= 10;
+            guild.inactivityTimer -= 30;
         if (guild.inactivityTimer <= 0) {
             guild.voiceConnection.disconnect();
             guild.voiceConnection = null;
@@ -503,4 +502,4 @@ function timer() {
         }
     }
 }
-setInterval(timer, 10000);
+setInterval(timer, 30000);

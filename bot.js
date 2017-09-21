@@ -49,7 +49,7 @@ bot.on('message', msg => {
     if (!msg.content.startsWith(config.prefix))
         return; //Not a command.
 
-    var cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length).toLowerCase();
+    let cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length).toLowerCase();
     switch (cmd) {
         case 'help':
         case 'tasukete':

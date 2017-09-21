@@ -24,9 +24,9 @@ module.exports = {
 Displays the general help menu, or the help text for a specific command if requested.
 */
 function help(msg) {
-    var args = msg.content.split(/\s+/).slice(1);
+    let args = msg.content.split(/\s+/).slice(1);
 
-    var helpStr;
+    let helpStr;
     if (args.length == 1) { //User requested help for a specific command.
         if (args[0].charAt(0) == config.prefix) //Remove prefix for the help argument.
             args[0] = args[0].slice(1);
@@ -73,7 +73,7 @@ Shut up weeb.
 */
 function andy(msg) {
     msg.delete();
-    var user = msg.mentions.users.first();
+    let user = msg.mentions.users.first();
     if (user)
         msg.channel.send(`Shut up weeb. ${user}`);
     else
@@ -87,14 +87,14 @@ function ban(msg) {
     if (!msg.member.hasPermission('BAN_MEMBERS')) {
         return msg.channel.send(`You don't have permission to ban members! ${tool.inaAngry}`);
     }
-    var memberToBan = msg.mentions.members.first();
+    let memberToBan = msg.mentions.members.first();
     if (memberToBan && memberToBan.bannable && (msg.member.highestRole.calculatedPosition >
             memberToBan.highestRole.calculatedPosition || msg.guild.ownerID == msg.author.id)) {
         //Parse arguments to options, if they exist.
-        var reason = tool.parseOptionArg('reason', msg.content);
-        var days = parseInt(tool.parseOptionArg('days', msg.content));
+        let reason = tool.parseOptionArg('reason', msg.content);
+        let days = parseInt(tool.parseOptionArg('days', msg.content));
 
-        var banOptions = {
+        let banOptions = {
             days: days ? days : 0,
             reason: reason ? reason : 'none'
         };
@@ -109,10 +109,10 @@ function kick(msg) {
     if (!msg.member.hasPermission('KICK_MEMBERS')) {
         return msg.channel.send(`You don't have permission to kick members! ${tool.inaAngry}`);
     }
-    var memberToKick = msg.mentions.members.first();
+    let memberToKick = msg.mentions.members.first();
     if (memberToKick && memberToKick.kickable && (msg.member.highestRole.calculatedPosition >
             memberToBan.highestRole.calculatedPosition || msg.guild.ownerID == msg.author.id)) {
-        var reason = tool.parseOptionArg('reason', msg.content);
+        let reason = tool.parseOptionArg('reason', msg.content);
         memberToKick.kick(reason ? reason : 'none');
     }
 }
@@ -125,9 +125,8 @@ function cc(msg) {
     if (!msg.member.hasPermission('MOVE_MEMBERS')) {
         return msg.channel.send(`Gomen, you're not allowed to move users. ${msg.author}`);
     }
-    var channel = msg.content.slice(config.prefix.length + 3, msg.content.indexOf('<@'));
-
-    var memberToBanish = msg.mentions.members.first();
+    let channel = msg.content.slice(config.prefix.length + 3, msg.content.indexOf('<@'));
+    let memberToBanish = msg.mentions.members.first();
     if (memberToBanish)
         memberToBanish.setVoiceChannel(msg.guild.channels.find('name', channel.trim()));
 }
@@ -136,10 +135,10 @@ function cc(msg) {
 Chooses between 1 or more choices given by the user, delimited by '|'.
 */
 function choose(msg) {
-    var args = msg.content.split('|');
+    let args = msg.content.split('|');
 
     args[0] = args[0].slice(8); //Slice off command string.
-    var choices = args.filter(arg => { //Filter out empty/whitespace args, and trim options.
+    let choices = args.filter(arg => { //Filter out empty/whitespace args, and trim options.
         return arg.trim() != '';
     });
 
@@ -153,7 +152,7 @@ function choose(msg) {
 Returns a random Gavin quote.
 */
 function gavquote(msg) {
-    var gq = require('./gavquotes.json');
+    let gq = require('./gavquotes.json');
     msg.channel.send(`${tool.wrap(gq.quotes[tool.randint(gq.quotes.length)])}`);
 }
 
@@ -163,8 +162,8 @@ Prunes the specified number of messages from a channel.
 function prune(msg) {
     if (!msg.member.hasPermission('MANAGE_MESSAGES'))
         return msg.channel.send(`You don't have permission to manage messages.`);
-    var args = msg.content.split(/\s+/);
-    var amount;
+    let args = msg.content.split(/\s+/);
+    let amount;
     if (args.length > 1) {
         amount = parseInt(args[1]);
     } else {
@@ -175,19 +174,19 @@ function prune(msg) {
     if (amount < 1 || amount > 500)
         return msg.channel.send(`Give me an amount between 1 and 500, onegai.`);
 
-    var options = tool.parseOptions(msg.content);
+    let options = tool.parseOptions(msg.content);
 
-    var botOption = options.long.includes('bots');
-    var userOption = options.long.includes('user');
-    var filterOption = options.long.includes('filter');
-    var silentOption = options.short.includes('s') || options.long.includes('silent');
-    var pinOption = options.short.includes('p') || options.long.includes('pinned');
+    let botOption = options.long.includes('bots');
+    let userOption = options.long.includes('user');
+    let filterOption = options.long.includes('filter');
+    let silentOption = options.short.includes('s') || options.long.includes('silent');
+    let pinOption = options.short.includes('p') || options.long.includes('pinned');
 
+    let name;
+    let nickname;
+    let stringToFilter;
     if (amount) {
         try {
-            var name;
-            var nickname;
-            var stringToFilter;
             if (userOption) {
                 name = tool.parseOptionArg('user', msg.content);
                 if (!name)
@@ -215,8 +214,7 @@ function prune(msg) {
     @param {Number} prunedAmount The number of messages pruned off so far.
     */
     function processAmount(amount, prunedAmount) {
-        var fetchAmount;
-
+        let fetchAmount;
         if (amount > 100)
             fetchAmount = 100;
         else if (amount > 1)
@@ -239,12 +237,12 @@ function prune(msg) {
                         nickname = msg.member.nickname.toLowerCase();
                     }
 
-                    var botPass = botOption ? msg.author.bot : true;
-                    var userPass = userOption ? msg.author.username.toLowerCase() ==
+                    let botPass = botOption ? msg.author.bot : true;
+                    let userPass = userOption ? msg.author.username.toLowerCase() ==
                         name || nickname == name : true;
-                    var filterPass = filterOption ? msg.content.toLowerCase()
+                    let filterPass = filterOption ? msg.content.toLowerCase()
                         .indexOf(stringToFilter) >= 0 : true;
-                    var pinnedPass = pinOption ? !msg.pinned : true;
+                    let pinnedPass = pinOption ? !msg.pinned : true;
 
                     return botPass && userPass && filterPass &&
                         pinnedPass;
@@ -301,17 +299,17 @@ function role(msg) {
         return msg.channel.send(`You don't have permission to manage roles. ${tool.inaBaka}`);
     }
 
-    var args = msg.content.split(/\s+/).slice(1);
+    let args = msg.content.split(/\s+/).slice(1);
     if (args.length < 1 || (args[0] != 'give' && args[0] != 'take' && args[0] != 'modify')) {
         return msg.channel.send(
             `Invalid arguments. Please refer to ${tool.wrap('~help role')}.`);
     }
 
     //Function params.
-    var enabledOptions;
-    var roles;
+    let enabledOptions;
+    let roles;
 
-    var roleNames = args[1].split(',');
+    let roleNames = args[1].split(',');
     if (roleNames.length == 0) {
         return msg.channel.send(`You haven't specified any roles to give or take.`);
     }
@@ -322,7 +320,7 @@ function role(msg) {
         return msg.channel.send(`Unable to find matching roles.`);
 
 
-    var options = tool.parseOptions(msg.content);
+    let options = tool.parseOptions(msg.content);
     if (options) {
         enabledOptions = validateOptions(options);
         if (!enabledOptions) return;
@@ -345,10 +343,10 @@ function role(msg) {
     @param {String} type The type of role change. 'give' or 'take' operation.
     */
     function processRoleChanges(type) {
-        var members = msg.guild.members;
+        let members = msg.guild.members;
         if (enabledOptions.user) { //This option ignores other options.
-            var name = enabledOptions.user;
-            var user = members.find(member => member.user.username.toLowerCase() == name.toLowerCase());
+            let name = enabledOptions.user;
+            let user = members.find(member => member.user.username.toLowerCase() == name.toLowerCase());
 
             if (user) {
                 changeRoles(user, type);
@@ -358,7 +356,7 @@ function role(msg) {
             return;
         }
 
-        var membersToChange = members.array();
+        let membersToChange = members.array();
         if (enabledOptions.bots) {
             membersToChange = membersToChange.filter(member => {
                 return member.user.bot;
@@ -370,13 +368,13 @@ function role(msg) {
         }
 
         if (enabledOptions.inrole) {
-            var roleName = enabledOptions.inrole;
+            let roleName = enabledOptions.inrole;
             membersToChange = membersToChange.filter(member => {
                 return member.roles.exists(role => role.name.toLowerCase() ==
                     roleName); //Has specified role.
             });
         } else if (enabledOptions.notinrole) {
-            var roleName = enabledOptions.notinrole;
+            let roleName = enabledOptions.notinrole;
             membersToChange = membersToChange.filter(member => {
                 return !member.roles.exists(role => role.name.toLowerCase() ==
                     roleName); //Doesn't have specified role.
@@ -396,7 +394,7 @@ function role(msg) {
     */
     function changeRoles(users, type) {
         //If type != 'give', type = 'take'.
-        var changeFunction = type == 'give' ? 'addRoles' : 'removeRoles';
+        let changeFunction = type == 'give' ? 'addRoles' : 'removeRoles';
 
         /*
           Filter according to change type.
@@ -423,7 +421,7 @@ function role(msg) {
     Changes the name or colour of the specified role.
     */
     function modifyRole() {
-        var role = roles[0];
+        let role = roles[0];
         if (enabledOptions.name) {
             role.setName(enabledOptions.name);
         }
@@ -438,15 +436,15 @@ function role(msg) {
     @param {Array} roleNames The supplied names of roles.
     */
     function validateRoleChanges(roleNames) {
-        var roles = [];
+        let roles = [];
         for (let i = 0; i < roleNames.length; i++) {
-            var roleName = roleNames[i];
-            var roleObj = msg.guild.roles.find(role => role.name.toLowerCase() ==
+            let roleName = roleNames[i];
+            let roleObj = msg.guild.roles.find(role => role.name.toLowerCase() ==
                 roleName.toLowerCase());
             if (!roleObj) return;
-            var botPositionHigher = roleObj.calculatedPosition < msg.guild.me.highestRole
+            let botPositionHigher = roleObj.calculatedPosition < msg.guild.me.highestRole
                 .calculatedPosition;
-            var userPositionHigher = roleObj.calculatedPosition < msg.member.highestRole
+            let userPositionHigher = roleObj.calculatedPosition < msg.member.highestRole
                 .calculatedPosition ||
                 msg.guild.ownerID == msg.author.id;
             if (!botPositionHigher) {
@@ -476,7 +474,7 @@ function role(msg) {
     if one of the options was --user <user>, enabledOptions.user = <user>.
     */
     function validateOptions(options) {
-        var enabledOptions = {};
+        let enabledOptions = {};
 
         //Validate options for 'give|take' or 'modify'.
         if (args[0] == 'give' || args[0] == 'take') {
@@ -495,8 +493,8 @@ function role(msg) {
             }
 
             //Make sure there is a valid combo of options.
-            var optionLength1 = Object.keys(optionCounter.type1).length;
-            var optionLength2 = Object.keys(optionCounter.type2).length;
+            let optionLength1 = Object.keys(optionCounter.type1).length;
+            let optionLength2 = Object.keys(optionCounter.type2).length;
             if (optionLength1 > 1) {
                 msg.channel.send(
                     `You may only use one of ${tool.wrap('--bots, --users, --user')} ${tool.inaBaka}`
@@ -569,10 +567,10 @@ function role(msg) {
                 }
             }
             if (enabledOptions.color) {
-                var hexCode;
+                let hexCode;
                 if (hexCode = tool.parseOptionArg('color', msg.content)) {
                     if (hexCode.indexOf('#') == 0) hexCode = hexCode.slice(1);
-                    var decimalCode = parseInt(hexCode, 16);
+                    let decimalCode = parseInt(hexCode, 16);
                     if (hexCode.length != 6 || isNaN(decimalCode)) {
                         msg.channel.send(`Invalid hex code!`);
                         return null;
@@ -594,19 +592,19 @@ function role(msg) {
 Rolls a number between 1 and num1 or num1 and num2 inclusive.
 */
 function roll(msg) {
-    var args = msg.content.split(/\s+/).slice(1);
+    let args = msg.content.split(/\s+/).slice(1);
     if (args.length > 2)
         return;
 
     if (args.length == 1) {
-        var num = parseInt(args[0]);
+        let num = parseInt(args[0]);
         if (tool.isInt(num))
             msg.channel.send(tool.randint(num) + 1);
         else
             msg.channel.send(`These aren\'t numbers ${tool.tsunNoun()}!`);
     } else {
-        var num1 = parseInt(args[0]);
-        var num2 = parseInt(args[1]);
+        let num1 = parseInt(args[0]);
+        let num2 = parseInt(args[1]);
         if (!tool.isInt(num1) || !tool.isInt(num2))
             return
         msg.channel.send(`These aren\'t numbers ${tool.tsunNoun()}!`);
@@ -626,8 +624,8 @@ function retrieveImgurAlbum(msg) {
         'aoba': '4e3Dd',
         'vigne': '90DeF'
     }
-    var album = albums[msg.content.slice(config.prefix.length)];
-    var options = {
+    let album = albums[msg.content.slice(config.prefix.length)];
+    let options = {
         url: `https://api.imgur.com/3/album/${album}/images`,
         headers: {
             'Authorization': `Client-ID ${config.imgur_id}`
@@ -635,7 +633,7 @@ function retrieveImgurAlbum(msg) {
     };
 
     rp(options).then(body => {
-        var info = JSON.parse(body);
+        let info = JSON.parse(body);
         msg.channel.send(info.data[tool.randint(info.data.length)].link);
     });
 }
