@@ -4,7 +4,10 @@ const tool = require('./tool.js')
 const rp = require('request-promise');
 const stripIndent = require('strip-indent');
 const sprintf = require('sprintf-js').sprintf;
+const util = require('util');
 const fs = require('fs');
+const writeFileAsync = util.promisify(fs.writeFile);
+
 
 module.exports = {
     'anilist': retrieveAnimeData,
@@ -602,10 +605,10 @@ function requestMissingSchedules() {
 Write data in memory to JSON files.
 */
 function writeFiles() {
-    let wfPromises = Promises.all([fs.writeFile('subscribedAnime.json', JSON.stringify(
-            subscribedAnime)),
-        fs.writeFile('anilistUsers.json', JSON.stringify(anilistUsers)),
-        fs.writeFile('seasonalAnime.json', JSON.stringify(seasonalAnime))
+    let wfPromises = Promise.all([
+        writeFileAsync('subscribedAnime.json', JSON.stringify(subscribedAnime)),
+        writeFileAsync('anilistUsers.json', JSON.stringify(anilistUsers)),
+        writeFileAsync('seasonalAnime.json', JSON.stringify(seasonalAnime))
     ]);
     wfPromises.catch(err => console.log('Error saving JSON files: ' + err.message));
     return wfPromises;

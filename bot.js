@@ -124,10 +124,13 @@ function promptInternalCmd() {
     prompt.get([colors.green('\\Inazuma>')], function (err, result) {
         if (!err) {
             let cmd = result[colors.green('\\Inazuma>')];
+
             if (cmd == 'save') { //Manually save anime JSON files.
-                ani.writeFiles().then(() => console.log('JSON files saved!'));
+                ani.writeFiles().then(() => {
+                    console.log('JSON files saved!');
+                    setTimeout(promptInternalCmd, 0);
+                });
             }
-            setTimeout(promptInternalCmd, 0);
         }
     });
 }
