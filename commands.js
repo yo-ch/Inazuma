@@ -300,31 +300,26 @@ function role(msg) {
     }
 
     let args = msg.content.split(/\s+/).slice(1);
-    if (args.length < 1 || (args[0] != 'give' && args[0] != 'take' && args[0] != 'modify')) {
-        return msg.channel.send(
-            `Invalid arguments. Please refer to ${tool.wrap('~help role')}.`);
+    if (args[0] != 'give' && args[0] != 'take' && args[0] != 'modify') {
+        return msg.channel.send(`Invalid arguments. Please refer to ${tool.wrap('~help role')}.`);
+    } else if (args.length < 2) {
+        return msg.channel.send(`You haven't specified any roles. ${tool.inaBaka}`);
     }
 
     //Function params.
     let enabledOptions;
     let roles;
 
-    let roleNames = args[1].split(',');
-    if (roleNames.length == 0) {
-        return msg.channel.send(`You haven't specified any roles to give or take.`);
-    }
-    roles = validateRoleChanges(roleNames);
+    roles = validateRoleChanges(args[1].split(','));
     if (roles == null)
         return;
     if (roles.length === 0)
         return msg.channel.send(`Unable to find matching roles.`);
 
-
     let options = tool.parseOptions(msg.content);
-    if (options) {
-        enabledOptions = validateOptions(options);
-        if (!enabledOptions) return;
-    }
+    if (options.long.length == 0 || !(enabledOptions = validateOptions(options)))
+        return msg.channel.send('Invalid arguments.');
+
     switch (args[0]) {
         case 'give':
             return processRoleChanges('give');
@@ -477,114 +472,115 @@ function role(msg) {
         let enabledOptions = {};
 
         //Validate options for 'give|take' or 'modify'.
-        if (args[0] == 'give' || args[0] == 'take') {
-            //Get options and their type counts.
-            for (let i = 0; i < options.long.length; i++) {
-                if (options.long[i] == 'bots' || options.long[i] == 'users' || options.long[i] ==
-                    'user') {
-                    optionCounter.type1[options.long[i]] = true;
-                } else if (options.long[i] == 'inrole' || options.long[i] == 'notinrole' ||
-                    options.long[
-                        i] ==
-                    'noroles') {
-                    optionCounter.type2[options.long[i]] = true;
-                }
-                enabledOptions[options.long[i]] = true;
-            }
-
-            //Make sure there is a valid combo of options.
-            let optionLength1 = Object.keys(optionCounter.type1).length;
-            let optionLength2 = Object.keys(optionCounter.type2).length;
-            if (optionLength1 > 1) {
-                msg.channel.send(
-                    `You may only use one of ${tool.wrap('--bots, --users, --user')} ${tool.inaBaka}`
-                );
-                return null;
-            }
-            if (optionLength2 > 1) {
-                msg.channel.send(
-                    `You may only use one of ${tool.wrap('--inrole, --notinrole, --noroles')} ${tool.inaBaka}`
-                );
-                return null;
-            }
-            if (optionLength1 == 0 && optionLength2 == 0) {
-                msg.channel.send(`You didn't specify any options.`);
-                return null;
-            }
-
+        if (args[0] == 'give' || args[0] == 'take' && validOptionCombo('givetake')) {
             //Get arguments for options that take arguments.
-            if (enabledOptions.user) {
+            if (options.long.includes('user')) {
                 if (!(enabledOptions.user = tool.parseOptionArg('user', msg.content))) {
                     msg.channel.send(`User not specified. ${tool.wrap('--user <user>')}`);
-                    return null;
+                    return;
                 }
             }
-            if (enabledOptions.inrole) {
+            if (options.long.includes('inrole')) {
                 if (enabledOptions.inrole = tool.parseOptionArg('inrole', msg.content)) {
                     if (!msg.guild.roles.exists(role => role.name.toLowerCase() ==
                             enabledOptions.inrole)) {
                         //Check that role actually exists.
                         msg.channel.send(`Gomen, I couldn't find a matching role.`)
-                        return null;
+                        return;
                     }
                 } else {
                     msg.channel.send(
                         `You didn't specify a role! ${tool.wrap('--inrole <role>')}`);
-                    return null;
+                    return;
                 }
-            }
-            if (enabledOptions.notinrole) {
+            } else if (options.long.includes('notinrole')) {
                 if (enabledOptions.notinrole = tool.parseOptionArg('notinrole', msg.content)) {
                     if (!msg.guild.roles.exists(role => role.name.toLowerCase() ==
                             enabledOptions.notinrole)) {
                         //Check that role actually exists.
                         msg.channel.send(`Gomen, I couldn't find a matching role.`)
-                        return null;
+                        return;
                     }
                 } else {
                     msg.channel.send(
                         `You didn't specify a role! ${tool.wrap('--notinrole <role>')}`);
-                    return null;
+                    return;
                 }
             }
-        } else { // (args[0] == 'modify')
-            //Get options and make sure at least one option was specified.
-            for (let i = 0; i < options.long.length; i++) {
-                enabledOptions[options.long[i]] = true;
-            }
-            if (!enabledOptions.name && !enabledOptions.color) {
-                msg.channel.send(`You didn't specify any options.`);
-                return null;
-            }
-
+        } else if (args[0] == 'modify' && validOptionCombo('modify')) {
             //Get option arguments.
-            if (enabledOptions.name) {
-                if (!(enabledOptions.name = tool.parseOptionArg('name'), msg.content)) {
+            if (options.long.includes('name')) {
+                if (!(enabledOptions.name = tool.parseOptionArg('name', msg.content))) {
                     msg.channel.send(
                         `You didn't specify a new name for the role! ${tool.wrap('--name <name>')}`
                     );
-                    return null;
+                    return;
                 }
             }
-            if (enabledOptions.color) {
+            if (options.long.includes('color')) {
                 let hexCode;
                 if (hexCode = tool.parseOptionArg('color', msg.content)) {
                     if (hexCode.indexOf('#') == 0) hexCode = hexCode.slice(1);
                     let decimalCode = parseInt(hexCode, 16);
                     if (hexCode.length != 6 || isNaN(decimalCode)) {
                         msg.channel.send(`Invalid hex code!`);
-                        return null;
+                        return;
                     }
                     enabledOptions.color = hexCode;
                 } else {
                     msg.channel.send(
                         `You didn't specify a color! ${tool.wrap('--color <color>')}`
                     );
-                    return null;
+                    return;
                 }
             }
         }
         return enabledOptions;
+
+        /*
+        Checks if the combination of options is valid.
+        @param {String} type The type of options to check. 'givetake'|'modify'
+        @return {Boolean} true if valid, false otherwise
+        */
+        function validOptionCombo(type) {
+            if (type == 'givetake') {
+                let optionCount1 = 0;
+                let optionCount2 = 0;
+                for (let i = 0; i < options.long.length; i++) {
+                    if (options.long[i] == 'bots' || options.long[i] == 'users' || options.long[i] ==
+                        'user') {
+                        optionCount1++;
+                    } else if (options.long[i] == 'inrole' || options.long[i] == 'notinrole' ||
+                        options.long[i] == 'noroles') {
+                        optionCount2++;
+                    }
+                }
+
+                if (optionCount1 > 1) {
+                    msg.channel.send(
+                        `You may only use one of ${tool.wrap('--bots, --users, --user')} ${tool.inaBaka}`
+                    );
+                    return false;
+                }
+                if (optionCount2 > 1) {
+                    msg.channel.send(
+                        `You may only use one of ${tool.wrap('--inrole, --notinrole, --noroles')} ${tool.inaBaka}`
+                    );
+                    return false;
+                }
+                if (optionLength1 == 0 && optionLength2 == 0) {
+                    msg.channel.send(`You didn't specify any options.`);
+                    return false;
+                }
+                return true;
+            } else if (type == 'modify') {
+                if (!options.long.includes('name') && !options.long.includes('color')) {
+                    msg.channel.send(`You didn't specify any options.`);
+                    return false;
+                }
+                return true;
+            }
+        }
     }
 }
 

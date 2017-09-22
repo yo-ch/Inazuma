@@ -514,36 +514,20 @@ function getCurrentSeason() {
     let month = date.getMonth();
     let year = date.getFullYear();
 
-    switch (month) {
-        case 0: //Jan - March
-        case 1:
-        case 2:
-            return {
-                season: 'WINTER',
-                year: year
-            };
-        case 3: //April - June
-        case 4:
-        case 5:
-            return {
-                season: 'SPRING',
-                year: year
-            };
-        case 6: //July - Sept
-        case 7:
-        case 8:
-            return {
-                season: 'SUMMER',
-                year: year
-            };
-        case 9: //Oct - Dec
-        case 10:
-        case 11:
-            return {
-                season: 'FALL',
-                year: year
-            };
-    }
+    let season;
+    if (0 <= month && month <= 2)
+        season = 'WINTER';
+    else if (3 <= month && month <= 5)
+        season = 'SPRING';
+    else if (6 <= month && month <= 8)
+        season = 'SUMMER';
+    else if (9 <= month && month <= 11)
+        season = 'FALL';
+
+    return {
+        season: season,
+        year: year
+    };
 }
 
 /*
