@@ -55,13 +55,10 @@ module.exports = {
         let shortOpts = [];
         let longOpts = [];
         while (matches = shortRegex.exec(commandString)) {
-            if (matches.input.indexOf('--') == -1) {
-                if (matches[1].length > 1) { //Parse combined short args. ex: '-abc' where a, b, c are options.
-                    for (let i = 0; i < matches[1].length; i++) {
-                        shortOpts.push(matches[1][i]);
-                    }
-                } else {
-                    shortOpts.push(matches[1]);
+            if (matches[1].indexOf('--') == -1) {
+                //Parse combined short args. ex: '-abc' where a, b, c are options.
+                for (let i = 0; i < matches[1].length; i++) {
+                    shortOpts.push(matches[1][i]);
                 }
             }
         }
