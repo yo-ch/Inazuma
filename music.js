@@ -9,6 +9,10 @@ const rp = require('request-promise');
 
 const Song = require('./obj/Song.js');
 
+module.exports = {
+    'processCommand': processCommand,
+}
+
 let guilds = {};
 
 /*
@@ -161,7 +165,9 @@ function playSong(msg, guild) {
             guild.dispatch.on('debug', info => {
                 console.log(info);
             });
-        }).catch((err) => console.log(err));
+        }).catch(err => {
+            if (err != 'novoice') console.log(err);
+        });
     }
 
     /*
@@ -176,7 +182,7 @@ function playSong(msg, guild) {
                 msg.channel.send(
                     `Please summon me using ${tool.wrap('~music join')} to start playing the queue.`
                 );
-                reject();
+                reject('novoice');
             }
         });
     }
@@ -480,9 +486,4 @@ const youtube = {
             }
         }
     },
-}
-
-module.exports = {
-    'processCommand': processCommand,
-    'youtube': youtube
 }

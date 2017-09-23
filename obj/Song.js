@@ -1,7 +1,7 @@
 const ytdl = require('ytdl-core');
 
 class Song {
-    constructor(title, url, type = 'search') {
+    constructor(title, url, type) {
         this.title = title;
         this.url = url;
         this.type = type;
