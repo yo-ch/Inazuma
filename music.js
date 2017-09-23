@@ -189,10 +189,10 @@ const youtube = {
             }
             let body = await rp(options);
             let playlist = JSON.parse(body);
-            playlistItems = playlistItems.concat(playlist.items.filter(
+            playlistItems = playlistItems.concat(playlist.items.filter( //Concat all undeleted videos.
                 item => item.snippet.title != 'Deleted video'));
 
-            if (playlist.hasOwnProperty('nextPageToken')) {
+            if (playlist.hasOwnProperty('nextPageToken')) { //More videos in playlist.
                 playlistItems = await getPlaylistInfo(playlistItems, playlist.nextPageToken);
             }
 

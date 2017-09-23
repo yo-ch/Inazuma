@@ -6,13 +6,12 @@ Includes anime lookup (Anilist) and a music player.
 
 ```
 indev:
-
+    -async/await where useful (upgraded to node 8)
 planned:
     -Soundcloud music when API registration opens back up.
     -More moderation tools.
     -Message embeds for current commands.
     -Constructors/classes for objects that are reused frequently.
-    -async/await where useful (upgraded to node 8)
 ```
 
 # Commands
