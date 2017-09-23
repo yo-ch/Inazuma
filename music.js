@@ -7,12 +7,14 @@ const youtubeDL = require('youtube-dl');
 const ytdl = require('ytdl-core');
 const rp = require('request-promise');
 
+const Song = require('./obj/Song.js');
+
 let guilds = {};
 
 /*
 The music command handler.
 */
-module.exports.processCommand = function (msg) {
+function processCommand(msg) {
     if (!msg.guild.available) return;
     //Add guild to the guild list.
     if (!guilds[msg.guild.id])
@@ -106,155 +108,6 @@ function processInput(msg, guild) {
 }
 
 /*
-Processes a search using youtube-dl, pushing the resulting song to the queue.
-@param {String} seachQuery The search query.
-*/
-function processSearch(msg, guild, searchQuery) {
-    searchQuery = 'gvsearch1:' + searchQuery;
-    youtubeDL.getInfo(searchQuery, ['--extract-audio'], (err, info) => {
-        if (err)
-            console.log(err);
-        queueSong(msg, guild, {
-            title: info.title,
-            url: info.url,
-            type: 'search'
-        });
-        guild.musicChannel.send(
-            `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
-        );
-
-        if (guild.status != 'playing')
-            playSong(msg, guild);
-    });
-}
-
-/*
-Processing functions for Youtube links.
-*/
-const youtube = {
-    /*
-    Processes a new song, pushing it to the queue.
-    @param {String} url The URL of the new song.
-    */
-    processSong(msg, guild, url) {
-        ytdl.getInfo(url, (err, info) => {
-            if (err) {
-                console.log(info);
-                msg.channel.send(`Gomen I couldn't enqueue your song. ${tool.inaError}`);
-                return;
-            }
-
-            queueSong(msg, guild, {
-                title: info.title,
-                url: url,
-                type: 'youtube'
-            });
-            guild.musicChannel.send(
-                `Enqueued ${tool.wrap(info.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
-            );
-            if (guild.status != 'playing')
-                playSong(msg, guild);
-        });
-    },
-
-    /*
-    Processes a Youtube playlist.
-    @param {String} playlistId The ID of the Youtube playlist.
-    */
-    processPlaylist(msg, guild, playlistId) {
-        const youtubeApiUrl = 'https://www.googleapis.com/youtube/v3/';
-
-        getPlaylistInfo([], null).then(playlistItems => processPlaylistInfo(playlistItems))
-            .catch(
-                err => {
-                    console.log(err.message);
-                    guild.musicChannel.send(
-                        `${tool.inaError} Gomen, I couldn't add your playlist to the queue. Try again later.`
-                    )
-                });
-
-        /*
-        A recursive function that retrieves the metadata (id and title) of each video in the playlist using the Youtube API.
-        @param {Array} playlistItems Array storing metadata of each video in the playlist.
-        @param {String} pageToken The next page token response for the playlist if applicable.
-        @return {Promise} Resolved with playlist items if playlist metadata succesfully retrieved, rejected if not.
-        */
-        async function getPlaylistInfo(playlistItems, pageToken) {
-            pageToken = pageToken ?
-                `&pageToken=${pageToken}` :
-                '';
-
-            let options = {
-                url: `${youtubeApiUrl}playlistItems?playlistId=${playlistId}${pageToken}&part=snippet&fields=nextPageToken,items(snippet(title,resourceId/videoId))&maxResults=50&key=${config.youtube_api_key}`
-            }
-
-            let body = await rp(options);
-            let playlist = JSON.parse(body);
-            playlistItems = playlistItems.concat(playlist.items.filter( //Concat all non-deleted videos.
-                item => item.snippet.title != 'Deleted video'));
-
-            if (playlist.hasOwnProperty('nextPageToken')) { //More videos in playlist.
-                playlistItems = await getPlaylistInfo(playlistItems, playlist.nextPageToken);
-            }
-            return playlistItems;
-        }
-
-        /*
-        Processes the playlist metadata, adding songs to the queue.
-        @param {Array} playlistItems The metadata of each video in the playlist.
-        */
-        async function processPlaylistInfo(playlistItems) {
-            let queueLength = guild.queue.length;
-
-            for (let i = 0; i < playlistItems.length; i++) {
-                let info = {
-                    title: playlistItems[i].snippet.title,
-                    url: `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`,
-                    type: 'youtube'
-                }
-                queueSong(msg, guild, info, i + queueLength);
-            }
-            let options = {
-                url: `${youtubeApiUrl}playlists?id=${playlistId}&part=snippet&key=${config.youtube_api_key}`
-            }
-
-            //Get playlist title.
-            try {
-                let body = await rp(options);
-                let playlistTitle = JSON.parse(body).items[0].snippet.title;
-                guild.musicChannel.send(
-                    `Enqueued ${tool.wrap(playlistItems.length)} songs from ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
-                );
-            } catch (err) {
-                console.log('Could not retrieve playlist title.');
-                guild.musicChannel.send(
-                    `Enqueued ${tool.wrap(playlistItems.length)} songs requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
-                );
-            }
-
-            if (guild.status != 'playing') {
-                playSong(msg, guild);
-            }
-        }
-    },
-
-    /*
-    Gets the readable stream of the given song.
-    @param {Object} song The song to get the stream of.
-    */
-    getStream(song) {
-        if (song) {
-            let stream = ytdl(song.url, {
-                retries: 7,
-                highWaterMark: 32768,
-                filter: 'audioonly'
-            });
-            return stream;
-        }
-    }
-}
-
-/*
 Adds the song to the queue.
 If an index argument is included, insert the song at that index instead of pushing it to the queue.
 
@@ -265,18 +118,10 @@ function queueSong(msg, guild, song) {
     let index;
     if (arguments.length == 4)
         index = arguments[3];
-
-    let songInfo = {
-        title: song.title ?
-            song.title.trim() : 'N/A',
-        url: song.url,
-        type: song.type
-    }
-
     if (index || index == 0) {
-        guild.queue[index] = songInfo;
+        guild.queue[index] = song;
     } else {
-        guild.queue.push(songInfo);
+        guild.queue.push(song);
     }
 }
 
@@ -290,11 +135,7 @@ function playSong(msg, guild) {
     } else {
         resolveVoiceChannel().then(() => {
             let song = guild.queue[0];
-            let stream;
-            if (song.type == 'youtube')
-                stream = youtube.getStream(song);
-            else //(song.type == 'soundcloud' || song.type =='search')
-                stream = song.url;
+            let stream = song.getStream();
 
             guild.musicChannel.send(`:notes: Now playing ${tool.wrap(song.title)}`);
             changeStatus(guild, 'playing');
@@ -320,11 +161,7 @@ function playSong(msg, guild) {
             guild.dispatch.on('debug', info => {
                 console.log(info);
             });
-        }).catch(() => {
-            msg.channel.send(
-                `Please summon me using ${tool.wrap('~music join')} to start playing the queue.`
-            );
-        });
+        }).catch((err) => console.log(err));
     }
 
     /*
@@ -335,8 +172,12 @@ function playSong(msg, guild) {
         return new Promise((resolve, reject) => {
             if (guild.voiceConnection)
                 resolve();
-            else
+            else {
+                msg.channel.send(
+                    `Please summon me using ${tool.wrap('~music join')} to start playing the queue.`
+                );
                 reject();
+            }
         });
     }
 }
@@ -501,11 +342,147 @@ function timer() {
         if (guild.inactivityTimer <= 0) {
             guild.voiceConnection.disconnect();
             guild.voiceConnection = null;
-            guild.musicChannel.send(
-                ':no_entry_sign: Leaving voice channel due to inactivity.');
+            guild.musicChannel.send(':no_entry_sign: Leaving voice channel due to inactivity.');
 
             changeStatus(guild, 'offline');
         }
     }
 }
 setInterval(timer, 30000);
+
+/*
+SONG/PLAYLIST PROCESSING FUNCTIONS
+*/
+/*
+Processes a search using youtube-dl, pushing the resulting song to the queue.
+@param {String} seachQuery The search query.
+*/
+function processSearch(msg, guild, searchQuery) {
+    searchQuery = 'gvsearch1:' + searchQuery;
+    youtubeDL.getInfo(searchQuery, ['--extract-audio'], (err, song) => {
+        if (err) {
+            msg.channel.send(`Gomen, I couldn't find matching song.`);
+            return console.log(err);
+        }
+        queueSong(msg, guild, new Song(song.title, song.url, 'search'));
+        guild.musicChannel.send(
+            `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+        );
+
+        if (guild.status != 'playing')
+            playSong(msg, guild);
+    });
+}
+
+/*
+Processing functions for Youtube links.
+*/
+const youtube = {
+    /*
+    Processes a new song, pushing it to the queue.
+    @param {String} url The URL of the new song.
+    */
+    processSong(msg, guild, url) {
+        ytdl.getInfo(url, (err, song) => {
+            if (err) {
+                console.log(err);
+                msg.channel.send(`Gomen I couldn't queue your song.`);
+                return;
+            }
+
+            queueSong(msg, guild, new Song(song.title, url, 'youtube'));
+            guild.musicChannel.send(
+                `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+            );
+            if (guild.status != 'playing')
+                playSong(msg, guild);
+        });
+    },
+
+    /*
+    Processes a Youtube playlist.
+    @param {String} playlistId The ID of the Youtube playlist.
+    */
+    processPlaylist(msg, guild, playlistId) {
+        const youtubeApiUrl = 'https://www.googleapis.com/youtube/v3/';
+
+        getPlaylistInfo([], null).then(playlistItems => addToQueue(playlistItems))
+            .catch(
+                err => {
+                    console.log(err);
+                    guild.musicChannel.send(
+                        `${tool.inaError} Gomen, I couldn't add your playlist to the queue. Try again later.`
+                    )
+                });
+
+        /*
+        A recursive function that retrieves the metadata (id and title) of each video in the playlist using the Youtube API.
+        @param {Array} playlistItems Array storing metadata of each video in the playlist.
+        @param {String} pageToken The next page token response for the playlist if applicable.
+        @return {Promise} Resolved with playlist items if playlist metadata succesfully retrieved, rejected if not.
+        */
+        async function getPlaylistInfo(playlistItems, pageToken) {
+            pageToken = pageToken ?
+                `&pageToken=${pageToken}` :
+                '';
+
+            let options = {
+                url: `${youtubeApiUrl}playlistItems?playlistId=${playlistId}${pageToken}&part=snippet&fields=nextPageToken,items(snippet(title,resourceId/videoId))&maxResults=50&key=${config.youtube_api_key}`
+            }
+
+            let body = await rp(options);
+            let playlist = JSON.parse(body);
+            playlistItems = playlistItems.concat(playlist.items.filter( //Concat all non-deleted videos.
+                item => item.snippet.title != 'Deleted video'));
+
+            if (playlist.hasOwnProperty('nextPageToken')) { //More videos in playlist.
+                playlistItems = await getPlaylistInfo(playlistItems, playlist.nextPageToken);
+            }
+
+            return playlistItems;
+        }
+
+        /*
+        Processes the playlist metadata, adding songs to the queue.
+        @param {Array} playlistItems The metadata of each video in the playlist.
+        */
+        async function addToQueue(playlistItems) {
+            let queueLength = guild.queue.length;
+
+            for (let i = 0; i < playlistItems.length; i++) {
+                let song = new Song(
+                    playlistItems[i].snippet.title,
+                    `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`,
+                    'youtube');
+
+                queueSong(msg, guild, song, i + queueLength);
+            }
+            let options = {
+                url: `${youtubeApiUrl}playlists?id=${playlistId}&part=snippet&key=${config.youtube_api_key}`
+            }
+
+            //Get playlist title.
+            try {
+                let body = await rp(options);
+                let playlistTitle = JSON.parse(body).items[0].snippet.title;
+                guild.musicChannel.send(
+                    `Enqueued ${tool.wrap(playlistItems.length)} songs from ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+                );
+            } catch (err) {
+                console.log('Could not retrieve playlist title.');
+                guild.musicChannel.send(
+                    `Enqueued ${tool.wrap(playlistItems.length)} songs requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+                );
+            }
+
+            if (guild.status != 'playing') {
+                playSong(msg, guild);
+            }
+        }
+    },
+}
+
+module.exports = {
+    'processCommand': processCommand,
+    'youtube': youtube
+}
