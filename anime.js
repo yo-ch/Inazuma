@@ -8,7 +8,6 @@ const util = require('util');
 const fs = require('fs');
 const writeFileAsync = util.promisify(fs.writeFile);
 
-
 module.exports = {
     'anilist': retrieveAnimeData,
     'anilistChoose': anilistChoose,
@@ -25,9 +24,10 @@ module.exports = {
 
 let discordClient = null;
 let searchRequests = {}; //Stores search requests that have multiple results.
-const subscribedAnime = JSON.parse(fs.readFileSync('subscribedAnime.json'));
-const anilistUsers = JSON.parse(fs.readFileSync('anilistUsers.json'));
-const seasonalAnime = JSON.parse(fs.readFileSync('seasonalAnime.json'));
+
+let subscribedAnime = require('./subscribedAnime.json');
+let anilistUsers = require('./anilistUsers.json');
+let seasonalAnime = require('./seasonalAnime.json');
 
 /*
 Display the specified anime's info, from Anilist.
