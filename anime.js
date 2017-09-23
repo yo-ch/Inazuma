@@ -454,6 +454,66 @@ function queryAnilist(query, variables) {
     return rp(options);
 }
 
+/*
+Requests airing schedules for anime missing them.
+*/
+function requestMissingSchedules() {
+    let query = stripIndent(
+        `
+        query ($id: Int){
+          Media(id: $id, type: ANIME){
+            id
+            status
+            nextAiringEpisode{
+              episode
+            }
+            airingSchedule{
+              nodes{
+                airingAt
+                episode
+              }
+            }
+          }
+        }
+        `
+    );
+    let variables = {
+        'id': 0
+    }
+    let processedCount = 0;
+    let noToProcess = 0;
+    for (let animeId in subscribedAnime) {
+        if (subscribedAnime[animeId].schedule == null) noToProcess++;
+    }
+    for (let animeId in subscribedAnime) {
+        if (subscribedAnime[animeId].schedule != null) continue;
+        if (processedCount == noToProcess) break;
+
+        processedCount++; //Could also use Promises.all here instead.
+        variables.id = parseInt(animeId); //Request airing schedule for anime with this id.
+        queryAnilist(query, variables).then(body => {
+            let animeSchedule = JSON.parse(body).data.Media;
+
+            if (animeSchedule.status != 'RELEASING' && animeSchedule.status !=
+                'NOT_YET_RELEASED') {
+                subscribedAnime[animeId].schedule = []; //Empty schedule to signify airing completion.
+            } else if (animeSchedule.airingSchedule.nodes.length > 0) { //Schedule available and anime still airing.
+                subscribedAnime[animeId].schedule = animeSchedule.airingSchedule.nodes;
+                subscribedAnime[animeId].nextEpisode = animeSchedule.nextAiringEpisode ?
+                    animeSchedule.nextAiringEpisode.episode : 1;
+            } else {
+                return;
+            }
+            console.log(`Updated schedule of an anime! ID: ${animeSchedule.id}`);
+        }).catch(err => console.log(err.message));
+    }
+}
+
+/*
+Updates the anilistUsers obj with a user's information.
+@param {Number} userId The user's Discord id.
+@param {String} username The user's Anilist name.
+*/
 function updateAnilistUsers(userId, username) {
     if (!anilistUsers.hasOwnProperty(userId) || anilistUsers[userId] !=
         username) {
@@ -531,61 +591,6 @@ function getCurrentSeason() {
         season: season,
         year: year
     };
-}
-
-/*
-Requests airing schedules for anime missing them.
-*/
-function requestMissingSchedules() {
-    let query = stripIndent(
-        `
-        query ($id: Int){
-          Media(id: $id, type: ANIME){
-            id
-            status
-            nextAiringEpisode{
-              episode
-            }
-            airingSchedule{
-              nodes{
-                airingAt
-                episode
-              }
-            }
-          }
-        }
-        `
-    );
-    let variables = {
-        'id': 0
-    }
-    let processedCount = 0;
-    let noToProcess = 0;
-    for (let animeId in subscribedAnime) {
-        if (subscribedAnime[animeId].schedule == null) noToProcess++;
-    }
-    for (let animeId in subscribedAnime) {
-        if (subscribedAnime[animeId].schedule != null) continue;
-        if (processedCount == noToProcess) break;
-
-        processedCount++; //Could also use Promises.all here instead.
-        variables.id = parseInt(animeId); //Request airing schedule for anime with this id.
-        queryAnilist(query, variables).then(body => {
-            let animeSchedule = JSON.parse(body).data.Media;
-
-            if (animeSchedule.status != 'RELEASING' && animeSchedule.status !=
-                'NOT_YET_RELEASED') {
-                subscribedAnime[animeId].schedule = []; //Empty schedule to signify airing completion.
-            } else if (animeSchedule.airingSchedule.nodes.length > 0) { //Schedule available and anime still airing.
-                subscribedAnime[animeId].schedule = animeSchedule.airingSchedule.nodes;
-                subscribedAnime[animeId].nextEpisode = animeSchedule.nextAiringEpisode ?
-                    animeSchedule.nextAiringEpisode.episode : 1;
-            } else {
-                return;
-            }
-            console.log(`Updated schedule of an anime! ID: ${animeSchedule.id}`);
-        }).catch(err => console.log(err.message));
-    }
 }
 
 /*
