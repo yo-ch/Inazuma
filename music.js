@@ -19,27 +19,12 @@ The music command handler.
 */
 function processCommand(msg) {
     if (!msg.guild.available) return;
+
     //Add guild to the guild list.
     if (!guilds[msg.guild.id])
-        guilds[msg.guild.id] = {
-            queue: [],
-            musicChannel: msg.guild.channels.find('name', 'music'),
-            voiceConnection: null,
-            dispatch: null,
-            volume: 1,
-            status: 'offline', //States: offline, playing, stopped
-            inactivityTimer: 60
-        };
+        guilds[msg.guild.id] = new MusicHandler(msg.guild);
 
     let guild = guilds[msg.guild.id];
-
-    if (!guild.musicChannel) {
-        guild.musicChannel = msg.guild.channels.find('name', 'music');
-        if (!guild.musicChannel) {
-            msg.channel.send(`Please create a ${tool.wrap('#music')} channel!`);
-            return;
-        }
-    }
 
     let musicCmd = msg.content.split(/\s+/)[1];
     if (musicCmd)

@@ -65,7 +65,6 @@ Airing notifications are sent to subscribed users when an anime airs.
     leave                 : Leaves voice channel.
 
 Supports Youtube and search.
-Requires a #music text channel.
 ```
 
 ## Utility
