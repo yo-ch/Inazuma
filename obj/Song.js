@@ -1,5 +1,8 @@
 const ytdl = require('ytdl-core');
 
+/*
+A song object.
+*/
 class Song {
     constructor(title, url, type) {
         this.title = title;

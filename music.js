@@ -3,15 +3,14 @@ const config = require('./config.json');
 const tool = require('./tool.js');
 const ani = require('./anime.js');
 
+const Song = require('./obj/Song.js');
+const MusicHandler = require('./obj/MusicHandler.js');
+
 const youtubeDL = require('youtube-dl');
 const ytdl = require('ytdl-core');
 const rp = require('request-promise');
 
-const Song = require('./obj/Song.js');
-
-module.exports = {
-    'processCommand': processCommand,
-}
+module.exports.processCommand = processCommand;
 
 let guilds = {};
 
