@@ -141,7 +141,7 @@ function getAiringList(msg) {
     //Get anime that user is subscribed to, and update next episode counter if applicable.
     let subscribedAnimeIds = Object.keys(subscribedAnime);
     let airingListAnime = [];
-    let unixts = Math.round((new Date()).getTime() / 1000);
+    let unixts = tool.getUnixTime();
     for (let i = 0; i < subscribedAnimeIds.length; i++) {
         let currentAnime = subscribedAnime[subscribedAnimeIds[i]];
         updateAnimeStatuses(currentAnime, unixts);
@@ -374,7 +374,7 @@ Updates the status of all anime in subscribedAnime.
 Removes anime that have no more subscribers and is done airing.
 */
 function updateAnimeStatuses() {
-    let unixts = Math.round((new Date()).getTime() / 1000);
+    let unixts = tool.getUnixTime();
 
     for (let animeId in subscribedAnime) {
         let currentAnime = subscribedAnime[animeId];

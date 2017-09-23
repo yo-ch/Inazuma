@@ -288,32 +288,30 @@ function playSong(msg, guild) {
             else //(song.type == 'soundcloud' || song.type =='search')
                 stream = song.url;
 
-            guild.musicChannel.send(`:notes: Now playing ${tool.wrap(song.title)}`)
-                .then(() => {
-                    changeStatus(guild, 'playing');
-                    guild.dispatch = guild.voiceConnection.playStream(stream, {
-                        passes: 2,
-                        volume: guild.volume
-                    });
+            guild.musicChannel.send(`:notes: Now playing ${tool.wrap(song.title)}`);
+            changeStatus(guild, 'playing');
+            guild.dispatch = guild.voiceConnection.playStream(stream, {
+                passes: 2,
+                volume: guild.volume
+            });
 
-                    guild.dispatch.on('error', error => {
-                        guild.dispatch = null;
-                        guild.queue.shift();
-                        playSong(msg, guild);
-                    });
+            guild.dispatch.on('error', error => {
+                guild.dispatch = null;
+                guild.queue.shift();
+                setTimeout(playSong(msg, guild), 0);
+            });
 
-                    guild.dispatch.on('end', reason => {
-                        guild.dispatch = null;
-                        guild.queue.shift();
-                        if (reason != 'leave') {
-                            playSong(msg, guild);
-                        }
-                    });
+            guild.dispatch.on('end', reason => {
+                guild.dispatch = null;
+                guild.queue.shift();
+                if (reason != 'leave') {
+                    setTimeout(playSong(msg, guild), 0);
+                }
+            });
 
-                    guild.dispatch.on('debug', info => {
-                        console.log(info);
-                    });
-                }).catch(() => {});
+            guild.dispatch.on('debug', info => {
+                console.log(info);
+            });
         }).catch(() => {
             msg.channel.send(
                 `Please summon me using ${tool.wrap('~music join')} to start playing the queue.`

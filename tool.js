@@ -100,6 +100,14 @@ module.exports = {
     },
 
     /*
+    Returns the current unix time in seconds.
+    @return {Number} the unix time in seconds.
+    */
+    getUnixTime(){
+        return Math.round((new Date()).getTime() / 1000);
+    },
+
+    /*
     Disord emojis.
     */
     inaAngry: '<:inaAngry:302886932164116480>',
