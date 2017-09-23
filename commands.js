@@ -266,25 +266,25 @@ function prune(msg) {
         }).catch(err => {
             throw 'err';
         });
-    }
 
-    /*
-    Calls the next processAmount call or ends the recursion and replies with results.
-    @param {Number} deletedSize The number of messages deleted in this iteration of processAmount.
-    */
-    function nextCall(deletedSize) {
-        prunedAmount += deletedSize;
-        if (amount > 0) {
-            //Delete next 100 batch of messages.
-            setTimeout(() => {
-                processAmount(amount, prunedAmount);
-            }, 1000);
-        } else { //Done pruning.
-            //Total number of pruned messages.
-            if (silentOption) {
-                msg.delete();
-            } else {
-                msg.channel.send(`Pruned ${tool.wrap(prunedAmount)} messages.`);
+        /*
+        Calls the next processAmount call or ends the recursion and replies with results.
+        @param {Number} deletedSize The number of messages deleted in this iteration of processAmount.
+        */
+        function nextCall(deletedSize) {
+            prunedAmount += deletedSize;
+            if (amount > 0) {
+                //Delete next 100 batch of messages.
+                setTimeout(() => {
+                    processAmount(amount, prunedAmount);
+                }, 1000);
+            } else { //Done pruning.
+                //Total number of pruned messages.
+                if (silentOption) {
+                    msg.delete();
+                } else {
+                    msg.channel.send(`Pruned ${tool.wrap(prunedAmount)} messages.`);
+                }
             }
         }
     }
