@@ -164,10 +164,14 @@ const youtube = {
     processPlaylist(msg, guild, playlistId) {
         const youtubeApiUrl = 'https://www.googleapis.com/youtube/v3/';
 
-        getPlaylistInfo([], null).then(playlistItems => processPlaylistInfo(playlistItems)).catch(
-            () => guild.musicChannel.send(
-                `${tool.inaError} Gomen, I couldn't add your playlist to the queue. Try again later.`
-            ));
+        getPlaylistInfo([], null).then(playlistItems => processPlaylistInfo(playlistItems))
+            .catch(
+                err => {
+                    console.log(err.message);
+                    guild.musicChannel.send(
+                        `${tool.inaError} Gomen, I couldn't add your playlist to the queue. Try again later.`
+                    )
+                });
 
         /*
         A recursive function that retrieves the metadata (id and title) of each video in the playlist using the Youtube API.
@@ -175,27 +179,24 @@ const youtube = {
         @param {String} pageToken The next page token response for the playlist if applicable.
         @return {Promise} Resolved if playlist metadata succesfully retrieved, rejected if not.
         */
-        function getPlaylistInfo(playlistItems, pageToken) {
-            return new Promise((resolve, reject) => {
-                pageToken = pageToken ?
-                    `&pageToken=${pageToken}` :
-                    '';
+        async function getPlaylistInfo(playlistItems, pageToken) {
+            pageToken = pageToken ?
+                `&pageToken=${pageToken}` :
+                '';
 
-                let options = {
-                    url: `${youtubeApiUrl}playlistItems?playlistId=${playlistId}${pageToken}&part=snippet&fields=nextPageToken,items(snippet(title,resourceId/videoId))&maxResults=50&key=${config.youtube_api_key}`
-                }
-                rp(options).then(body => {
-                    let playlist = JSON.parse(body);
-                    playlistItems = playlistItems.concat(playlist.items.filter(
-                        item => item.snippet.title != 'Deleted video'));
+            let options = {
+                url: `${youtubeApiUrl}playlistItems?playlistId=${playlistId}${pageToken}&part=snippet&fields=nextPageToken,items(snippet(title,resourceId/videoId))&maxResults=50&key=${config.youtube_api_key}`
+            }
+            let body = await rp(options);
+            let playlist = JSON.parse(body);
+            playlistItems = playlistItems.concat(playlist.items.filter(
+                item => item.snippet.title != 'Deleted video'));
 
-                    if (playlist.hasOwnProperty('nextPageToken'))
-                        getPlaylistInfo(playlistItems, playlist.nextPageToken).then(
-                            playlistItems => resolve(playlistItems));
-                    else
-                        resolve(playlistItems);
-                }).catch(reject);
-            });
+            if (playlist.hasOwnProperty('nextPageToken')) {
+                playlistItems = await getPlaylistInfo(playlistItems, playlist.nextPageToken);
+            }
+
+            return playlistItems;
         }
 
         /*
@@ -287,31 +288,32 @@ function playSong(msg, guild) {
             else //(song.type == 'soundcloud' || song.type =='search')
                 stream = song.url;
 
-            guild.musicChannel.send(`:notes: Now playing ${tool.wrap(song.title)}`).then(() => {
-                changeStatus(guild, 'playing');
-                guild.dispatch = guild.voiceConnection.playStream(stream, {
-                    passes: 2,
-                    volume: guild.volume
-                });
+            guild.musicChannel.send(`:notes: Now playing ${tool.wrap(song.title)}`)
+                .then(() => {
+                    changeStatus(guild, 'playing');
+                    guild.dispatch = guild.voiceConnection.playStream(stream, {
+                        passes: 2,
+                        volume: guild.volume
+                    });
 
-                guild.dispatch.on('error', error => {
-                    guild.dispatch = null;
-                    guild.queue.shift();
-                    playSong(msg, guild);
-                });
-
-                guild.dispatch.on('end', reason => {
-                    guild.dispatch = null;
-                    guild.queue.shift();
-                    if (reason != 'leave') {
+                    guild.dispatch.on('error', error => {
+                        guild.dispatch = null;
+                        guild.queue.shift();
                         playSong(msg, guild);
-                    }
-                });
+                    });
 
-                guild.dispatch.on('debug', info => {
-                    console.log(info);
-                });
-            }).catch(() => {});
+                    guild.dispatch.on('end', reason => {
+                        guild.dispatch = null;
+                        guild.queue.shift();
+                        if (reason != 'leave') {
+                            playSong(msg, guild);
+                        }
+                    });
+
+                    guild.dispatch.on('debug', info => {
+                        console.log(info);
+                    });
+                }).catch(() => {});
         }).catch(() => {
             msg.channel.send(
                 `Please summon me using ${tool.wrap('~music join')} to start playing the queue.`
@@ -494,7 +496,8 @@ function timer() {
         if (guild.inactivityTimer <= 0) {
             guild.voiceConnection.disconnect();
             guild.voiceConnection = null;
-            guild.musicChannel.send(':no_entry_sign: Leaving voice channel due to inactivity.');
+            guild.musicChannel.send(
+                ':no_entry_sign: Leaving voice channel due to inactivity.');
 
             changeStatus(guild, 'offline');
         }
