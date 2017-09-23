@@ -177,7 +177,7 @@ const youtube = {
         A recursive function that retrieves the metadata (id and title) of each video in the playlist using the Youtube API.
         @param {Array} playlistItems Array storing metadata of each video in the playlist.
         @param {String} pageToken The next page token response for the playlist if applicable.
-        @return {Promise} Resolved if playlist metadata succesfully retrieved, rejected if not.
+        @return {Promise} Resolved with playlist items if playlist metadata succesfully retrieved, rejected if not.
         */
         async function getPlaylistInfo(playlistItems, pageToken) {
             pageToken = pageToken ?
@@ -187,15 +187,15 @@ const youtube = {
             let options = {
                 url: `${youtubeApiUrl}playlistItems?playlistId=${playlistId}${pageToken}&part=snippet&fields=nextPageToken,items(snippet(title,resourceId/videoId))&maxResults=50&key=${config.youtube_api_key}`
             }
+
             let body = await rp(options);
             let playlist = JSON.parse(body);
-            playlistItems = playlistItems.concat(playlist.items.filter( //Concat all undeleted videos.
+            playlistItems = playlistItems.concat(playlist.items.filter( //Concat all non-deleted videos.
                 item => item.snippet.title != 'Deleted video'));
 
             if (playlist.hasOwnProperty('nextPageToken')) { //More videos in playlist.
                 playlistItems = await getPlaylistInfo(playlistItems, playlist.nextPageToken);
             }
-
             return playlistItems;
         }
 
@@ -203,7 +203,7 @@ const youtube = {
         Processes the playlist metadata, adding songs to the queue.
         @param {Array} playlistItems The metadata of each video in the playlist.
         */
-        function processPlaylistInfo(playlistItems) {
+        async function processPlaylistInfo(playlistItems) {
             let queueLength = guild.queue.length;
 
             for (let i = 0; i < playlistItems.length; i++) {
@@ -218,15 +218,23 @@ const youtube = {
                 url: `${youtubeApiUrl}playlists?id=${playlistId}&part=snippet&key=${config.youtube_api_key}`
             }
 
-            rp(options).then(body => { //Get playlist name.
+            //Get playlist title.
+            try {
+                let body = await rp(options);
                 let playlistTitle = JSON.parse(body).items[0].snippet.title;
                 guild.musicChannel.send(
                     `Enqueued ${tool.wrap(playlistItems.length)} songs from ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
                 );
+            } catch (err) {
+                console.log('Could not retrieve playlist title.');
+                guild.musicChannel.send(
+                    `Enqueued ${tool.wrap(playlistItems.length)} songs requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+                );
+            }
 
-                if (guild.status != 'playing')
-                    playSong(msg, guild);
-            })
+            if (guild.status != 'playing') {
+                playSong(msg, guild);
+            }
         }
     },
 
@@ -321,7 +329,6 @@ function playSong(msg, guild) {
 
     /*
     Resolves the voice channel.
-
     @return Promise - resolved if the bot is connected to a voice channel, and rejected if not.
     */
     function resolveVoiceChannel() {

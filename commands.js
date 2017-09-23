@@ -263,30 +263,30 @@ function prune(msg) {
             } else {
                 nextCall(0);
             }
-
-            /*
-            Calls the next processAmount call or ends the recursion and replies with results.
-            @param {Number} deletedSize The number of messages deleted in this iteration of processAmount.
-            */
-            function nextCall(deletedSize) {
-                prunedAmount += deletedSize;
-                if (amount > 0) {
-                    //Delete next 100 batch of messages.
-                    setTimeout(() => {
-                        processAmount(amount, prunedAmount);
-                    }, 1000);
-                } else { //Done pruning.
-                    //Total number of pruned messages.
-                    if (silentOption) {
-                        msg.delete();
-                    } else {
-                        msg.channel.send(`Pruned ${tool.wrap(prunedAmount)} messages.`);
-                    }
-                }
-            }
         }).catch(err => {
             throw 'err';
         });
+    }
+
+    /*
+    Calls the next processAmount call or ends the recursion and replies with results.
+    @param {Number} deletedSize The number of messages deleted in this iteration of processAmount.
+    */
+    function nextCall(deletedSize) {
+        prunedAmount += deletedSize;
+        if (amount > 0) {
+            //Delete next 100 batch of messages.
+            setTimeout(() => {
+                processAmount(amount, prunedAmount);
+            }, 1000);
+        } else { //Done pruning.
+            //Total number of pruned messages.
+            if (silentOption) {
+                msg.delete();
+            } else {
+                msg.channel.send(`Pruned ${tool.wrap(prunedAmount)} messages.`);
+            }
+        }
     }
 }
 
@@ -310,7 +310,7 @@ function role(msg) {
     let enabledOptions;
     let roles;
 
-    roles = validateRoleChanges(args[1].split(','));
+    roles = validatePermissions(args[1].split(','));
     if (roles == null)
         return;
     if (roles.length === 0)
@@ -430,7 +430,7 @@ function role(msg) {
     Validate that the bot and user have permission to modify/assign the specified roles.
     @param {Array} roleNames The supplied names of roles.
     */
-    function validateRoleChanges(roleNames) {
+    function validatePermissions(roleNames) {
         let roles = [];
         for (let i = 0; i < roleNames.length; i++) {
             let roleName = roleNames[i];
@@ -631,5 +631,5 @@ function retrieveImgurAlbum(msg) {
     rp(options).then(body => {
         let info = JSON.parse(body);
         msg.channel.send(info.data[tool.randint(info.data.length)].link);
-    });
+    }).catch(err => console.log(err.message));
 }

@@ -292,15 +292,7 @@ function syncList(msg) {
                 delete subscribedAnime[id].users[msg.author.id];
             }
         }
-
-        //Add/modify user to list of anilist users.
-        if (!anilistUsers.hasOwnProperty(msg.author.id) || anilistUsers[msg.author.id] !=
-            username) {
-            anilistUsers[msg.author.id] = {
-                username: username,
-                notifications: true
-            }
-        }
+        updateAnilistUsers(msg.author.id, username);
         msg.channel.send(`Sync success! ${tool.inaHappy}`);
     }).catch((err) => {
         console.log(err.message);
@@ -398,15 +390,16 @@ Notifies subscribed users that an anime has aired if they have notifications on.
 @param {Object} airedAnime The anime that has aired.
 @param {Number} episode The episode number.
 */
-function notifyAnimeAired(airedAnime, episode) {
+async function notifyAnimeAired(airedAnime, episode) {
     for (let userId in airedAnime.users) {
         if (anilistUsers.hasOwnProperty(userId) && anilistUsers[userId].notifications == true) { //Notifications on.
-            discordClient.fetchUser(userId).then(user => {
-                user.createDM().then(dm =>
-                    dm.send(
-                        `${tool.wrap(airedAnime.title)} **Episode ${episode}** has aired!`
-                    ));
-            }).catch(err => console.log(err.message));
+            try {
+                let user = await discordClient.fetchUser(userId);
+                let dm = await user.createDM();
+                dm.send(`${tool.wrap(airedAnime.title)} **Episode ${episode}** has aired!`);
+            } catch (err) {
+                console.log(err.message);
+            }
         }
     }
 }
@@ -459,6 +452,16 @@ function queryAnilist(query, variables) {
         })
     }
     return rp(options);
+}
+
+function updateAnilistUsers(userId, username) {
+    if (!anilistUsers.hasOwnProperty(userId) || anilistUsers[userId] !=
+        username) {
+        anilistUsers[userId] = {
+            username: username,
+            notifications: true
+        }
+    }
 }
 
 /*
