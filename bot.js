@@ -86,13 +86,13 @@ bot.on('message', msg => {
 });
 
 bot.on('guildMemberAdd', member => {
-    member.guild.defaultChannel.send(
+    member.guild.channels.get(member.guild.id).send(
         `I-It's not like I wanted you to join this server or anything, ${tool.tsunNoun()}. ${member.user}`
     );
 });
 
 bot.on('guildMemberRemove', member => {
-    member.guild.defaultChannel.send(`S-Sayonara. ${member.user}`);
+    member.guild.guild.channels.get(member.guild.id).send(`S-Sayonara. ${member.user}`);
 });
 
 bot.on('error', (e) => console.error(e));
