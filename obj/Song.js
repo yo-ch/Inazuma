@@ -1,18 +1,19 @@
+'use strict';
 const ytdl = require('ytdl-core');
 
 /*
-A song object.
+An object representing a song.
 */
 class Song {
     constructor(title, url, type) {
         this.title = title;
         this.url = url;
-        this.type = type;
+        this.type = type; //youtube, soundcloud, search
     }
 
     getStream() {
         if (this.type == 'search')
-            return url;
+            return this.url;
         if (this.type == 'youtube') {
             return ytdl(this.url, {
                 retries: 7,
