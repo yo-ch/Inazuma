@@ -46,8 +46,6 @@ class MusicPlayer {
                 let song = this.queue[0];
                 let stream = song.getStream();
 
-                console.log(song.title);
-
                 this.musicChannel.send(`:notes: Now playing ${tool.wrap(song.title)}`);
                 this.changeStatus('playing');
                 this.dispatch = this.voiceConnection.playStream(stream, {
