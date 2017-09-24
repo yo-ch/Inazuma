@@ -1,3 +1,6 @@
+/*
+Anime related commands and functions.
+*/
 'use strict';
 const config = require('./config.json');
 const tool = require('./tool.js')

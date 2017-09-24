@@ -1,5 +1,6 @@
 /*
 Processes music commands and retrieves Songs for guild MusicPlayers.
+Also manages MusicPlayer timers.
 */
 
 'use strict';
@@ -11,7 +12,6 @@ const Song = require('./obj/Song.js');
 const MusicPlayer = require('./obj/MusicPlayer.js');
 
 const youtubeDL = require('youtube-dl');
-const ytdl = require('ytdl-core');
 const rp = require('request-promise');
 
 module.exports.processCommand = processCommand;

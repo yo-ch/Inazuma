@@ -1,3 +1,6 @@
+/*
+Regular commands.
+*/
 'use strict';
 const config = require('./config.json');
 const commandHelp = require('./help.js');

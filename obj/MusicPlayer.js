@@ -1,10 +1,10 @@
+'use strict';
+const tool = require('../tool.js');
+
 /*
 The music player for a guild.
 Handles the queuing, and streaming of Songs.
 */
-'use strict';
-const tool = require('../tool.js');
-
 class MusicPlayer {
     constructor(guild) {
         this.queue = [];

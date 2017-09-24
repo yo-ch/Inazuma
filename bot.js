@@ -50,39 +50,7 @@ bot.on('message', msg => {
         return; //Not a command.
 
     let cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length).toLowerCase();
-    switch (cmd) {
-        case 'help':
-        case 'tasukete':
-            return cmds.help(msg);
-        case 'andy':
-            return cmds.andy(msg);
-        case 'airing':
-            return ani.airing(msg);
-        case 'ani':
-        case 'anilist':
-            return ani.anilist(msg);
-        case 'ban':
-            return cmds.ban(msg);
-        case 'kick':
-            return cmds.kick(msg);
-        case 'cc':
-            return cmds.cc(msg);
-        case 'choose':
-            return cmds.choose(msg);
-        case 'gavquote':
-            return cmds.gavquote(msg);
-        case 'prune':
-            return cmds.prune(msg);
-        case 'role':
-            return cmds.role(msg);
-        case 'roll':
-            return cmds.roll(msg);
-        case 'vigne':
-        case 'aoba':
-            return cmds.retrieveImgurAlbum(msg);
-        case 'music':
-            return music.processCommand(msg);
-    }
+    getCmdFunction(cmd)(msg);
 });
 
 bot.on('guildMemberAdd', member => {
@@ -100,6 +68,29 @@ bot.on('warn', (e) => console.warn(e));
 // bot.on('debug', (e) => console.info(e));
 
 bot.login(config.token);
+
+function getCmdFunction(cmd) {
+    const COMMANDS = {
+        'help': cmds.help,
+        'tasukete': cmds.help,
+        'andy': cmds.andy,
+        'airing': ani.airing,
+        'ani': ani.anilist,
+        'anilist': ani.anilist,
+        'ban': cmds.ban,
+        'kick': cmds.kick,
+        'cc': cmds.cc,
+        'choose': cmds.choose,
+        'gavquote': cmds.gavquote,
+        'prune': cmds.prune,
+        'role': cmds.role,
+        'roll': cmds.roll,
+        'vigne': cmds.retrieveImgurAlbum,
+        'aoba': cmds.retrieveImgurAlbum,
+        'music': music.processCommand,
+    }
+    return COMMANDS[cmd] ? COMMANDS[cmd] : () => {};
+}
 
 function reply(msg) {
     const replies = [
