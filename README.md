@@ -7,7 +7,6 @@ Includes anime lookup (Anilist) and a music player.
 ```
 indev:
     -Constructors/classes for objects that are reused frequently.
-    -async/await where useful (upgraded to node 8)
 planned:
     -Soundcloud music when API registration opens back up.
     -More moderation tools.
@@ -66,7 +65,6 @@ Airing notifications are sent to subscribed users when an anime airs.
     leave                 : Leaves voice channel.
 
 Supports Youtube and search.
-Requires a #music text channel.
 ```
 
 ## Utility
