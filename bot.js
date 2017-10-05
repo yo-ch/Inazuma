@@ -60,7 +60,7 @@ bot.on('guildMemberAdd', member => {
 });
 
 bot.on('guildMemberRemove', member => {
-    member.guild.guild.channels.get(member.guild.id).send(`S-Sayonara. ${member.user}`);
+    member.guild.channels.get(member.guild.id).send(`S-Sayonara. ${member.user}`);
 });
 
 bot.on('error', (e) => console.error(e));
