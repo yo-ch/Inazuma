@@ -178,7 +178,7 @@ function getAiringList(msg) {
             info.push([sprintf('%-50s [ SCHEDULE N/A ]\n', title), Infinity]);
         else if (countdown == Infinity)
             info.push([
-                sprintf('%-50s [  DONE AIRING  ]\n', title),
+                sprintf('%-50s [ DONE  AIRING ]\n', title),
                 Infinity
             ]);
         else
