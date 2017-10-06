@@ -1,4 +1,4 @@
-const commands = module.exports = {
+module.exports = {
     'help': `
 ~help [command]
    Brings up the command page. Pass a command for further information.`,
@@ -31,12 +31,12 @@ Airing notifications are sent to subscribed users when an anime airs.`,
 
     'anilist': `
 ~anilist | ~ani <anime name>
-   Displays an anime\'s data, pulled from Anilist.
+   Displays an anime's data, pulled from Anilist.
    If multiple choices are given, simply reply with the number.`,
 
     'cc': `
 ~cc <voice channel> <mention>
-   Changes the mentioned user\'s voice channel to the given channel.`,
+   Changes the mentioned user's voice channel to the given channel.`,
 
     'choose': `
 ~choose <arg1> | [arg2] ...

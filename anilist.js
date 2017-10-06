@@ -2,7 +2,6 @@
 Anime related commands and functions.
 */
 'use strict';
-const config = require('./config.json');
 const tool = require('./tool.js')
 const rp = require('request-promise');
 const stripIndent = require('strip-indent');
@@ -58,7 +57,7 @@ function retrieveAnimeData(msg) {
             `
         );
         let choice;
-        if (choice = parseInt(search)) { //Search using number from ~airing seasonal instead.
+        if ((choice = parseInt(search))) { //Search using number from ~airing seasonal instead.
             if (seasonalAnime.hasOwnProperty(choice)) {
                 search = seasonalAnime[choice];
             }
@@ -155,7 +154,7 @@ function getAiringList(msg) {
 
     if (subscribedAnime.length === 0) {
         return msg.channel.send(
-            `There aren\'t any anime in your airing list, ${tool.tsunNoun()}.`);
+            `There aren't any anime in your airing list, ${tool.tsunNoun()}.`);
     }
 
     let info = [];
@@ -194,7 +193,7 @@ function getAiringList(msg) {
     });
 
     let airing = `${msg.author.username}'s Airing List\n`;
-    airing += "=".repeat(airing.trim().length) + '\n';
+    airing += '='.repeat(airing.trim().length) + '\n';
     for (let i = 0; i < info.length; i++) //Add info of each anime to airing string.
         airing += info[i][0];
 

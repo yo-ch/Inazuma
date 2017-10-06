@@ -54,7 +54,7 @@ module.exports = {
         let longRegex = / --(\w+)/g;
         let shortOpts = [];
         let longOpts = [];
-        while (matches = shortRegex.exec(commandString)) {
+        while ((matches = shortRegex.exec(commandString))) {
             if (matches[1].indexOf('--') == -1) {
                 //Parse combined short args. ex: '-abc' where a, b, c are options.
                 for (let i = 0; i < matches[1].length; i++) {
@@ -62,7 +62,7 @@ module.exports = {
                 }
             }
         }
-        while (matches = longRegex.exec(commandString)) {
+        while ((matches = longRegex.exec(commandString))) {
             longOpts.push(matches[1]);
         }
         return {

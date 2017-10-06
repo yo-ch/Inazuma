@@ -2,16 +2,15 @@
 Processes music commands and retrieves Songs for guild MusicPlayers.
 Also manages MusicPlayer timers.
 */
-
 'use strict';
 const config = require('./config.json');
 const tool = require('./tool.js');
-const ani = require('./anime.js');
 
 const Song = require('./obj/Song.js');
 const MusicPlayer = require('./obj/MusicPlayer.js');
 
 const youtubeDL = require('youtube-dl');
+const ytdl = require('ytdl-core');
 const rp = require('request-promise');
 
 module.exports.processCommand = processCommand;
@@ -34,32 +33,32 @@ function processCommand(msg) {
     if (musicCmd)
         musicCmd.toLowerCase();
     switch (musicCmd) {
-        case 'play':
-            return processInput(msg, guild);
-        case 'skip':
-            return guild.skipSong(msg);
-        case 'pause':
-            return guild.pauseSong();
-        case 'resume':
-            return guild.resumeSong();
-        case 'queue':
-            return guild.printQueue(msg);
-        case 'np':
-            return guild.nowPlaying(msg);
-        case 'vol':
-            return guild.setVolume(msg);
-        case 'purge':
-            return guild.purgeQueue(msg);
+    case 'play':
+        return processInput(msg, guild);
+    case 'skip':
+        return guild.skipSong(msg);
+    case 'pause':
+        return guild.pauseSong();
+    case 'resume':
+        return guild.resumeSong();
+    case 'queue':
+        return guild.printQueue(msg);
+    case 'np':
+        return guild.nowPlaying(msg);
+    case 'vol':
+        return guild.setVolume(msg);
+    case 'purge':
+        return guild.purgeQueue(msg);
 
-        case 'join':
-            return guild.joinVc(msg);
-        case 'leave':
-            return guild.leaveVc(msg);
+    case 'join':
+        return guild.joinVc(msg);
+    case 'leave':
+        return guild.leaveVc(msg);
 
-        case 'hime':
-            return hime(msg, guild);
-        default:
-            msg.channel.send(`Please refer to ${tool.wrap('~help music')}.`);
+    case 'hime':
+        return hime(msg, guild);
+    default:
+        msg.channel.send(`Please refer to ${tool.wrap('~help music')}.`);
     }
 }
 
@@ -79,7 +78,7 @@ function processInput(msg, guild) {
             } else if (url.search(/v=(\S+?)(&|\s|$|#)/)) { //Video.
                 processYoutube.song(msg, guild, url);
             } else {
-                msg.channel.send(`Invalid Youtube link! ${inaBaka}`);
+                msg.channel.send(`Invalid Youtube link! ${tool.inaBaka}`);
             }
         } else if (url.search('soundcloud.com')) { //Soundcloud.
             msg.channel.send('Gomen, Soundcloud music isn\'nt functional right now.');
