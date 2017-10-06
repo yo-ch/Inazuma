@@ -103,7 +103,7 @@ module.exports = {
     Returns the current unix time in seconds.
     @return {Number} the unix time in seconds.
     */
-    getUnixTime(){
+    getUnixTime() {
         return Math.round((new Date()).getTime() / 1000);
     },
 
