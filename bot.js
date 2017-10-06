@@ -88,7 +88,7 @@ function getCmdFunction(cmd) {
         'vigne': cmds.retrieveImgurAlbum,
         'aoba': cmds.retrieveImgurAlbum,
         'music': music.processCommand,
-    }
+    };
     return COMMANDS[cmd] ? COMMANDS[cmd] : () => {};
 }
 

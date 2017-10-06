@@ -4,7 +4,6 @@ Regular commands.
 'use strict';
 const config = require('./config.json');
 const commandHelp = require('./help.js');
-const ani = require('./anime.js');
 const tool = require('./tool.js');
 const rp = require('request-promise');
 const stripIndent = require('strip-indent');
@@ -114,7 +113,7 @@ function kick(msg) {
     }
     let memberToKick = msg.mentions.members.first();
     if (memberToKick && memberToKick.kickable && (msg.member.highestRole.calculatedPosition >
-            memberToBan.highestRole.calculatedPosition || msg.guild.ownerID == msg.author.id)) {
+            memberToKick.highestRole.calculatedPosition || msg.guild.ownerID == msg.author.id)) {
         let reason = tool.parseOptionArg('reason', msg.content);
         memberToKick.kick(reason ? reason : 'none');
     }
@@ -260,13 +259,13 @@ function prune(msg) {
                     nextCall(0);
                 });
             } else if (msgs.size == 1) {
-                msgs.first().delete().then(deleted => {
+                msgs.first().delete().then(() => {
                     nextCall(1);
                 });
             } else {
                 nextCall(0);
             }
-        }).catch(err => {
+        }).catch(() => {
             throw 'err';
         });
 
@@ -324,16 +323,16 @@ function role(msg) {
         return msg.channel.send('Invalid arguments.');
 
     switch (args[0]) {
-        case 'give':
-            return processRoleChanges('give');
-        case 'take':
-            return processRoleChanges('take');
-        case 'modify':
-            if (roles.length == 1)
-                modifyRole();
-            else
-                return;
-            break;
+    case 'give':
+        return processRoleChanges('give');
+    case 'take':
+        return processRoleChanges('take');
+    case 'modify':
+        if (roles.length == 1)
+            modifyRole();
+        else
+            return;
+        break;
     }
 
     /*
@@ -484,7 +483,7 @@ function role(msg) {
                 }
             }
             if (options.long.includes('inrole')) {
-                if (enabledOptions.inrole = tool.parseOptionArg('inrole', msg.content)) {
+                if ((enabledOptions.inrole = tool.parseOptionArg('inrole', msg.content))) {
                     if (!msg.guild.roles.exists(role => role.name.toLowerCase() ==
                             enabledOptions.inrole)) {
                         //Check that role actually exists.
@@ -497,7 +496,7 @@ function role(msg) {
                     return;
                 }
             } else if (options.long.includes('notinrole')) {
-                if (enabledOptions.notinrole = tool.parseOptionArg('notinrole', msg.content)) {
+                if ((enabledOptions.notinrole = tool.parseOptionArg('notinrole', msg.content))) {
                     if (!msg.guild.roles.exists(role => role.name.toLowerCase() ==
                             enabledOptions.notinrole)) {
                         //Check that role actually exists.
@@ -522,7 +521,7 @@ function role(msg) {
             }
             if (options.long.includes('color')) {
                 let hexCode;
-                if (hexCode = tool.parseOptionArg('color', msg.content)) {
+                if ((hexCode = tool.parseOptionArg('color', msg.content))) {
                     if (hexCode.indexOf('#') == 0) hexCode = hexCode.slice(1);
                     let decimalCode = parseInt(hexCode, 16);
                     if (hexCode.length != 6 || isNaN(decimalCode)) {
@@ -571,7 +570,7 @@ function role(msg) {
                     );
                     return false;
                 }
-                if (optionLength1 == 0 && optionLength2 == 0) {
+                if (optionCount1 == 0 && optionCount2 == 0) {
                     msg.channel.send(`You didn't specify any options.`);
                     return false;
                 }
@@ -600,13 +599,13 @@ function roll(msg) {
         if (tool.isInt(num))
             msg.channel.send(tool.randint(num) + 1);
         else
-            msg.channel.send(`These aren\'t numbers ${tool.tsunNoun()}!`);
+            msg.channel.send(`These aren't numbers ${tool.tsunNoun()}!`);
     } else {
         let num1 = parseInt(args[0]);
         let num2 = parseInt(args[1]);
         if (!tool.isInt(num1) || !tool.isInt(num2))
             return
-        msg.channel.send(`These aren\'t numbers ${tool.tsunNoun()}!`);
+        msg.channel.send(`These aren't numbers ${tool.tsunNoun()}!`);
 
         if (num1 > num2)
             msg.channel.send(tool.randint(num1 - num2 + 1) + num2);

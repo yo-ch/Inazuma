@@ -6,7 +6,7 @@ The music player for a guild.
 Handles the queuing, and streaming of Songs.
 */
 class MusicPlayer {
-    constructor(guild) {
+    constructor() {
         this.queue = [];
         this.musicChannel = null;
         this.voiceConnection = null;
@@ -54,6 +54,7 @@ class MusicPlayer {
                 });
 
                 this.dispatch.on('error', error => {
+                    console.log(error);
                     this.dispatch = null;
                     this.queue.shift();
                     this.playSong(msg);
@@ -101,7 +102,7 @@ class MusicPlayer {
             this.musicChannel.send(`:fast_forward: Skipped ${tool.wrap(this.queue[0].title)}`);
             this.dispatch.end();
         } else {
-            this.musicChannel.send(`There\'s nothing to skip! ${tool.inaBaka}`);
+            this.musicChannel.send(`There's nothing to skip! ${tool.inaBaka}`);
         }
     }
 
@@ -203,7 +204,7 @@ class MusicPlayer {
                     this.playSong(msg);
             })
         } else {
-            msg.channel.send(`You\'re not in a voice channel! ${tool.inaBaka}`);
+            msg.channel.send(`You're not in a voice channel! ${tool.inaBaka}`);
         }
     }
 
