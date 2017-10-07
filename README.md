@@ -6,7 +6,6 @@ Includes anime lookup (Anilist) and a music player.
 
 ```
 indev:
-    -Constructors/classes for objects that are reused frequently.
     -Message embeds.
 planned:
     -Soundcloud music when API registration opens back up.
