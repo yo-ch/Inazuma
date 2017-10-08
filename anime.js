@@ -527,7 +527,7 @@ function updateAnilistUsers(userId, username) {
 Formats the given anime information.
 @params {Strings} params Self explanatory.
 */
-function animeInfoString(name, score, type, episodes, synopsis, url, ding) {
+function animeInfoString(name, score, type, episodes, synopsis, url) {
     if (!episodes) episodes = 'N/A';
     const formatType = {
         'TV': 'TV',
