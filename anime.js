@@ -55,6 +55,9 @@ function retrieveAnimeData(msg) {
                   format
                   episodes
                   averageScore
+                  coverImage {
+                    medium
+                  }
                 }
               }
             }
@@ -75,10 +78,10 @@ function retrieveAnimeData(msg) {
 
             if (searchResults.length == 1) { //Send results.
                 let anime = searchResults[0];
-                let ais = animeInfoString(anime.title.romaji, anime.averageScore,
+                let aie = animeInfoEmbed(anime.title.romaji, anime.averageScore,
                     anime.format, anime.episodes, anime.description,
-                    `https://anilist.co/anime/${anime.id}/`);
-                msg.channel.send(ais);
+                    `https://anilist.co/anime/${anime.id}/`, anime.coverImage.medium);
+                msg.channel.send(aie);
             } else if (searchResults.length >= 2) {
                 //Store results to retrieve when user replies with a choice.
                 searchRequests[msg.author.id] = searchResults;
@@ -114,9 +117,10 @@ function anilistChoose(msg, choice) {
     if (choice > 0 && choice <= results.length) {
         let anime = results[choice - 1];
 
-        let ais = animeInfoString(anime.title.romaji, anime.averageScore, anime.format, anime.episodes,
-            anime.description, `https://anilist.co/anime/${anime.id}/`);
-        msg.channel.send(ais);
+        let aie = animeInfoEmbed(anime.title.romaji, anime.averageScore, anime.format, anime.episodes,
+            anime.description, `https://anilist.co/anime/${anime.id}/`, anime.coverImage.medium
+        );
+        msg.channel.send(aie);
         delete searchRequests[msg.author.id];
     }
 }
@@ -522,13 +526,15 @@ function updateAnilistUsers(userId, username) {
         }
     }
 }
-
 /*
-Formats the given anime information.
+Formats the given anime information into an embed.
 @params {Strings} params Self explanatory.
 */
-function animeInfoString(name, score, type, episodes, synopsis, url) {
+function animeInfoEmbed(name, score, type, episodes, synopsis, url, image) {
+    let embed = new RichEmbed();
+
     if (!episodes) episodes = 'N/A';
+    if (!score) score = 'N/A';
     const formatType = {
         'TV': 'TV',
         'TV_SHORT': 'TV Short',
@@ -539,11 +545,20 @@ function animeInfoString(name, score, type, episodes, synopsis, url) {
         'MUSIC': 'Music'
     }
     type = formatType[type] ? formatType[type] : type;
+    synopsis = synopsis.replace(/<br>\\n|<br>/g, '\n'); //Remove <b> tags.
+    synopsis = synopsis.replace(/<i>|<\/i>/g, '*'); //Remove <i> tags.
+    synopsis = synopsis.slice(0, synopsis.indexOf('(Source:')).trim(); //Remove source information.
 
-    let syn = synopsis.replace(/<br>\\n|<br>/g, '\n');
-    syn = syn.replace(/<i>|<\/i>/g, '*');
-    syn = syn.slice(0, syn.indexOf('(Source:')).trim(); //Remove source information.
-    return `**${name}** (${url})\n**Score:** ${score}\n**Type:** ${type}\n**Episodes:** ${episodes}\n\n${syn}\n\n`;
+    embed.setTitle(name);
+    embed.setImage(image);
+    embed.addField('Type:', tool.wrap(type), true);
+    embed.addField('Score:', tool.wrap(score), true);
+    embed.addField('Episodes:', tool.wrap(episodes), true);
+    embed.addField('Synopsis:', synopsis, false);
+    embed.setURL(url);
+    embed.setColor()
+
+    return embed;
 }
 
 /*
