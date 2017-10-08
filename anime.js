@@ -3,11 +3,15 @@ Anime related commands and functions.
 */
 'use strict';
 const tool = require('./tool.js')
+
 const rp = require('request-promise');
-const stripIndent = require('strip-indent');
-const sprintf = require('sprintf-js').sprintf;
 const util = require('util');
 const fs = require('fs');
+const RichEmbed = require('discord.js').RichEmbed;
+const sprintf = require('sprintf-js').sprintf;
+
+const stripIndent = require('strip-indent');
+
 const writeFileAsync = util.promisify(fs.writeFile);
 
 module.exports = {
@@ -197,16 +201,9 @@ function getAiringList(msg) {
     for (let i = 0; i < info.length; i++) //Add info of each anime to airing string.
         airing += info[i][0];
 
-    let airingListPromise = msg.channel.send(`${airing}`, {
+    msg.channel.send(`${airing}`, {
         'code': 'md'
     });
-
-    setTimeout(() => { //Delete airing message after 5 minutes.
-        airingListPromise.then(airingMsg => {
-            msg.delete();
-            airingMsg.delete();
-        });
-    }, 300000);
 }
 
 /*
