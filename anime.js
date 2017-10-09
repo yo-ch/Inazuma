@@ -556,8 +556,9 @@ function animeInfoEmbed(name, score, type, episodes, synopsis, url, image) {
     embed.addField('Episodes:', tool.wrap(episodes), true);
     embed.addField('Synopsis:', synopsis, false);
     embed.setURL(url);
-    embed.setColor()
-
+    embed.setColor('BLUE');
+    embed.setFooter('Powered by Anilist');
+    
     return embed;
 }
 
