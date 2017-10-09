@@ -6,7 +6,7 @@ Includes anime lookup (Anilist) and a music player.
 
 ```
 indev:
-    -Message embeds.
+
 planned:
     -Soundcloud music when API registration opens back up.
     -More moderation tools.
@@ -151,61 +151,4 @@ Options:
 
 ~vigne   
     Returns a random picture of Vigne.
-```
-
-# JSON Sample Files
-
-## config.json
-
-```
-{
-    "token": "Discord Token",
-    "prefix": "~",
-    "imgur_id": "Imgur ID",
-    "anilist_id": "Anilist ID",
-    "anilist_secret": "Anilist Secret",
-    "youtube_api_key": "Youtube API Key"
-}
-```
-
-## seasonalAnime.json
-
-Empty json file initially.
-
-```
-{
-  "21856": {
-    "title": "Boku no Hero Academia 2",
-    "schedule": [
-    {"airingAt": 1491585000, "episode": 1},
-    {"airingAt": 1492189800, "episode": 2},
-    ...],
-    "nextEpisode": 22,
-    "users": {"userid1": null, "userid2": null, ...}"
-  }, ...
-}
-```
-
-## anilistUsers.json
-
-Empty json file initially.
-
-```
-{
-  "discordId": {
-    "username": "anilistUsername",
-    "notifications": true
-  }, ...
-}
-```
-
-## gavquotes.json
-
-```
-{
-    "quotes": [
-    "Quote 1",
-    "Quote 2",
-    ... ]
-}
 ```
