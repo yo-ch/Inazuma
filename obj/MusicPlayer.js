@@ -156,7 +156,7 @@ class MusicPlayer {
     Clears the queue.
     */
     purgeQueue(msg) {
-        this.queue = [];
+        this.queue = [this.queue[0]];
         msg.channel.send('The queue has been cleared.');
     }
 

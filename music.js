@@ -97,9 +97,11 @@ Processes a search using youtube-dl, pushing the resulting song to the queue.
 */
 function processSearch(msg, guild, searchQuery) {
     searchQuery = 'gvsearch1:' + searchQuery;
-    youtubeDL.getInfo(searchQuery, ['--extract-audio'], (err, song) => {
+    youtubeDL.getInfo(searchQuery, ['--extract-audio', '--buffer-size=4096'], {
+        maxBuffer: Infinity
+    }, (err, song) => {
         if (err) {
-            msg.channel.send(`Gomen, I couldn't find matching song.`);
+            msg.channel.send(`Gomen, I couldn't find a matching song.`);
             return console.log(err);
         }
         guild.queueSong(new Song(song.title, song.url, 'search'));
