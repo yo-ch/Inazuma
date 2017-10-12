@@ -1,0 +1,39 @@
+{
+  "name": "inazuma-bot",
+  "version": "1.0.0",
+  "description": "Discord bot powered by discord.js.",
+  "main": "bot.js",
+  "dependencies": {
+    "ajv": "^5.2.3",
+    "bufferutil": "^3.0.2",
+    "colors": "^1.1.2",
+    "discord.js": "^11.2.1",
+    "erlpack": "^0.1.0",
+    "latest": "^0.2.0",
+    "node-opus": "^0.2.7",
+    "prompt": "^1.0.0",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.0",
+    "request-promise-native": "^1.0.3",
+    "sodium": "^2.0.1",
+    "sprintf-js": "^1.0.3",
+    "strip-indent": "^2.0.0",
+    "uws": "^8.14.1",
+    "youtube-dl": "^1.11.1",
+    "ytdl-core": "^0.15.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yo-ch/Inazuma-Bot.git"
+  },
+  "author": "Yoson Chiu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yo-ch/Inazuma-Bot/issues"
+  },
+  "homepage": "https://github.com/yo-ch/Inazuma-Bot#readme"
+}
