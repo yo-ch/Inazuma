@@ -172,7 +172,7 @@ function getAiringList(msg) {
         if (currentAnime.schedule) {
             if (currentAnime.schedule.length == 0) {
                 countdown = Infinity; //Empty schedule means done airing. Infinity makes sense in this case.
-            } else if (currentAnime.nextEpisode <= currentAnime.schedule.length){
+            } else if (currentAnime.nextEpisode <= currentAnime.schedule.length) {
                 countdown = currentAnime.schedule[nextEpisode - 1].airingAt - unixts;
             }
         }
@@ -385,8 +385,11 @@ function updateAnimeStatuses() {
                 requestAiringData(parseInt(animeId));
             }
         }
-        if (currentAnime.schedule == [] && Object.keys(currentAnime.users).length == 0)
+
+        if (currentAnime.schedule && currentAnime.schedule.length == 0 && Object.keys(currentAnime.users)
+            .length == 0) {
             delete subscribedAnime[animeId];
+        }
     }
 }
 
