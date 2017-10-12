@@ -172,7 +172,7 @@ function getAiringList(msg) {
         if (currentAnime.schedule) {
             if (currentAnime.schedule.length == 0) {
                 countdown = Infinity; //Empty schedule means done airing. Infinity makes sense in this case.
-            } else {
+            } else if (currentAnime.nextEpisode <= currentAnime.schedule.length){
                 countdown = currentAnime.schedule[nextEpisode - 1].airingAt - unixts;
             }
         }
@@ -380,8 +380,10 @@ function updateAnimeStatuses() {
                 notifyAnimeAired(currentAnime, currentAnime.nextEpisode);
                 currentAnime.nextEpisode++;
             }
-            if (currentAnime.nextEpisode > currentAnime.schedule.length)
-                currentAnime.schedule = []; //Empty schedule signifies airing completion.
+            if (currentAnime.nextEpisode > currentAnime.schedule.length) {
+                //Get next batch of airing schedule.
+                requestAiringData(parseInt(animeId));
+            }
         }
         if (currentAnime.schedule == [] && Object.keys(currentAnime.users).length == 0)
             delete subscribedAnime[animeId];
@@ -435,6 +437,7 @@ setInterval(function periodicalFuncts() {
     writeFiles();
     updateAnimeStatuses();
 }, 900000);
+updateAnimeStatuses();
 
 /*
 Send request to Anilist api with provided query and variables.
@@ -461,55 +464,61 @@ function queryAnilist(query, variables) {
 Requests airing schedules for anime missing them.
 */
 function requestMissingSchedules() {
+    for (let animeId in subscribedAnime) {
+        if (subscribedAnime[animeId].schedule != null) break;
+        requestAiringData(parseInt(animeId));
+    }
+}
+
+/*
+Requests the latest airing data (25 eps) for an anime, and updates the anime entry accordingly.
+*/
+function requestAiringData(animeId) {
+    let anime = subscribedAnime[animeId];
+
     let query = stripIndent(
         `
-        query ($id: Int){
-          Media(id: $id, type: ANIME){
-            id
-            status
-            nextAiringEpisode{
+      query ($id: Int, $page: Int){
+        Media(id: $id, type: ANIME){
+          id
+          status
+          nextAiringEpisode{
+            episode
+          }
+          airingSchedule (page: $page){
+            nodes{
+              airingAt
               episode
-            }
-            airingSchedule{
-              nodes{
-                airingAt
-                episode
-              }
             }
           }
         }
-        `
+      }
+      `
     );
     let variables = {
-        'id': 0
+        'id': animeId,
+        'page': Math.floor(subscribedAnime[animeId].nextEpisode / 25) + 1
     }
-    let processedCount = 0;
-    let noToProcess = 0;
-    for (let animeId in subscribedAnime) {
-        if (subscribedAnime[animeId].schedule == null) noToProcess++;
-    }
-    for (let animeId in subscribedAnime) {
-        if (subscribedAnime[animeId].schedule != null) continue;
-        if (processedCount == noToProcess) break;
 
-        processedCount++; //Could also use Promises.all here instead.
-        variables.id = parseInt(animeId); //Request airing schedule for anime with this id.
-        queryAnilist(query, variables).then(body => {
-            let animeSchedule = JSON.parse(body).data.Media;
+    queryAnilist(query, variables).then(body => {
+        let animeSchedule = JSON.parse(body).data.Media;
 
-            if (animeSchedule.status != 'RELEASING' && animeSchedule.status !=
-                'NOT_YET_RELEASED') {
-                subscribedAnime[animeId].schedule = []; //Empty schedule to signify airing completion.
-            } else if (animeSchedule.airingSchedule.nodes.length > 0) { //Schedule available and anime still airing.
-                subscribedAnime[animeId].schedule = animeSchedule.airingSchedule.nodes;
-                subscribedAnime[animeId].nextEpisode = animeSchedule.nextAiringEpisode ?
-                    animeSchedule.nextAiringEpisode.episode : 1;
-            } else {
-                return;
-            }
-            console.log(`Updated schedule of an anime! ID: ${animeSchedule.id}`);
-        }).catch(err => console.log(err.message));
-    }
+        if (animeSchedule.status != 'RELEASING' && animeSchedule.status !=
+            'NOT_YET_RELEASED') {
+            anime.schedule = []; //Empty schedule to signify airing completion.
+        } else if (animeSchedule.airingSchedule.nodes.length > 0) { //Schedule available and anime still airing.
+            let tempSchedule = anime.schedule == null ? [] : anime.schedule;
+            anime.schedule = tempSchedule.concat(animeSchedule.airingSchedule.nodes);
+            anime.nextEpisode = animeSchedule.nextAiringEpisode ?
+                animeSchedule.nextAiringEpisode.episode :
+                1;
+        } else if (animeSchedule.airingSchedule.nodes.length == 0) {
+            anime.schedule = null;
+        } else {
+            return;
+        }
+        console.log(`Updated schedule of an anime! ID: ${animeSchedule.id}`);
+    }).catch(err => console.log(err.message));
 }
 
 /*
@@ -558,7 +567,7 @@ function animeInfoEmbed(name, score, type, episodes, synopsis, url, image) {
     embed.setURL(url);
     embed.setColor('BLUE');
     embed.setFooter('Powered by Anilist');
-    
+
     return embed;
 }
 
