@@ -31,9 +31,9 @@ module.exports = {
 let discordClient = null;
 let searchRequests = {}; //Stores search requests that have multiple results.
 
-let subscribedAnime = require('./subscribedAnime.json');
-let anilistUsers = require('./anilistUsers.json');
-let seasonalAnime = require('./seasonalAnime.json');
+let subscribedAnime = require('./json/subscribedAnime.json');
+let anilistUsers = require('./json/anilistUsers.json');
+let seasonalAnime = require('./json/seasonalAnime.json');
 
 /*
 Display the specified anime's info, from Anilist.
@@ -361,7 +361,7 @@ function retrieveSeasonalAnime(msg) {
 }
 
 /*
-NOTIFICATION FUNCTIONS
+NOTIFICATION/AIRING LIST FUNCTIONS
 */
 
 /*
@@ -629,7 +629,7 @@ function writeFiles() {
         writeFileAsync('anilistUsers.json', JSON.stringify(anilistUsers)),
         writeFileAsync('seasonalAnime.json', JSON.stringify(seasonalAnime))
     ]);
-    wfPromises.catch(err => console.log('Error saving JSON files: ' + err.message));
+    wfPromises.catch(err => console.log('Error saving JSON files: ' + err));
     return wfPromises;
 }
 

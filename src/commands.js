@@ -2,7 +2,7 @@
 Regular commands.
 */
 'use strict';
-const config = require('./config.json');
+const config = require('./json/config.json');
 const commandHelp = require('./help.js');
 const tool = require('./tool.js');
 const rp = require('request-promise');
@@ -154,7 +154,7 @@ function choose(msg) {
 Returns a random Gavin quote.
 */
 function gavquote(msg) {
-    let gq = require('./gavquotes.json');
+    let gq = require('./json/gavquotes.json');
     msg.channel.send(`${tool.wrap(gq.quotes[tool.randint(gq.quotes.length)])}`);
 }
 

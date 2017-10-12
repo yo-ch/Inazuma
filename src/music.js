@@ -3,7 +3,7 @@ Processes music commands and retrieves Songs for guild MusicPlayers.
 Also manages MusicPlayer timers.
 */
 'use strict';
-const config = require('./config.json');
+const config = require('./json/config.json');
 const tool = require('./tool.js');
 
 const Song = require('./obj/Song.js');
