@@ -1,4 +1,5 @@
 node_modules/*
 *.json
+json/*
 npm-debug.log
 .tern-project
