@@ -625,9 +625,9 @@ Write data in memory to JSON files.
 */
 function writeFiles() {
     let wfPromises = Promise.all([
-        writeFileAsync('subscribedAnime.json', JSON.stringify(subscribedAnime)),
-        writeFileAsync('anilistUsers.json', JSON.stringify(anilistUsers)),
-        writeFileAsync('seasonalAnime.json', JSON.stringify(seasonalAnime))
+        writeFileAsync('./json/subscribedAnime.json', JSON.stringify(subscribedAnime)),
+        writeFileAsync('./json/anilistUsers.json', JSON.stringify(anilistUsers)),
+        writeFileAsync('./json/seasonalAnime.json', JSON.stringify(seasonalAnime))
     ]);
     wfPromises.catch(err => console.log('Error saving JSON files: ' + err));
     return wfPromises;
