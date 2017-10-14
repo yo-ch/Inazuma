@@ -440,7 +440,7 @@ setInterval(function periodicalFuncts() {
     writeFiles();
     updateAnimeStatuses();
 }, 900000);
-updateAnimeStatuses();
+setTimeout(updateAnimeStatuses, 5000);
 
 /*
 Send request to Anilist api with provided query and variables.
