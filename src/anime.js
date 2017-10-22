@@ -91,6 +91,10 @@ function retrieveAnimeData(msg) {
                     choiceString +=
                     `${tool.wrap(`${i + 1} - ${searchResults[i].title.romaji}`)}\n`;
                 msg.channel.send(choiceString);
+
+                setTimeout(() => { //del after 5 min.
+                    delete searchRequests[msg.author.id]
+                }, 300000);
             } else {
                 throw {
                     message: 'No results.'
@@ -406,7 +410,7 @@ async function notifyAnimeAired(airedAnime, episode) {
                 let dm = await user.createDM();
                 dm.send(`${tool.wrap(airedAnime.title)} **Episode ${episode}** has aired!`);
             } catch (err) {
-                console.log(err.message);
+                console.log(err);
             }
         }
     }
