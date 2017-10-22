@@ -25,7 +25,7 @@ function processCommand(msg) {
 
     //Add guild to the guild list.
     if (!guilds[msg.guild.id])
-        guilds[msg.guild.id] = new MusicPlayer(msg.guild);
+        guilds[msg.guild.id] = new MusicPlayer();
 
     let guild = guilds[msg.guild.id];
 
@@ -112,8 +112,9 @@ function processSearch(msg, guild, searchQuery) {
             `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
         );
 
-        if (guild.status != 'playing')
+        if (guild.status != 'playing') {
             guild.playSong(msg, guild);
+        }
     });
 }
 
@@ -137,6 +138,7 @@ const processYoutube = {
             msg.channel.send(
                 `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
             );
+
             if (guild.status != 'playing') {
                 guild.playSong(msg);
             }
