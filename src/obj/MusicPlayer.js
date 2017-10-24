@@ -1,6 +1,13 @@
 'use strict';
 const tool = require('../tool.js');
 
+const Status = {
+    OFFLINE: 0,
+    STOPPED: 1,
+    PAUSED: 2,
+    PLAYING: 3
+};
+
 /*
 The music player for a guild.
 Handles the queuing, and streaming of Songs.
@@ -12,7 +19,7 @@ class MusicPlayer {
         this.voiceConnection = null;
         this.dispatch = null;
         this.volume = 1;
-        this.status = 'offline'; //States: offline, playing, stopped
+        this.status = Status.OFFLINE; //States: offline, playing, stopped, paused
         this.inactivityTimer = 60;
     }
 
@@ -40,14 +47,14 @@ class MusicPlayer {
     playSong(msg) {
         if (this.queue.length === 0) {
             this.musicChannel.send('Queue complete.');
-            this.changeStatus('stopped');
+            this.changeStatus(Status.STOPPED);
         } else {
             resolveVoiceChannel.call(this).then(() => {
                 let song = this.queue[0];
                 let stream = song.getStream();
 
                 this.musicChannel.send(`:notes: Now playing ${tool.wrap(song.title)}`);
-                this.changeStatus('playing');
+                this.changeStatus(Status.PLAYING);
                 this.dispatch = this.voiceConnection.playStream(stream, {
                     passes: 2,
                     volume: this.volume
@@ -98,8 +105,9 @@ class MusicPlayer {
     Skips the current song.
     */
     skipSong() {
-        if (this.dispatch && this.status == 'playing') {
-            this.musicChannel.send(`:fast_forward: Skipped ${tool.wrap(this.queue[0].title)}`);
+        if (this.dispatch && this.status == Status.PLAYING) {
+            this.musicChannel.send(
+                `:fast_forward: Skipped ${tool.wrap(this.queue[0].title)}`);
             this.dispatch.end();
         } else {
             this.musicChannel.send(`There's nothing to skip! ${tool.inaBaka}`);
@@ -156,7 +164,11 @@ class MusicPlayer {
     Clears the queue.
     */
     purgeQueue(msg) {
-        this.queue = [this.queue[0]];
+        if (this.status == Status.PLAYING || this.status == Status.PAUSED) {
+            this.queue = [this.queue[0]];
+        } else {
+            this.queue = [];
+        }
         msg.channel.send('The queue has been cleared.');
     }
 
@@ -194,12 +206,12 @@ class MusicPlayer {
     joinVc(msg) {
         if (msg.member.voiceChannel) {
             this.musicChannel = msg.channel;
+            this.musicChannel.send(
+                `Joined and bound to :speaker: **${msg.member.voiceChannel.name}** and #**${this.musicChannel.name}**.`
+            );
             msg.member.voiceChannel.join().then(connection => {
                 this.voiceConnection = connection;
-                this.musicChannel.send(
-                    `Joined and bound to :speaker: **${msg.member.voiceChannel.name}** and #**${this.musicChannel.name}**.`
-                );
-                this.changeStatus('stopped');
+                this.changeStatus(Status.STOPPED);
                 if (this.queue.length > 0)
                     this.playSong(msg);
             })
@@ -219,7 +231,7 @@ class MusicPlayer {
                 this.dispatch.end('leave');
             this.voiceConnection.disconnect();
 
-            this.changeStatus('offline');
+            this.changeStatus(Status.OFFLINE);
 
             this.voiceConnection = null;
             this.dispatch = null;
@@ -234,7 +246,7 @@ class MusicPlayer {
     */
     changeStatus(status) {
         this.status = status;
-        this.inactivityTimer = status == 'paused' ?
+        this.inactivityTimer = status == Status.PAUSED ?
             600 :
             120;
     }
