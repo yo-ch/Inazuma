@@ -7,11 +7,6 @@ const ani = require('./anime.js');
 const music = require('./music.js');
 const tool = require('./tool.js');
 
-const prompt = require('prompt');
-const colors = require('colors');
-prompt.message = '';
-prompt.delimiter = '';
-
 const bot = new Discord.Client();
 
 bot.on('ready', () => {
@@ -23,9 +18,6 @@ bot.on('ready', () => {
     ani.passClient(bot);
     ani.requestMissingSchedules();
     setInterval(ani.requestMissingSchedules, 86400000); //Request every 24 hours.
-
-    //Internal bot commands.
-    promptInternalCmd();
 });
 
 bot.on('message', msg => {
@@ -103,27 +95,6 @@ function reply(msg) {
         `${tool.inaAngry}`
     ];
     msg.channel.send(replies[tool.randint(replies.length)]);
-}
-
-/*
-Server-side command prompts.
-*/
-function promptInternalCmd() {
-    prompt.start({
-        noHandleSIGINT: true
-    });
-    prompt.get([colors.green('\\Inazuma>')], function (err, result) {
-        if (!err) {
-            let cmd = result[colors.green('\\Inazuma>')];
-
-            if (cmd == 'save') { //Manually save anime JSON files.
-                ani.writeFiles().then(() => {
-                    console.log('JSON files saved!');
-                    setTimeout(promptInternalCmd, 0);
-                });
-            }
-        }
-    });
 }
 
 /*
