@@ -17,6 +17,13 @@ module.exports.processCommand = processCommand;
 
 let guilds = {};
 
+const Status = {
+    OFFLINE: 0,
+    STOPPED: 1,
+    PAUSED: 2,
+    PLAYING: 3
+};
+
 /*
 The music command handler.
 */
@@ -112,7 +119,7 @@ function processSearch(msg, guild, searchQuery) {
             `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
         );
 
-        if (guild.status != 'playing') {
+        if (guild.status != Status.PLAYING) {
             guild.playSong(msg, guild);
         }
     });
@@ -139,7 +146,7 @@ const processYoutube = {
                 `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
             );
 
-            if (guild.status != 'playing') {
+            if (guild.status != Status.PLAYING) {
                 guild.playSong(msg);
             }
         });
@@ -216,7 +223,7 @@ const processYoutube = {
                 `Enqueued ${tool.wrap(playlistItems.length)} songs from ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
             );
 
-            if (guild.status != 'playing') {
+            if (guild.status != Status.PLAYING) {
                 guild.playSong(msg);
             }
         }
@@ -237,7 +244,7 @@ Timer for inactivity. Leave voice channel after inactivity timer expires.
 function timer() {
     for (let guildId in guilds) {
         let guild = guilds[guildId];
-        if (guild.status == 'stopped' || guild.status == 'paused')
+        if (guild.status == Status.STOPPED || guild.status == Status.PAUSED)
             guild.inactivityTimer -= 10;
         if (guild.inactivityTimer <= 0) {
             guild.voiceConnection.disconnect();
@@ -245,7 +252,7 @@ function timer() {
             guild.musicChannel.send(
                 ':no_entry_sign: Leaving voice channel due to inactivity.');
 
-            guild.changeStatus('offline');
+            guild.changeStatus(Status.OFFLINE);
         }
     }
 }
