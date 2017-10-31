@@ -3,8 +3,6 @@ Anime related commands and functions.
 */
 'use strict';
 const tool = require('./tool.js')
-const Discord = require('discord.js');
-const DiscordClient = new Discord.Client();
 
 const rp = require('request-promise');
 const util = require('util');
@@ -26,9 +24,11 @@ module.exports = {
     'retrieveSeasonalAnime': retrieveSeasonalAnime,
     'requestMissingSchedules': requestMissingSchedules,
     'setNotificationOption': setNotificationOption,
+    'passClient': passClient,
     'writeFiles': writeFiles
 }
 
+let discordClient = null;
 let searchRequests = {}; //Stores search requests that have multiple results.
 
 let subscribedAnime = require('./json/subscribedAnime.json');
@@ -406,7 +406,7 @@ async function notifyAnimeAired(airedAnime, episode) {
     for (let userId in airedAnime.users) {
         if (anilistUsers.hasOwnProperty(userId) && anilistUsers[userId].notifications == true) { //Notifications on.
             try {
-                let user = await DiscordClient.fetchUser(userId);
+                let user = await discordClient.fetchUser(userId);
                 let dm = await user.createDM();
                 dm.send(`${tool.wrap(airedAnime.title)} **Episode ${episode}** has aired!`);
             } catch (err) {
@@ -440,11 +440,11 @@ UTILITY FUNCTIONS
 /*
 Periodically write stored data to files, and check if any anime have aired. (15 mins)
 */
-setInterval(async function periodicalFuncts() {
-    await writeFiles();
+setInterval(function periodicalFuncts() {
+    writeFiles();
     updateAnimeStatuses();
 }, 900000);
-setTimeout(updateAnimeStatuses, 5000);
+setTimeout(updateAnimeStatuses, 10000);
 
 /*
 Send request to Anilist api with provided query and variables.
@@ -627,7 +627,7 @@ function getCurrentSeason() {
 /*
 Write data in memory to JSON files.
 */
-function writeFiles() {
+async function writeFiles() {
     let wfPromises = Promise.all([
         writeFileAsync('./json/subscribedAnime.json', JSON.stringify(subscribedAnime)),
         writeFileAsync('./json/anilistUsers.json', JSON.stringify(anilistUsers)),
@@ -635,4 +635,12 @@ function writeFiles() {
     ]);
     wfPromises.catch(err => console.log('Error saving JSON files: ' + err));
     return wfPromises;
+}
+
+/*
+Receive Discord client instance.
+@param {Object} client The Discord client.
+*/
+function passClient(client) {
+    discordClient = client;
 }
