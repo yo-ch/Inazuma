@@ -67,7 +67,7 @@ class MusicPlayer {
                     this.playSong(msg);
                 });
 
-                this.dispatch.on('end', reason => {
+                this.dispatch.once('end', reason => {
                     this.dispatch = null;
                     this.queue.shift();
                     if (reason != 'leave') {
