@@ -35,12 +35,12 @@ bot.on('message', msg => {
         msg.channel.send(`Arigato! ${tool.inaHappy}`);
     else if (msg.content.search('299400284906717186') >= 0) //Random reply when bot is mentioned.
         reply(msg);
-        
+
     if (!msg.content.startsWith(config.prefix))
         return; //Not a command.
 
     let cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length).toLowerCase();
-    getCmdFunction(cmd)(msg);
+    call(cmd)(msg);
 });
 
 bot.on('guildMemberAdd', member => {
@@ -59,7 +59,7 @@ bot.on('warn', (e) => console.warn(e));
 
 bot.login(config.token);
 
-function getCmdFunction(cmd) {
+function call(cmd) {
     const COMMANDS = {
         'help': cmds.help,
         'tasukete': cmds.help,
