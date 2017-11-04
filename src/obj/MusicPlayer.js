@@ -49,7 +49,7 @@ class MusicPlayer {
             this.musicChannel.send('Queue complete.');
             this.changeStatus(Status.STOPPED);
         } else {
-            resolveVoiceChannel.call(this).then(() => {
+            if (this.voiceChannel) {
                 let song = this.queue[0];
                 let stream = song.getStream();
 
@@ -78,26 +78,11 @@ class MusicPlayer {
                 this.dispatch.on('debug', info => {
                     console.log(info);
                 });
-            }).catch(err => {
-                if (err != 'novoice') console.log(err);
-            });
-        }
-
-        /*
-        Resolves the voice channel.
-        @return Promise - resolved if the bot is connected to a voice channel, and rejected if not.
-        */
-        function resolveVoiceChannel() {
-            return new Promise((resolve, reject) => {
-                if (this.voiceConnection)
-                    resolve();
-                else {
-                    msg.channel.send(
-                        `Please summon me using ${tool.wrap('~music join')} to start playing the queue.`
-                    );
-                    reject('novoice');
-                }
-            });
+            } else {
+                msg.channel.send(
+                    `Please summon me using ${tool.wrap('~music join')} to start playing the queue.`
+                );
+            }
         }
     }
 
@@ -212,8 +197,9 @@ class MusicPlayer {
             msg.member.voiceChannel.join().then(connection => {
                 this.voiceConnection = connection;
                 this.changeStatus(Status.STOPPED);
-                if (this.queue.length > 0)
+                if (this.queue.length > 0) {
                     this.playSong(msg);
+                }
             })
         } else {
             msg.channel.send(`You're not in a voice channel! ${tool.inaBaka}`);
