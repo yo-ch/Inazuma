@@ -35,9 +35,7 @@ bot.on('message', msg => {
         msg.channel.send(`Arigato! ${tool.inaHappy}`);
     else if (msg.content.search('299400284906717186') >= 0) //Random reply when bot is mentioned.
         reply(msg);
-    else if (tool.isInt(parseInt(msg.content))) //Could be input for the Anilist search function.
-        ani.anilistChoose(msg, parseInt(msg.content));
-
+        
     if (!msg.content.startsWith(config.prefix))
         return; //Not a command.
 
@@ -46,13 +44,13 @@ bot.on('message', msg => {
 });
 
 bot.on('guildMemberAdd', member => {
-    member.guild.channels.get(member.guild.id).send(
+    member.guild.defaultChannel.send(
         `I-It's not like I wanted you to join this server or anything, ${tool.tsunNoun()}. ${member.user}`
     );
 });
 
 bot.on('guildMemberRemove', member => {
-    member.guild.channels.get(member.guild.id).send(`S-Sayonara. ${member.user}`);
+    member.guild.defaultChannel.send(`S-Sayonara. ${member.user}`);
 });
 
 bot.on('error', (e) => console.error(e));

@@ -16,7 +16,6 @@ const writeFileAsync = util.promisify(fs.writeFile);
 
 module.exports = {
     'anilist': retrieveAnimeData,
-    'anilistChoose': anilistChoose,
     'airing': airingHandler,
     'getAiringList': getAiringList,
     'clearAiringList': clearAiringList,
@@ -29,7 +28,6 @@ module.exports = {
 }
 
 let discordClient = null;
-let searchRequests = {}; //Stores search requests that have multiple results.
 
 let subscribedAnime = require('./json/subscribedAnime.json');
 let anilistUsers = require('./json/anilistUsers.json');
@@ -83,18 +81,29 @@ function retrieveAnimeData(msg) {
                     `https://anilist.co/anime/${anime.id}/`, anime.coverImage.medium);
                 msg.channel.send(aie);
             } else if (searchResults.length >= 2) {
-                //Store results to retrieve when user replies with a choice.
-                searchRequests[msg.author.id] = searchResults;
-
                 let choiceString = 'Choose a number onegai!\n\n';
                 for (let i = 0; i < searchResults.length; i++)
                     choiceString +=
                     `${tool.wrap(`${i + 1} - ${searchResults[i].title.romaji}`)}\n`;
                 msg.channel.send(choiceString);
 
-                setTimeout(() => { //del after 5 min.
-                    delete searchRequests[msg.author.id]
-                }, 300000);
+                //Wait for response.
+                let choice = msg.channel.createMessageCollector(m =>
+                    tool.isInt(m) && parseInt(m) > 0 && parseInt(m) <= searchResults.length, {
+                        time: 60000,
+                        maxMatches: 1
+                    });
+
+                choice.on('collect', m => {
+                    let anime = searchResults[parseInt(m) - 1];
+                    let aie = animeInfoEmbed(anime.title.romaji, anime.averageScore,
+                        anime.format, anime.episodes,
+                        anime.description,
+                        `https://anilist.co/anime/${anime.id}/`, anime.coverImage
+                        .medium
+                    );
+                    msg.channel.send(aie);
+                });
             } else {
                 throw {
                     message: 'No results.'
@@ -106,26 +115,6 @@ function retrieveAnimeData(msg) {
         });
     } else {
         msg.channel.send(`Give me an anime to search for, ${tool.tsunNoun()}!`);
-    }
-}
-
-/*
-Replies with specified anime data after user has chosen a number.
-@param {Number} choice The user's choice.
-*/
-function anilistChoose(msg, choice) {
-    let results = searchRequests[msg.author.id];
-    if (!results)
-        return; //User does not have a search active.
-
-    if (choice > 0 && choice <= results.length) {
-        let anime = results[choice - 1];
-
-        let aie = animeInfoEmbed(anime.title.romaji, anime.averageScore, anime.format, anime.episodes,
-            anime.description, `https://anilist.co/anime/${anime.id}/`, anime.coverImage.medium
-        );
-        msg.channel.send(aie);
-        delete searchRequests[msg.author.id];
     }
 }
 
