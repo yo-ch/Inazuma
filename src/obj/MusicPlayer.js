@@ -64,14 +64,14 @@ class MusicPlayer {
                     console.log(error);
                     this.dispatch = null;
                     this.queue.shift();
-                    this.playSong(msg);
+                    setTimeout(() => this.playSong(msg), 250);
                 });
 
                 this.dispatch.once('end', reason => {
                     this.dispatch = null;
                     this.queue.shift();
                     if (reason != 'leave') {
-                        this.playSong(msg);
+                        setTimeout(() => this.playSong(msg), 250);
                     }
                 });
 
