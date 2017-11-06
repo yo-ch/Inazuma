@@ -49,7 +49,7 @@ class MusicPlayer {
             this.musicChannel.send('Queue complete.');
             this.changeStatus(Status.STOPPED);
         } else {
-            if (this.voiceChannel) {
+            if (this.voiceConnection) {
                 let song = this.queue[0];
                 let stream = song.getStream();
 
