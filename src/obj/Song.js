@@ -9,6 +9,7 @@ class Song {
         this.title = title;
         this.url = url;
         this.duration = duration;
+        this.type = type; //youtube, soundcloud, search
     }
 
     getStream() {
