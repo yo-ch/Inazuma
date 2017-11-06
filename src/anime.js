@@ -74,7 +74,7 @@ function retrieveAnimeData(msg) {
         queryAnilist(query, variables).then(body => {
             let searchResults = JSON.parse(body).data.Page.media;
 
-            if (searchResults.length == 1) { //Send results.
+            if (searchResults.length === 1) { //Send results.
                 let anime = searchResults[0];
                 let aie = animeInfoEmbed(anime.title.romaji, anime.averageScore,
                     anime.format, anime.episodes, anime.description,
@@ -124,15 +124,15 @@ Parses ~airing commands and calls the corresponding function.
 function airingHandler(msg) {
     let args = msg.content.split(/\s+/);
 
-    if (args.length == 1)
+    if (args.length === 1)
         getAiringList(msg);
-    else if (args[1] == 'sync')
+    else if (args[1] === 'sync')
         syncList(msg);
-    else if (args[1] == 'clear')
+    else if (args[1] === 'clear')
         clearAiringList(msg);
-    else if (args[1] == 'seasonal') {
+    else if (args[1] === 'seasonal') {
         retrieveSeasonalAnime(msg);
-    } else if (args[1] == 'notifications') {
+    } else if (args[1] === 'notifications') {
         setNotificationOption(msg);
     }
 }
@@ -163,7 +163,7 @@ function getAiringList(msg) {
         let nextEpisode = currentAnime.nextEpisode;
         let countdown = null;
         if (currentAnime.schedule) {
-            if (currentAnime.schedule.length == 0) {
+            if (currentAnime.schedule.length === 0) {
                 countdown = Infinity; //Empty schedule means done airing. Infinity makes sense in this case.
             } else if (currentAnime.nextEpisode <= currentAnime.schedule.length) {
                 countdown = currentAnime.schedule[nextEpisode - 1].airingAt - unixts;
@@ -174,9 +174,9 @@ function getAiringList(msg) {
             `${currentAnime.title.substring(0, 43)}...` :
             currentAnime.title; //Cut off anime title if needed.
         //Push tuple of string and airing countdown, which is used to sort by airing countdown.
-        if (countdown == null)
+        if (countdown === null)
             info.push([sprintf('%-50s [ SCHEDULE N/A ]\n', title), Infinity]);
-        else if (countdown == Infinity)
+        else if (countdown === Infinity)
             info.push([
                 sprintf('%-50s [ DONE  AIRING ]\n', title),
                 Infinity
@@ -256,7 +256,7 @@ function syncList(msg) {
         //Process anime in the user's watching list.
         for (let i = 0; i < watchingAnime.length; i++) {
             let entry = watchingAnime[i];
-            if ((entry.media.status == 'RELEASING' || entry.media.status ==
+            if ((entry.media.status === 'RELEASING' || entry.media.status ===
                     'NOT_YET_RELEASED')) {
                 //Add anime that are not in the subscribedAnime list yet.
                 if (!subscribedAnime.hasOwnProperty(entry.media.id)) {
@@ -379,8 +379,8 @@ function updateAnimeStatuses() {
             }
         }
 
-        if (currentAnime.schedule && currentAnime.schedule.length == 0 && Object.keys(currentAnime.users)
-            .length == 0) {
+        if (currentAnime.schedule && currentAnime.schedule.length === 0 && Object.keys(currentAnime.users)
+            .length === 0) {
             delete subscribedAnime[animeId];
         }
     }
@@ -393,7 +393,7 @@ Notifies subscribed users that an anime has aired if they have notifications on.
 */
 async function notifyAnimeAired(airedAnime, episode) {
     for (let userId in airedAnime.users) {
-        if (anilistUsers.hasOwnProperty(userId) && anilistUsers[userId].notifications == true) { //Notifications on.
+        if (anilistUsers.hasOwnProperty(userId) && anilistUsers[userId].notifications === true) { //Notifications on.
             try {
                 let user = await discordClient.fetchUser(userId);
                 let dm = await user.createDM();
@@ -412,12 +412,12 @@ function setNotificationOption(msg) {
     let args = msg.content.split(/\s+/);
     if (anilistUsers.hasOwnProperty(msg.author.id)) {
         let on;
-        if (args[2] && args[2] == 'on' || args[2] == 'off') {
+        if (args[2] && args[2] === 'on' || args[2] === 'off') {
             on = args[2];
         } else {
             return;
         }
-        anilistUsers[msg.author.id].notifications = on == 'on' ? true : false;
+        anilistUsers[msg.author.id].notifications = on === 'on' ? true : false;
         msg.channel.send(`Notifications are now ${tool.wrap(on)}! ${tool.inaHappy}`);
     }
 }
@@ -503,12 +503,12 @@ function requestAiringData(animeId) {
             'NOT_YET_RELEASED') {
             anime.schedule = []; //Empty schedule to signify airing completion.
         } else if (animeSchedule.airingSchedule.nodes.length > 0) { //Schedule available and anime still airing.
-            let tempSchedule = anime.schedule == null ? [] : anime.schedule;
+            let tempSchedule = anime.schedule === null ? [] : anime.schedule;
             anime.schedule = tempSchedule.concat(animeSchedule.airingSchedule.nodes);
             anime.nextEpisode = animeSchedule.nextAiringEpisode ?
                 animeSchedule.nextAiringEpisode.episode :
                 1;
-        } else if (animeSchedule.airingSchedule.nodes.length == 0) {
+        } else if (animeSchedule.airingSchedule.nodes.length === 0) {
             anime.schedule = null;
         } else {
             return;
@@ -574,14 +574,14 @@ Converts a countdown in seconds to days/hours/minutes.
 function secondsToCountdown(seconds) {
     let days = Math.floor(seconds / 86400);
     let hours = Math.floor((seconds % 86400) / 3600);
-    days = (days == 0) ?
+    days = (days === 0) ?
         '' :
         days + 'd ';
-    hours = (hours == 0) ?
+    hours = (hours === 0) ?
         '' :
         hours + 'h';
 
-    if (days == '' && hours == '') {
+    if (days === '' && hours === '') {
         return `${Math.ceil(seconds / 60)}m`;
     } else {
         return `${days}${hours}`;
