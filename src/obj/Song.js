@@ -5,10 +5,9 @@ const ytdl = require('ytdl-core');
 An object representing a song.
 */
 class Song {
-    constructor(title, url, type, duration) {
+    constructor(title, url, duration, type) {
         this.title = title;
         this.url = url;
-        this.type = type; //youtube, soundcloud, search
         this.duration = duration;
     }
 
