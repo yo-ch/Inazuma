@@ -20,7 +20,7 @@ class MusicPlayer {
         this.dispatch = null;
         this.volume = 1;
         this.status = Status.OFFLINE; //States: offline, playing, stopped, paused
-        this.inactivityTimer = 60;
+        this.inactivityTimer = 300;
     }
 
     /*
@@ -234,7 +234,7 @@ class MusicPlayer {
         this.status = status;
         this.inactivityTimer = status == Status.PAUSED ?
             600 :
-            120;
+            300;
     }
 }
 
