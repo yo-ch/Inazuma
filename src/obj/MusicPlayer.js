@@ -32,7 +32,7 @@ class MusicPlayer {
     */
     queueSong(song) {
         let index;
-        if (arguments.length == 2)
+        if (arguments.length === 2)
             index = arguments[1];
         if (index != undefined) {
             this.queue[index] = song;
@@ -44,17 +44,21 @@ class MusicPlayer {
     /*
     A recursive function that plays the queue.
     */
-    playSong(msg) {
+    async playSong(msg) {
         if (this.queue.length === 0) {
             this.musicChannel.send('Queue complete.');
             this.changeStatus(Status.STOPPED);
         } else {
             if (this.voiceConnection) {
                 let song = this.queue[0];
-                let stream = song.getStream();
+                let stream = await song.getStream();
 
-                this.musicChannel.send(`:notes: Now playing ${tool.wrap(song.title)}`);
+                this.musicChannel.send(
+                    `:notes: Now playing ${tool.wrap(song.title)}   \`\`|${song.duration}|\`\``
+                );
                 this.changeStatus(Status.PLAYING);
+                song.startTime = tool.getUnixTime();
+
                 this.dispatch = this.voiceConnection.playStream(stream, {
                     passes: 2,
                     volume: this.volume
@@ -90,7 +94,7 @@ class MusicPlayer {
     Skips the current song.
     */
     skipSong() {
-        if (this.dispatch && this.status == Status.PLAYING) {
+        if (this.dispatch && this.status === Status.PLAYING) {
             this.musicChannel.send(
                 `:fast_forward: Skipped ${tool.wrap(this.queue[0].title)}`);
             this.dispatch.end();
@@ -149,7 +153,7 @@ class MusicPlayer {
     Clears the queue.
     */
     purgeQueue(msg) {
-        if (this.status == Status.PLAYING || this.status == Status.PAUSED) {
+        if (this.status === Status.PLAYING || this.status === Status.PAUSED) {
             this.queue = [this.queue[0]];
         } else {
             this.queue = [];
@@ -158,13 +162,17 @@ class MusicPlayer {
     }
 
     /*
-    Displays the currently playing song.
+    Displays the currently playing song and elapsed time.
     */
     nowPlaying(msg) {
-        if (this.queue.length > 0)
-            msg.channel.send(`:notes: Now playing ${tool.wrap(this.queue[0].title)}.`);
-        else
+        if (this.queue.length > 0) {
+            let elapsedTime = tool.formatTime(tool.getUnixTime() - this.queue[0].startTime);
+            msg.channel.send(
+                `:notes: Now playing ${tool.wrap(this.queue[0].title)}   ${tool.wrap (`|${elapsedTime}/${this.queue[0].duration}|`)}`
+            );
+        } else {
             msg.channel.send('Nothing is playing right now.');
+        }
     }
 
     /*
@@ -232,7 +240,7 @@ class MusicPlayer {
     */
     changeStatus(status) {
         this.status = status;
-        this.inactivityTimer = status == Status.PAUSED ?
+        this.inactivityTimer = status === Status.PAUSED ?
             600 :
             300;
     }

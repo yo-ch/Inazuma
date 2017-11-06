@@ -1,3 +1,5 @@
+const sprintf = require('sprintf-js').sprintf;
+
 module.exports = {
     /*
     Generates a random integer from 0 to upper exclusive.
@@ -105,6 +107,10 @@ module.exports = {
     */
     getUnixTime() {
         return Math.round((new Date()).getTime() / 1000);
+    },
+
+    formatTime(seconds) {
+        return `${Math.floor(seconds/60)}:${sprintf('%02d', seconds%60)}`;
     },
 
     /*

@@ -113,7 +113,8 @@ function processSearch(msg, guild, searchQuery) {
             msg.channel.send(`Gomen, I couldn't find a matching song.`);
             return console.log(err);
         }
-        guild.queueSong(new Song(song.title, song.url, 'search'));
+
+        guild.queueSong(new Song(song.title, song.url, song.duration, 'search'));
 
         msg.channel.send(
             `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
@@ -140,8 +141,8 @@ const processYoutube = {
                 msg.channel.send(`Gomen I couldn't queue your song.`);
                 return;
             }
-
-            guild.queueSong(new Song(song.title, url, 'youtube'));
+            guild.queueSong(new Song(song.title, url, tool.formatTime(song.length_seconds),
+                'youtube'));
             msg.channel.send(
                 `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
             );
@@ -157,7 +158,7 @@ const processYoutube = {
     @param {String} playlistId The ID of the Youtube playlist.
     */
     playlist(msg, guild, playlistId) {
-        const youtubeApiUrl = 'https://www.googleapis.com/youtube/v3/';
+        const youtubeApiUrl = 'https://www.googleapis.com/youtube/v3';
 
         Promise.all([getPlaylistName(), getPlaylistSongs([], null)])
             .then(results => addToQueue(results[0], results[1]))
@@ -170,7 +171,7 @@ const processYoutube = {
 
         async function getPlaylistName() {
             let options = {
-                url: `${youtubeApiUrl}playlists?id=${playlistId}&part=snippet&key=${config.youtube_api_key}`
+                url: `${youtubeApiUrl}/playlists?id=${playlistId}&part=snippet&key=${config.youtube_api_key}`
             }
             let body = await rp(options);
             let playlistTitle = JSON.parse(body).items[0].snippet.title;
@@ -189,13 +190,13 @@ const processYoutube = {
                 '';
 
             let options = {
-                url: `${youtubeApiUrl}playlistItems?playlistId=${playlistId}${pageToken}&part=snippet&fields=nextPageToken,items(snippet(title,resourceId/videoId))&maxResults=50&key=${config.youtube_api_key}`
+                url: `${youtubeApiUrl}/playlistItems?playlistId=${playlistId}${pageToken}&part=snippet&fields=nextPageToken,items(snippet(title,resourceId/videoId))&maxResults=50&key=${config.youtube_api_key}`
             }
 
             let body = await rp(options);
             let playlist = JSON.parse(body);
             playlistItems = playlistItems.concat(playlist.items.filter( //Concat all non-deleted videos.
-                item => item.snippet.title != 'Deleted video'));
+                item => item.snippet.title !== 'Deleted video'));
 
             if (playlist.hasOwnProperty('nextPageToken')) { //More videos in playlist.
                 playlistItems = await getPlaylistSongs(playlistItems, playlist.nextPageToken);
@@ -208,14 +209,14 @@ const processYoutube = {
         Processes the playlist metadata, adding songs to the queue.
         @param {Array} playlistItems The metadata of each video in the playlist.
         */
-        async function addToQueue(playlistTitle, playlistItems) {
+        function addToQueue(playlistTitle, playlistItems) {
             let queueLength = guild.queue.length;
 
             for (let i = 0; i < playlistItems.length; i++) {
                 let song = new Song(
                     playlistItems[i].snippet.title,
                     `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`,
-                    'youtube');
+                    null, 'youtubepl');
                 guild.queueSong(song, i + queueLength);
             }
 
@@ -244,7 +245,7 @@ Timer for inactivity. Leave voice channel after inactivity timer expires.
 function timer() {
     for (let guildId in guilds) {
         let guild = guilds[guildId];
-        if (guild.status == Status.STOPPED || guild.status == Status.PAUSED)
+        if (guild.status === Status.STOPPED || guild.status === Status.PAUSED)
             guild.inactivityTimer -= 10;
         if (guild.inactivityTimer <= 0) {
             guild.voiceConnection.disconnect();
