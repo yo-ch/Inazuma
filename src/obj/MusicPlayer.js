@@ -54,7 +54,7 @@ class MusicPlayer {
                 let stream = await song.getStream();
 
                 this.musicChannel.send(
-                    `:notes: Now playing ${tool.wrap(song.title)}   \`\`|${song.duration}|\`\``
+                    `:notes: Now playing ${tool.wrap(song.title)}   \`\`|${tool.formatTime(song.duration)}|\`\``
                 );
                 this.changeStatus(Status.PLAYING);
                 song.startTime = tool.getUnixTime();
@@ -198,17 +198,19 @@ class MusicPlayer {
     */
     joinVc(msg) {
         if (msg.member.voiceChannel) {
-            this.musicChannel = msg.channel;
-            this.musicChannel.send(
-                `Joined and bound to :speaker: **${msg.member.voiceChannel.name}** and #**${this.musicChannel.name}**.`
-            );
-            msg.member.voiceChannel.join().then(connection => {
-                this.voiceConnection = connection;
-                this.changeStatus(Status.STOPPED);
-                if (this.queue.length > 0) {
-                    this.playSong(msg);
-                }
-            })
+            if (this.voiceConnection == null) {
+                this.musicChannel = msg.channel;
+                this.musicChannel.send(
+                    `Joined and bound to :speaker: **${msg.member.voiceChannel.name}** and #**${this.musicChannel.name}**.`
+                );
+                msg.member.voiceChannel.join().then(connection => {
+                    this.voiceConnection = connection;
+                    this.changeStatus(Status.STOPPED);
+                    if (this.queue.length > 0) {
+                        this.playSong(msg);
+                    }
+                });
+            }
         } else {
             msg.channel.send(`You're not in a voice channel! ${tool.inaBaka}`);
         }
