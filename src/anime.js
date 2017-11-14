@@ -379,8 +379,8 @@ function updateAnimeStatuses() {
             }
         }
 
-        if (currentAnime.schedule && currentAnime.schedule.length === 0 && Object.keys(currentAnime.users)
-            .length === 0) {
+        if (currentAnime.schedule && currentAnime.schedule.length === 0 && Object.keys(currentAnime
+                .users).length === 0) {
             delete subscribedAnime[animeId];
         }
     }
@@ -392,16 +392,20 @@ Notifies subscribed users that an anime has aired if they have notifications on.
 @param {Number} episode The episode number.
 */
 async function notifyAnimeAired(airedAnime, episode) {
-    for (let userId in airedAnime.users) {
-        if (anilistUsers.hasOwnProperty(userId) && anilistUsers[userId].notifications === true) { //Notifications on.
-            try {
-                let user = await discordClient.fetchUser(userId);
-                let dm = await user.createDM();
-                dm.send(`${tool.wrap(airedAnime.title)} **Episode ${episode}** has aired!`);
-            } catch (err) {
-                console.log(err);
+    if (discordClient) {
+        for (let userId in airedAnime.users) {
+            if (anilistUsers.hasOwnProperty(userId) && anilistUsers[userId].notifications === true) { //Notifications on.
+                try {
+                    let user = await discordClient.fetchUser(userId);
+                    let dm = await user.createDM();
+                    dm.send(`${tool.wrap(airedAnime.title)} **Episode ${episode}** has aired!`);
+                } catch (err) {
+                    console.log(err);
+                }
             }
         }
+    } else {
+        setTimeout(notifyAnimeAired(airedAnime, episode), 10000);
     }
 }
 
