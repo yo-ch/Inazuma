@@ -24,7 +24,6 @@ module.exports = {
     'requestMissingSchedules': requestMissingSchedules,
     'setNotificationOption': setNotificationOption,
     'passClient': passClient,
-    'writeFiles': writeFiles
 }
 
 let discordClient = null;
@@ -364,6 +363,8 @@ Removes anime that have no more subscribers and is done airing.
 function updateAnimeStatuses() {
     let unixts = tool.getUnixTime();
 
+    let requested = [];
+
     for (let animeId in subscribedAnime) {
         let currentAnime = subscribedAnime[animeId];
         if (currentAnime.schedule && currentAnime.schedule.length > 0) {
@@ -374,16 +375,21 @@ function updateAnimeStatuses() {
                 currentAnime.nextEpisode++;
             }
             if (currentAnime.nextEpisode > currentAnime.schedule.length) {
-                //Get next batch of airing schedule.
-                requestAiringData(parseInt(animeId));
+                //Get next batch of airing schedule if applicable.
+                requested.push(requestAiringData(parseInt(animeId)));
             }
         }
 
+        //remove anime.
         if (currentAnime.schedule && currentAnime.schedule.length === 0 && Object.keys(currentAnime
                 .users).length === 0) {
             delete subscribedAnime[animeId];
         }
     }
+
+    //write to file after updates complete.
+    Promise.all(requested).then(() => writeFiles())
+        .catch(() => console.log('Err updating anime statuses.'));
 }
 
 /*
@@ -431,10 +437,9 @@ UTILITY FUNCTIONS
 */
 
 /*
-Periodically write stored data to files, and check if any anime have aired. (15 mins)
+Periodically update anime statuses. (15 mins)
 */
 setInterval(function periodicalFuncts() {
-    writeFiles();
     updateAnimeStatuses();
 }, 900000);
 setTimeout(updateAnimeStatuses, 10000);
@@ -473,7 +478,7 @@ function requestMissingSchedules() {
 /*
 Requests the latest airing data (25 eps) for an anime, and updates the anime entry accordingly.
 */
-function requestAiringData(animeId) {
+async function requestAiringData(animeId) {
     let anime = subscribedAnime[animeId];
 
     let query = stripIndent(
@@ -500,7 +505,7 @@ function requestAiringData(animeId) {
         'page': Math.floor(subscribedAnime[animeId].nextEpisode / 25) + 1
     }
 
-    queryAnilist(query, variables).then(body => {
+    return queryAnilist(query, variables).then(body => {
         let animeSchedule = JSON.parse(body).data.Media;
 
         if (animeSchedule.status != 'RELEASING' && animeSchedule.status !=
