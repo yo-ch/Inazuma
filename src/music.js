@@ -114,7 +114,10 @@ function processSearch(msg, guild, searchQuery) {
             return console.log(err);
         }
 
-        guild.queueSong(new Song(song.title, song.url, song.duration, 'search'));
+        let match = song.duration.match(/(\d+):(\d+)/);
+        let duration = parseInt(match[1]) * 60 + parseInt(match[2]);
+
+        guild.queueSong(new Song(song.title, song.url, duration, 'search'));
 
         msg.channel.send(
             `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
@@ -141,7 +144,7 @@ const processYoutube = {
                 msg.channel.send(`Gomen I couldn't queue your song.`);
                 return;
             }
-            guild.queueSong(new Song(song.title, url, tool.formatTime(song.length_seconds),
+            guild.queueSong(new Song(song.title, url, song.length_seconds,
                 'youtube'));
             msg.channel.send(
                 `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`

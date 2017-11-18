@@ -1,6 +1,5 @@
 'use strict';
 const ytdl = require('ytdl-core');
-const tool = require('../tool.js');
 
 /*
 An object representing a song.
@@ -25,7 +24,7 @@ class Song {
         }
         if (this.type === 'youtubepl') {
             let info = await ytdl.getInfo(this.url);
-            this.duration = tool.formatTime(info.length_seconds);
+            this.duration = info.length_seconds
 
             return ytdl.downloadFromInfo(info, {
                 retries: 7,
