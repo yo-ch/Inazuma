@@ -110,7 +110,7 @@ module.exports = {
     },
 
     formatTime(seconds) {
-        return `${Math.floor(seconds/60)}:${sprintf('%02d', seconds%60)}`;
+        return seconds !== 'N/A' ? `${Math.floor(seconds/60)}:${sprintf('%02d', seconds%60)}` : seconds;
     },
 
     /*

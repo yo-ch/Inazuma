@@ -54,7 +54,7 @@ class MusicPlayer {
                 let stream = await song.getStream();
 
                 this.musicChannel.send(
-                    `:notes: Now playing ${tool.wrap(song.title)}   \`\`|${tool.formatTime(song.duration)}|\`\``
+                    `:notes: Now playing ${tool.wrap(song.title)}   \`\`|${song.duration}|\`\``
                 );
                 this.changeStatus(Status.PLAYING);
                 song.startTime = tool.getUnixTime();

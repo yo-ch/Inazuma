@@ -115,7 +115,7 @@ function processSearch(msg, guild, searchQuery) {
         }
 
         let match = song.duration.match(/(\d+):(\d+)/);
-        let duration = parseInt(match[1]) * 60 + parseInt(match[2]);
+        let duration = match != null ? parseInt(match[1]) * 60 + parseInt(match[2]) : 'N/A';
 
         guild.queueSong(new Song(song.title, song.url, duration, 'search'));
 

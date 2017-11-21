@@ -1,5 +1,6 @@
 'use strict';
 const ytdl = require('ytdl-core');
+const tool = require('../tool.js');
 
 /*
 An object representing a song.
@@ -8,7 +9,7 @@ class Song {
     constructor(title, url, duration, type) {
         this.title = title;
         this.url = url;
-        this.duration = duration;
+        this.duration = tool.formatTime(duration);
         this.type = type; //youtube, soundcloud, search
         this.startTime = null;
     }
