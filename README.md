@@ -8,6 +8,7 @@ Includes anime lookup (Anilist) and a music player.
 indev:
 
 planned:
+    -Airing list refinement/changes.
     -Soundcloud music when API registration opens back up.
     -More moderation tools.
 ```
