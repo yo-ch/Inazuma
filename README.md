@@ -9,6 +9,7 @@ indev:
 
 planned:
     -Airing list refinement/changes.
+    -Message embeds for music.
     -Soundcloud music when API registration opens back up.
     -More moderation tools.
 ```
