@@ -289,7 +289,7 @@ function syncList(msg) {
         }
         updateAnilistUsers(msg.author.id, username);
         msg.channel.send(`Sync success! ${tool.inaHappy}`);
-    }).catch((err) => {
+    }).catch(err => {
         console.log(err.message);
         msg.channel.send(
             `Gomen, I couldn't sync your Anilist. Try again later. ${tool.inaError}`
@@ -411,7 +411,7 @@ async function notifyAnimeAired(airedAnime, episode) {
             }
         }
     } else {
-        setTimeout(notifyAnimeAired(airedAnime, episode), 10000);
+        setTimeout(() => notifyAnimeAired(airedAnime, episode), 10000);
     }
 }
 
