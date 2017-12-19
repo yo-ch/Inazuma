@@ -51,17 +51,19 @@ class MusicPlayer {
         } else {
             if (this.voiceConnection) {
                 let song = this.queue[0];
-                let stream = await song.getStream();
-
-                this.musicChannel.send(
-                    `:notes: Now playing ${tool.wrap(song.title)}   \`\`|${song.duration}|\`\``
-                );
-                this.changeStatus(Status.PLAYING);
-                song.startTime = tool.getUnixTime();
+                let stream = await song.getStream().catch(() => {});
 
                 this.dispatch = this.voiceConnection.playStream(stream, {
                     passes: 2,
                     volume: this.volume
+                });
+
+                this.dispatch.on('start', () => {
+                    this.musicChannel.send(
+                        `:notes: Now playing ${tool.wrap(song.title)}   \`\`|${song.duration}|\`\``
+                    );
+                    this.changeStatus(Status.PLAYING);
+                    song.startTime = tool.getUnixTime();
                 });
 
                 this.dispatch.on('error', error => {
