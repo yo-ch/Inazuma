@@ -515,8 +515,7 @@ async function requestAiringData(animeId) {
             let tempSchedule = anime.schedule === null ? [] : anime.schedule;
             anime.schedule = tempSchedule.concat(animeSchedule.airingSchedule.nodes);
             anime.nextEpisode = animeSchedule.nextAiringEpisode ?
-                animeSchedule.nextAiringEpisode.episode :
-                1;
+                animeSchedule.nextAiringEpisode.episode : anime.nextEpisode;
         } else if (animeSchedule.airingSchedule.nodes.length === 0) {
             anime.schedule = null;
         } else {
