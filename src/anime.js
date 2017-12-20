@@ -3,15 +3,13 @@ Anime related commands and functions.
 */
 'use strict';
 const tool = require('./tool.js')
+const RichEmbed = require('discord.js').RichEmbed;
 
 const rp = require('request-promise');
 const util = require('util');
 const fs = require('fs');
-const RichEmbed = require('discord.js').RichEmbed;
 const sprintf = require('sprintf-js').sprintf;
-
 const stripIndent = require('strip-indent');
-
 const writeFileAsync = util.promisify(fs.writeFile);
 
 module.exports = {
@@ -89,7 +87,7 @@ function retrieveAnimeData(msg) {
                 //Wait for response.
                 let choice = msg.channel.createMessageCollector(m =>
                     tool.isInt(m) && parseInt(m) > 0 && parseInt(m) <= searchResults.length, {
-                        time: 60000,
+                        time: 60,
                         maxMatches: 1
                     });
 
