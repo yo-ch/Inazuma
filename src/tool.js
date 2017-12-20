@@ -119,6 +119,19 @@ module.exports = {
     },
 
     /*
+    Shuffles the given array, returning it.
+    */
+    shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            let e = this.randInt(i + 1);
+            let t = array[i];
+            array[i] = array[e];
+            array[e] = t;
+        }
+        return array;
+    },
+
+    /*
     Disord emojis.
     */
     inaAngry: '<:inaAngry:302886932164116480>',

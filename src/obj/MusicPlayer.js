@@ -164,6 +164,18 @@ class MusicPlayer {
     }
 
     /*
+    Shuffles the queue.
+    */
+    shuffleQueue(msg) {
+        if (this.status === Status.PLAYING || this.status === Status.PAUSED) {
+            this.queue = [this.queue[0]].concat(tool.shuffle(this.queue.slice(1)));
+        } else {
+            this.queue = tool.shuffle(this.queue);
+        }
+        msg.channel.send('Queue shuffled!');
+    }
+
+    /*
     Displays the currently playing song and elapsed time.
     */
     nowPlaying(msg) {

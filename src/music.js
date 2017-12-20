@@ -1,6 +1,5 @@
 /*
-Processes music commands and retrieves Songs for guild MusicPlayers.
-Also manages MusicPlayer timers.
+Processes music commands. Constructs Songs and manages MusicPlayers.
 */
 'use strict';
 const config = require('./json/config.json');
@@ -56,6 +55,8 @@ function processCommand(msg) {
         return guild.setVolume(msg);
     case 'purge':
         return guild.purgeQueue(msg);
+    case 'shuffle':
+        return guild.shuffleQueue(msg);
 
     case 'join':
         return guild.joinVc(msg);
