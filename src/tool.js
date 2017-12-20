@@ -113,7 +113,6 @@ module.exports = {
     Formats time in seconds to minutes:seconds.
     */
     formatTime(seconds) {
-        console.log(seconds);
         return seconds !== 'N/A' ? `${Math.floor(seconds/60)}:${sprintf('%02d', seconds % 60)}` :
             'N/A';
     },
