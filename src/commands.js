@@ -35,39 +35,10 @@ function help(msg) {
         helpStr = commandHelp[args[0]];
     }
 
-    if (helpStr) //Display help for requested command.
-        msg.channel.send(helpStr, {
-            'code': 'css'
-        });
-    else //Bring up default help menu.
-        msg.channel.send(stripIndent(
-            `
-            [Help Menu]
-               ~help [command]
-
-               #Utility
-                  ~airing
-                  ~anilist
-                  ~choose
-                  ~roll
-                  ~music
-               #Moderation
-                  ~ban
-                  ~kick
-                  ~prune
-                  ~role
-                  ~cc
-               #Etc.
-                  ~andy
-                  ~gavquote
-                  ~aoba
-                  ~vigne
-
-            [] = optional, <> = required, | = or
-            `
-        ), {
-            'code': 'css'
-        });
+    helpStr = helpStr ? helpStr : commandHelp['default'];
+    msg.channel.send(helpStr, {
+        'code': 'css'
+    });
 }
 
 /*

@@ -1,4 +1,28 @@
 module.exports = {
+    'default': `
+[Help Menu]
+   ~help [command]
+
+   #Utility
+      ~airing
+      ~anilist
+      ~choose
+      ~roll
+      ~music
+   #Moderation
+      ~ban
+      ~kick
+      ~prune
+      ~role
+      ~cc
+   #Etc.
+      ~andy
+      ~gavquote
+      ~aoba
+      ~vigne
+
+[] = optional, <> = required, | = or`,
+
     'help': `
 ~help [command]
    Brings up the command page. Pass a command for further information.`,
@@ -95,6 +119,7 @@ modify
    skip                  : Skips the current song.
    pause                 : Pauses the song.
    resume                : Resumes the song.
+   shuffle               : Shuffles the queue.
 
    queue                 : Displays the song queue.
    purge                 : Clears the song queue.
