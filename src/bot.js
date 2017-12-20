@@ -92,7 +92,7 @@ function reply(msg) {
         `Doushitano?`,
         `${tool.inaAngry}`
     ];
-    msg.channel.send(replies[tool.randint(replies.length)]);
+    msg.channel.send(replies[tool.randInt(replies.length)]);
 }
 
 /*

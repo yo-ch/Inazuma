@@ -6,7 +6,7 @@ module.exports = {
     @param {Number} upper The upper bound of the random integer.
     @return {Number} A random integer from 0 to upper exclusive.
     */
-    randint(upper) {
+    randInt(upper) {
         return Math.floor(Math.random() * (upper));
     },
 
@@ -42,7 +42,7 @@ module.exports = {
             `${this.inaBaka}`,
             'dummy'
         ];
-        return nouns[this.randint(nouns.length)];
+        return nouns[this.randInt(nouns.length)];
     },
 
     /*
@@ -91,7 +91,7 @@ module.exports = {
     },
 
     /*
-    Gets the index of the next argument/option. Usually used to chop off that argument.
+    Gets the index of the next argument/option. Usually used to ignore off that argument.
     If next argument does not exist, index = argString.length.
     @param {String} argString The string to check.
     @return {Number} The index of the next argument, or as above if the arg does not exist.
@@ -109,6 +109,9 @@ module.exports = {
         return Math.round((new Date()).getTime() / 1000);
     },
 
+    /*
+    Formats time in seconds to minutes:seconds.
+    */
     formatTime(seconds) {
         console.log(seconds);
         return seconds !== 'N/A' ? `${Math.floor(seconds/60)}:${sprintf('%02d', seconds % 60)}` :

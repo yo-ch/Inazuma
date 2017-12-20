@@ -145,7 +145,7 @@ function choose(msg) {
     });
 
     if (choices.length >= 1)
-        msg.channel.send(choices[tool.randint(choices.length)]);
+        msg.channel.send(choices[tool.randInt(choices.length)]);
     else
         msg.channel.send(`I can't choose if you don't give me any choices! ${tool.inaAngry}`);
 }
@@ -155,7 +155,7 @@ Returns a random Gavin quote.
 */
 function gavquote(msg) {
     let gq = require('./json/gavquotes.json');
-    msg.channel.send(`${tool.wrap(gq.quotes[tool.randint(gq.quotes.length)])}`);
+    msg.channel.send(`${tool.wrap(gq.quotes[tool.randInt(gq.quotes.length)])}`);
 }
 
 /*
@@ -597,7 +597,7 @@ function roll(msg) {
     if (args.length === 1) {
         let num = parseInt(args[0]);
         if (tool.isInt(num))
-            msg.channel.send(tool.randint(num) + 1);
+            msg.channel.send(tool.randInt(num) + 1);
         else
             msg.channel.send(`These aren't numbers ${tool.tsunNoun()}!`);
     } else {
@@ -608,9 +608,9 @@ function roll(msg) {
         msg.channel.send(`These aren't numbers ${tool.tsunNoun()}!`);
 
         if (num1 > num2)
-            msg.channel.send(tool.randint(num1 - num2 + 1) + num2);
+            msg.channel.send(tool.randInt(num1 - num2 + 1) + num2);
         else
-            msg.channel.send(tool.randint(num2 - num1 + 1) + num1);
+            msg.channel.send(tool.randInt(num2 - num1 + 1) + num1);
     }
 }
 
@@ -632,6 +632,6 @@ function retrieveImgurAlbum(msg) {
 
     rp(options).then(body => {
         let info = JSON.parse(body);
-        msg.channel.send(info.data[tool.randint(info.data.length)].link);
+        msg.channel.send(info.data[tool.randInt(info.data.length)].link);
     }).catch(err => console.log(err.message));
 }
