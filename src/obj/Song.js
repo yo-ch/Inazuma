@@ -15,8 +15,9 @@ class Song {
     }
 
     async getStream() {
-        if (this.type === 'search')
+        if (this.type === 'search') {
             return this.url;
+        }
         if (this.type === 'youtube') {
             return ytdl(this.url, {
                 retries: 7,
@@ -24,16 +25,18 @@ class Song {
             });
         }
         if (this.type === 'youtubepl') {
+            //Get duration first.
             let info = await ytdl.getInfo(this.url);
-            this.duration = info.length_seconds
+            this.duration = tool.formatTime(info.length_seconds);
 
             return ytdl.downloadFromInfo(info, {
                 retries: 7,
                 highWaterMark: 32768
             });
         }
-        if (this.type === 'soundcloud')
+        if (this.type === 'soundcloud') {
             return null; //need api key.
+        }
     }
 
 

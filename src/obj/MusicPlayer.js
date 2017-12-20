@@ -18,7 +18,7 @@ class MusicPlayer {
         this.musicChannel = null;
         this.voiceConnection = null;
         this.dispatch = null;
-        this.volume = 1;
+        this.volume = 0.5;
         this.status = Status.OFFLINE; //States: offline, playing, stopped, paused
         this.inactivityTimer = 300;
     }
@@ -58,7 +58,7 @@ class MusicPlayer {
                     volume: this.volume
                 });
 
-                this.dispatch.on('start', () => {
+                this.dispatch.once('start', () => {
                     this.musicChannel.send(
                         `:notes: Now playing ${tool.wrap(song.title)}   \`\`|${song.duration}|\`\``
                     );
@@ -70,14 +70,14 @@ class MusicPlayer {
                     console.log(error);
                     this.dispatch = null;
                     this.queue.shift();
-                    setTimeout(() => this.playSong(msg), 250);
+                    setTimeout(() => this.playSong(msg), 100);
                 });
 
                 this.dispatch.once('end', reason => {
                     this.dispatch = null;
                     this.queue.shift();
                     if (reason != 'leave') {
-                        setTimeout(() => this.playSong(msg), 250);
+                        setTimeout(() => this.playSong(msg), 100);
                     }
                 });
 
