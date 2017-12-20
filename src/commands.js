@@ -6,7 +6,6 @@ const config = require('./json/config.json');
 const commandHelp = require('./help.js');
 const tool = require('./tool.js');
 const rp = require('request-promise');
-const stripIndent = require('strip-indent');
 
 module.exports = {
     'help': help,
