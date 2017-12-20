@@ -55,6 +55,7 @@ Airing notifications are sent to subscribed users when an anime airs.
     skip                  : Skips the current song.
     pause                 : Pauses the song.
     resume                : Resumes the song.
+    shuffle               : Shuffles the queue.
 
     queue                 : Displays the song queue.
     purge                 : Clears the song queue.
