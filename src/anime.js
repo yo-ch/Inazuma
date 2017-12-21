@@ -469,7 +469,6 @@ Requests airing schedules for anime missing them.
 function requestMissingSchedules() {
     for (let animeId in subscribedAnime) {
         if (subscribedAnime[animeId].schedule != null) continue;
-        console.log(animeId);
         requestAiringData(parseInt(animeId));
     }
 }
