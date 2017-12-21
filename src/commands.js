@@ -2,7 +2,7 @@
 Regular commands.
 */
 'use strict';
-const Attachment = require('discord.js').Attachment;
+const RichEmbed = require('discord.js').RichEmbed;
 
 const config = require('./json/config.json');
 const commandHelp = require('./help.js');
@@ -604,7 +604,6 @@ function retrieveImgurAlbum(msg) {
 
     rp(options).then(body => {
         let info = JSON.parse(body);
-        msg.channel.send(new Attachment(info.data[tool.randInt(info.data.length)].link,
-            'image'));
+        msg.channel.send(new RichEmbed({ image: info.data[tool.randInt(info.data.length)].link }));
     }).catch(err => console.log(err.message));
 }

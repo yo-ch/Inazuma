@@ -21,7 +21,7 @@ class Song {
         if (this.type === 'youtube') {
             return ytdl(this.url, {
                 retries: 7,
-                highWaterMark: 32768
+                highWaterMark: 4096
             });
         }
         if (this.type === 'youtubepl') {
@@ -31,7 +31,7 @@ class Song {
 
             return ytdl.downloadFromInfo(info, {
                 retries: 7,
-                highWaterMark: 32768
+                highWaterMark: 4096
             });
         }
         if (this.type === 'soundcloud') {
