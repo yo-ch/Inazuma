@@ -57,39 +57,42 @@ class MusicPlayer {
 
                 if (badStream) {
                     console.log(`Failed to get stream. ${song.title}`);
-                    return playNextSong.bind(this);
-                }
-
-                this.dispatch = this.voiceConnection.playStream(stream, {
-                    passes: 2,
-                    volume: this.volume
-                });
-
-                this.dispatch.once('start', () => {
-                    this.musicChannel.send(
-                        `:notes: Now playing ${tool.wrap(song.title)}   \`\`|${song.duration}|\`\``
-                    );
-                    this.changeStatus(Status.PLAYING);
-                    song.startTime = tool.getUnixTime();
-                });
-
-                this.dispatch.on('error', error => {
-                    console.log(error);
-                    this.dispatch = null;
-                    playNextSong.bind(this);
-                });
-
-                this.dispatch.once('end', reason => {
                     this.dispatch = null;
                     this.queue.shift();
-                    if (reason != 'leave') {
-                        setTimeout(() => this.playSong(msg), 100);
-                    }
-                });
+                    this.playSong(msg);
+                } else {
+                    this.dispatch = this.voiceConnection.playStream(stream, {
+                        passes: 2,
+                        volume: this.volume
+                    });
 
-                this.dispatch.on('debug', info => {
-                    console.log(info);
-                });
+                    this.dispatch.once('start', () => {
+                        this.musicChannel.send(
+                            `:notes: Now playing ${tool.wrap(song.title)}   \`\`|${song.duration}|\`\``
+                        );
+                        this.changeStatus(Status.PLAYING);
+                        song.startTime = tool.getUnixTime();
+                    });
+
+                    this.dispatch.on('error', error => {
+                        console.log(error);
+                        this.dispatch = null;
+                        this.queue.shift();
+                        setTimeout(() => {this.playSong(msg)}, 100);
+                    });
+
+                    this.dispatch.once('end', reason => {
+                        this.dispatch = null;
+                        this.queue.shift();
+                        if (reason != 'leave') {
+                            setTimeout(() => this.playSong(msg), 100);
+                        }
+                    });
+
+                    this.dispatch.on('debug', info => {
+                        console.log(info);
+                    });
+                }
             } else {
                 msg.channel.send(
                     `Please summon me using ${tool.wrap('~music join')} to start playing the queue.`
@@ -98,8 +101,7 @@ class MusicPlayer {
         }
 
         function playNextSong() {
-            this.queue.shift();
-            setTimeout(() => this.playSong(msg), 100);
+
         }
     }
 
