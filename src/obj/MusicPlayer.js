@@ -51,7 +51,14 @@ class MusicPlayer {
         } else {
             if (this.voiceConnection) {
                 let song = this.queue[0];
-                let stream = await song.getStream().catch(() => {});
+
+                let badStream = false;
+                let stream = await song.getStream().catch(() => { badStream = true });
+
+                if (badStream) {
+                    console.log(`Failed to get stream. ${song.title}`);
+                    return playNextSong.bind(this);
+                }
 
                 this.dispatch = this.voiceConnection.playStream(stream, {
                     passes: 2,
@@ -69,8 +76,7 @@ class MusicPlayer {
                 this.dispatch.on('error', error => {
                     console.log(error);
                     this.dispatch = null;
-                    this.queue.shift();
-                    setTimeout(() => this.playSong(msg), 100);
+                    playNextSong.bind(this);
                 });
 
                 this.dispatch.once('end', reason => {
@@ -89,6 +95,11 @@ class MusicPlayer {
                     `Please summon me using ${tool.wrap('~music join')} to start playing the queue.`
                 );
             }
+        }
+
+        function playNextSong() {
+            this.queue.shift();
+            setTimeout(() => this.playSong(msg), 100);
         }
     }
 
