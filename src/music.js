@@ -7,6 +7,7 @@ const tool = require('./tool.js');
 
 const Song = require('./obj/Song.js');
 const MusicPlayer = require('./obj/MusicPlayer.js');
+const RichEmbed = require('discord.js').RichEmbed;
 
 const youtubeDL = require('youtube-dl');
 const ytdl = require('ytdl-core');
@@ -118,10 +119,11 @@ function processSearch(msg, guild, searchQuery) {
         let match = song.duration.match(/(\d+):(\d+)/);
         let duration = match != null ? parseInt(match[1]) * 60 + parseInt(match[2]) : 'N/A';
 
-        guild.queueSong(new Song(song.title, song.url, duration, 'search'));
+        guild.queueSong(new Song(song.title, `https://youtube.com/watch?v=${song.id}`,
+            'search', duration, song.url, song.thumbnail));
 
         msg.channel.send(
-            `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+            new RichEmbed({ description: `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}` })
         );
 
         if (guild.status != Status.PLAYING) {
@@ -145,8 +147,9 @@ const processYoutube = {
                 msg.channel.send(`Gomen I couldn't queue your song.`);
                 return;
             }
-            guild.queueSong(new Song(song.title, url, song.length_seconds,
-                'youtube'));
+            guild.queueSong(new Song(song.title, url, 'youtube', song.length_seconds,
+                null,
+                `https://img.youtube.com/vi/${song.video_id}/mqdefault.jpg`));
             msg.channel.send(
                 `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
             );
@@ -200,7 +203,7 @@ const processYoutube = {
             let body = await rp(options);
             let playlist = JSON.parse(body);
             playlistItems = playlistItems.concat(playlist.items.filter( //Concat all non-deleted videos.
-                item => item.snippet.title !== 'Deleted video'));
+                item => item.snippet.title.search('Deleted video') == -1));
 
             if (playlist.hasOwnProperty('nextPageToken')) { //More videos in playlist.
                 playlistItems = await getPlaylistSongs(playlistItems, playlist.nextPageToken);
@@ -220,7 +223,7 @@ const processYoutube = {
                 let song = new Song(
                     playlistItems[i].snippet.title,
                     `https://www.youtube.com/watch?v=${playlistItems[i].snippet.resourceId.videoId}`,
-                    null, 'youtubepl');
+                    'youtubepl');
                 guild.queueSong(song, i + queueLength);
             }
 

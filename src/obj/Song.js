@@ -1,38 +1,46 @@
 'use strict';
 const ytdl = require('ytdl-core');
 const tool = require('../tool.js');
+const sharp = require('sharp');
+const request = require('request');
+const fs = require('fs');
 
 /*
 An object representing a song.
 */
 class Song {
-    constructor(title, url, duration, type) {
+    constructor(title, url, type, duration = null, stream = null, thumbnail = null) {
         this.title = title;
         this.url = url;
         this.duration = tool.formatTime(duration);
         this.type = type; //youtube, soundcloud, search
+        this.stream = stream;
+        this.thumbnail = thumbnail;
         this.startTime = null;
     }
 
     async getStream() {
         if (this.type === 'search') {
-            return this.url;
+            return this.stream;
         }
         if (this.type === 'youtube') {
-            return ytdl(this.url, {
+            this.stream = ytdl(this.url, {
                 retries: 7,
                 highWaterMark: 4096
             });
+            return this.stream;
         }
         if (this.type === 'youtubepl') {
             //Get duration first.
             let info = await ytdl.getInfo(this.url);
             this.duration = tool.formatTime(info.length_seconds);
+            this.thumbnail = `https://img.youtube.com/vi/${info.video_id}/mqdefault.jpg`;
 
-            return ytdl.downloadFromInfo(info, {
+            this.stream = ytdl.downloadFromInfo(info, {
                 retries: 7,
                 highWaterMark: 4096
             });
+            return this.stream;
         }
         if (this.type === 'soundcloud') {
             return null; //need api key.
