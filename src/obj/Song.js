@@ -1,9 +1,6 @@
 'use strict';
 const ytdl = require('ytdl-core');
 const tool = require('../tool.js');
-const sharp = require('sharp');
-const request = require('request');
-const fs = require('fs');
 
 /*
 An object representing a song.
