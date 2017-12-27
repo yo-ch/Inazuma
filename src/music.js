@@ -151,7 +151,7 @@ const processYoutube = {
                 null,
                 `https://img.youtube.com/vi/${song.video_id}/mqdefault.jpg`));
             msg.channel.send(
-                `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+                new RichEmbed({ description: `Enqueued ${tool.wrap(song.title.trim())} to position **${guild.queue.length}** ${tool.inaHappy}` })
             );
 
             if (guild.status != Status.PLAYING) {
@@ -228,7 +228,9 @@ const processYoutube = {
             }
 
             msg.channel.send(
-                `Enqueued ${tool.wrap(playlistItems.length)} songs from ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+                new RichEmbed({
+                    description: `Enqueued ${tool.wrap(playlistItems.length)} songs from ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+                })
             );
 
             if (guild.status != Status.PLAYING) {
