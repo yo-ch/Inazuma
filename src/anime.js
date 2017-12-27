@@ -518,7 +518,7 @@ async function requestAiringData(animeId) {
                 anime.schedule = [];
             }
         } else if (animeSchedule.airingSchedule.nodes.length === 0) {
-            anime.schedule = null;
+            anime.schedule = anime.nextEpisode > 0 ? [] : null;
         } else {
             return;
         }
