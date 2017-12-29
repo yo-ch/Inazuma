@@ -235,7 +235,7 @@ class MusicPlayer {
             if (this.voiceConnection === null) {
                 this.musicChannel = msg.channel;
                 this.musicChannel.send(
-                    new RichEmbed({ description: `Joined and bound to :speaker: **${msg.member.voiceChannel.name}** and #**${this.musicChannel.name}**.` })
+                    new RichEmbed({ description: `Joined and bound to :speaker:**${msg.member.voiceChannel.name}** and #**${this.musicChannel.name}**.` })
                 );
                 msg.member.voiceChannel.join().then(
                     connection => {

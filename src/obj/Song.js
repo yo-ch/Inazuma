@@ -23,7 +23,7 @@ class Song {
         if (this.type === 'youtube') {
             this.stream = ytdl(this.url, {
                 retries: 7,
-                highWaterMark: 4096
+                highWaterMark: 32768
             });
             return this.stream;
         }
@@ -35,7 +35,7 @@ class Song {
 
             this.stream = ytdl.downloadFromInfo(info, {
                 retries: 7,
-                highWaterMark: 4096
+                highWaterMark: 32768
             });
             return this.stream;
         }

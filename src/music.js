@@ -77,7 +77,7 @@ Determines what kind of input (search query, youtube video/playlist, soundcloud 
 */
 function processInput(msg, guild) {
     let url = msg.content.split(/\s+/).slice(2).join(' ');
-    if (url) {
+    if (url && url !== '') {
         if (!url.startsWith('http')) { //Assume its a search.
             processSearch(msg, guild, url);
         } else if (url.search('youtube.com')) { //Youtube.
