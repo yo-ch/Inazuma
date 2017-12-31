@@ -260,7 +260,8 @@ function timer() {
             guild.voiceConnection.disconnect();
             guild.voiceConnection = null;
             guild.musicChannel.send(
-                ':no_entry_sign: Leaving voice channel due to inactivity.');
+                new RichEmbed({ description: ':no_entry_sign: Leaving voice channel due to inactivity.' })
+            );
 
             guild.changeStatus(Status.OFFLINE);
         }
