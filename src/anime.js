@@ -366,20 +366,21 @@ function updateAnimeStatuses() {
     for (let animeId in subscribedAnime) {
         let currentAnime = subscribedAnime[animeId];
         if (currentAnime.schedule && currentAnime.schedule.length > 0) {
-            while (currentAnime.nextEpisode <= currentAnime.schedule.length && unixts >
-                currentAnime.schedule[currentAnime.nextEpisode - 1].airingAt
-            ) {
-                notifyAnimeAired(currentAnime, currentAnime.nextEpisode);
-                currentAnime.nextEpisode++;
-            }
-            if (currentAnime.nextEpisode > currentAnime.schedule.length) {
-                //Get next batch of airing schedule if applicable.
-                requested.push(requestAiringData(parseInt(animeId)));
+            if (hasAired(currentAnime)) {
+                //Reupdate airing schedule. (Might've changed since last checked)
+                requested.push(requestAiringData(parseInt(animeId)).then(() => {
+                    //Check if updated schedule still indicates episode has aired.
+                    if (hasAired(currentAnime)) {
+                        notifyAnimeAired(currentAnime, currentAnime.nextEpisode);
+                        currentAnime.nextEpisode++;
+                    }
+                }));
             }
         }
 
         //remove anime.
-        if (currentAnime.schedule && currentAnime.schedule.length === 0 && Object.keys(currentAnime
+        if (currentAnime.schedule && currentAnime.schedule.length === 0 && Object.keys(
+                currentAnime
                 .users).length === 0) {
             delete subscribedAnime[animeId];
         }
@@ -388,6 +389,12 @@ function updateAnimeStatuses() {
     //write to file after updates complete.
     Promise.all(requested).then(() => writeFiles())
         .catch(() => console.log('Err updating anime statuses.'));
+
+    //Helper function to check if anime has aired.
+    function hasAired(anime) {
+        return anime.nextEpisode <= anime.schedule.length && unixts >
+            anime.schedule[anime.nextEpisode - 1].airingAt;
+    }
 }
 
 /*
@@ -398,7 +405,8 @@ Notifies subscribed users that an anime has aired if they have notifications on.
 async function notifyAnimeAired(airedAnime, episode) {
     if (discordClient) {
         for (let userId in airedAnime.users) {
-            if (anilistUsers.hasOwnProperty(userId) && anilistUsers[userId].notifications === true) { //Notifications on.
+            if (anilistUsers.hasOwnProperty(userId) && anilistUsers[userId].notifications ===
+                true) { //Notifications on.
                 try {
                     let user = await discordClient.fetchUser(userId);
                     let dm = await user.createDM();
@@ -513,8 +521,8 @@ async function requestAiringData(animeId) {
             let tempSchedule = anime.schedule === null ? [] : anime.schedule;
             anime.schedule = tempSchedule.concat(animeSchedule.airingSchedule.nodes.filter(
                 node => node.episode >= anime.nextEpisode));
-            if (anime.schedule.map(e => e.episode).reduce((a, b) => Math.max(a, b)) < anime
-                .nextEpisode) {
+            if (anime.schedule.map(e => e.episode).reduce((a, b) => Math.max(a, b)) <
+                anime.nextEpisode) {
                 anime.schedule = [];
             }
         } else if (animeSchedule.airingSchedule.nodes.length === 0) {
