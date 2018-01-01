@@ -29,10 +29,6 @@ bot.on('message', msg => {
         msg.channel.send('lmao');
     else if (msg.content.toLowerCase().search(/^same+$/) >= 0) //same.
         msg.channel.send('same');
-    else if (msg.content.toLowerCase().indexOf('inazuma') >= 0) //Tehe~.
-        msg.channel.send('<:inaTehe:301555244330909697>');
-    else if (msg.content.search(':inaGanbare:') >= 0)
-        msg.channel.send(`Arigato! ${tool.inaHappy}`);
     else if (msg.content.search('299400284906717186') >= 0) //Random reply when bot is mentioned.
         reply(msg);
 
@@ -90,7 +86,8 @@ function reply(msg) {
         `Kimochi warui. <:vigneKuzu:270818397380411393>`,
         `Baka janaino?`,
         `Doushitano?`,
-        `${tool.inaAngry}`
+        `${tool.inaAngry}`,
+        `${tool.inaTehe}`
     ];
     msg.channel.send(replies[tool.randInt(replies.length)]);
 }
