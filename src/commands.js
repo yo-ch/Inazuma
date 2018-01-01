@@ -432,11 +432,11 @@ function role(msg) {
                     `You are in a lower or equal ranked role compared to the role you are trying to modify.`
                 );
                 return null;
-
             } else if (roleObj.managed) {
                 msg.channel.send(
                     `The role you are trying to assign is externally managed.`
                 );
+                return null;
             } else {
                 roles.push(roleObj);
             }
