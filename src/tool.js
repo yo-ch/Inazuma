@@ -48,29 +48,27 @@ module.exports = {
     /*
     Parses '--' (long) and '-' (short) options for command strings.
     @param {String} commandString The command to parse options from.
-    @return An object with a short and long props, which are arrays of parsed options.
+    @return An object with fields corresponding to the parsed options.
     */
     parseOptions(commandString) {
         let matches;
         let shortRegex = / -(\w+)/g;
         let longRegex = / --(\w+)/g;
-        let shortOpts = [];
-        let longOpts = [];
+
+        let options = {};
         while ((matches = shortRegex.exec(commandString))) {
             if (matches[1].indexOf('--') === -1) {
                 //Parse combined short args. ex: '-abc' where a, b, c are options.
                 for (let i = 0; i < matches[1].length; i++) {
-                    shortOpts.push(matches[1][i]);
+                    options[matches[1][i]] = true;
                 }
             }
         }
         while ((matches = longRegex.exec(commandString))) {
-            longOpts.push(matches[1]);
+            options[matches[1]] = true;
         }
-        return {
-            short: shortOpts,
-            long: longOpts
-        };
+
+        return options;
     },
 
     /*

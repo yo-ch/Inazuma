@@ -150,36 +150,40 @@ function prune(msg) {
 
     let options = tool.parseOptions(msg.content);
 
-    let botOption = options.long.includes('bots');
-    let userOption = options.long.includes('user');
-    let filterOption = options.long.includes('filter');
-    let silentOption = options.short.includes('s') || options.long.includes('silent');
-    let pinOption = options.short.includes('p') || options.long.includes('pinned');
+    let botOption = options['bots'];
+    let userOption = options['user'];
+    let filterOption = options['filter'];
+    let silentOption = options['s'] || options['silent'];
+    let pinOption = options['p'] || options['pinned'];
 
     let name;
     let nickname;
     let stringToFilter;
-    if (amount) {
-        try {
+    try {
+        if (amount) {
             if (userOption) {
                 name = tool.parseOptionArg('user', msg.content);
-                if (!name)
+                if (!name) {
                     throw 'args';
+                }
             }
 
             if (filterOption) {
                 stringToFilter = tool.parseOptionArg('filter', msg.content);
-                if (!stringToFilter)
+                if (!stringToFilter) {
                     throw 'args';
+                }
             }
-            processAmount(amount, 0);
-        } catch (err) {
-            if (err.message === 'err')
-                msg.channel.send(`Gomen, I couldn't delete your messages. ${tool.inaError}`);
-            else //err.message === 'args'
-                msg.channel.send(`Invalid syntax. Please check ${tool.wrap('~help prune')}.`)
+        }
+    } catch (err) {
+        if (err.message === 'err') {
+            msg.channel.send(`Gomen, I couldn't delete your messages. ${tool.inaError}`);
+        } else { //err.message === 'args'
+            msg.channel.send(`Invalid syntax. Please check ${tool.wrap('~help prune')}.`);
         }
     }
+
+    processAmount(amount);
 
     /*
     Recursive function to fetch and delete more than 100 messages if needed.
@@ -187,7 +191,7 @@ function prune(msg) {
     @param {Number} amount The amount of messages to delete.
     @param {Number} prunedAmount The number of messages pruned off so far.
     */
-    function processAmount(amount, prunedAmount) {
+    function processAmount(amount, prunedAmount = 0) {
         let fetchAmount;
         if (amount > 100)
             fetchAmount = 100;
@@ -204,7 +208,7 @@ function prune(msg) {
                 msgs.delete(msgs.lastKey());
             amount -= 100;
 
-            if (options.long.length > 0 || options.short.length > 0) {
+            if (Object.keys(options).length > 0) {
                 msgs = msgs.filter(msg => {
                     //Evaluate filter if option enabled, else default to true, since we aren't filtering for it.
                     if (msg.member.nickname) {
@@ -275,24 +279,27 @@ function role(msg) {
 
     let args = msg.content.split(/\s+/).slice(1);
     if (args[0] != 'give' && args[0] != 'take' && args[0] != 'modify') {
-        return msg.channel.send(`Invalid arguments. Please refer to ${tool.wrap('~help role')}.`);
+        return msg.channel.send(
+            `Invalid arguments. Please refer to ${tool.wrap('~help role')}.`);
     } else if (args.length < 2) {
         return msg.channel.send(`You haven't specified any roles. ${tool.inaBaka}`);
     }
 
     //Function params.
-    let enabledOptions;
+    let optionArguments;
     let roles;
 
     roles = validatePermissions(args[1].split(','));
-    if (roles === null)
+    if (roles === null) {
         return;
-    if (roles.length === 0)
+    } else if (roles.length === 0) {
         return msg.channel.send(`Unable to find matching roles.`);
+    }
 
     let options = tool.parseOptions(msg.content);
-    if (options.long.length === 0 || !(enabledOptions = validateOptions(options)))
+    if (Object.keys(options).length === 0 || !(optionArguments = validateOptions(options))) {
         return msg.channel.send('Invalid arguments.');
+    }
 
     switch (args[0]) {
     case 'give':
@@ -300,10 +307,9 @@ function role(msg) {
     case 'take':
         return processRoleChanges('take');
     case 'modify':
-        if (roles.length === 1)
+        if (roles.length === 1) {
             modifyRole();
-        else
-            return;
+        }
         break;
     }
 
@@ -313,8 +319,8 @@ function role(msg) {
     */
     function processRoleChanges(type) {
         let members = msg.guild.members;
-        if (enabledOptions.user) { //This option ignores other options.
-            let name = enabledOptions.user;
+        if (optionArguments.user) { //This option ignores other options.
+            let name = optionArguments.user;
             let user = members.find(member => member.user.username.toLowerCase() === name.toLowerCase());
 
             if (user) {
@@ -326,29 +332,29 @@ function role(msg) {
         }
 
         let membersToChange = members.array();
-        if (enabledOptions.bots) {
+        if (optionArguments.bots) {
             membersToChange = membersToChange.filter(member => {
                 return member.user.bot;
             });
-        } else if (enabledOptions.users) {
+        } else if (optionArguments.users) {
             membersToChange = membersToChange.filter(member => {
                 return !member.user.bot;
             });
         }
 
-        if (enabledOptions.inrole) {
-            let roleName = enabledOptions.inrole;
+        if (optionArguments.inrole) {
+            let roleName = optionArguments.inrole;
             membersToChange = membersToChange.filter(member => {
                 return member.roles.exists(role => role.name.toLowerCase() ===
                     roleName); //Has specified role.
             });
-        } else if (enabledOptions.notinrole) {
-            let roleName = enabledOptions.notinrole;
+        } else if (optionArguments.notinrole) {
+            let roleName = optionArguments.notinrole;
             membersToChange = membersToChange.filter(member => {
                 return !member.roles.exists(role => role.name.toLowerCase() ===
                     roleName); //Doesn't have specified role.
             });
-        } else if (enabledOptions.noroles) {
+        } else if (optionArguments.noroles) {
             membersToChange = membersToChange.filter(member => {
                 return member.roles.size === 1; //Only has @everyone role.
             });
@@ -391,11 +397,11 @@ function role(msg) {
     */
     function modifyRole() {
         let role = roles[0];
-        if (enabledOptions.name) {
-            role.setName(enabledOptions.name);
+        if (optionArguments.name) {
+            role.setName(optionArguments.name);
         }
-        if (enabledOptions.color) {
-            role.setColor(enabledOptions.color);
+        if (optionArguments.color) {
+            role.setColor(optionArguments.color);
         }
         msg.channel.send(`The role ${tool.wrap(role.name)} has been modified.`);
     }
@@ -426,6 +432,11 @@ function role(msg) {
                     `You are in a lower or equal ranked role compared to the role you are trying to modify.`
                 );
                 return null;
+
+            } else if (roleObj.managed) {
+                msg.channel.send(
+                    `The role you are trying to assign is externally managed.`
+                );
             } else {
                 roles.push(roleObj);
             }
@@ -448,13 +459,13 @@ function role(msg) {
         //Validate options for 'give|take' or 'modify'.
         if (args[0] === 'give' || args[0] === 'take' && validOptionCombo('givetake')) {
             //Get arguments for options that take arguments.
-            if (options.long.includes('user')) {
+            if (options['user']) {
                 if (!(enabledOptions.user = tool.parseOptionArg('user', msg.content))) {
                     msg.channel.send(`User not specified. ${tool.wrap('--user <user>')}`);
                     return;
                 }
             }
-            if (options.long.includes('inrole')) {
+            if (options['inrole']) {
                 if ((enabledOptions.inrole = tool.parseOptionArg('inrole', msg.content))) {
                     if (!msg.guild.roles.exists(role => role.name.toLowerCase() ===
                             enabledOptions.inrole)) {
@@ -467,7 +478,7 @@ function role(msg) {
                         `You didn't specify a role! ${tool.wrap('--inrole <role>')}`);
                     return;
                 }
-            } else if (options.long.includes('notinrole')) {
+            } else if (options['notinrole']) {
                 if ((enabledOptions.notinrole = tool.parseOptionArg('notinrole', msg.content))) {
                     if (!msg.guild.roles.exists(role => role.name.toLowerCase() ===
                             enabledOptions.notinrole)) {
@@ -483,7 +494,7 @@ function role(msg) {
             }
         } else if (args[0] === 'modify' && validOptionCombo('modify')) {
             //Get option arguments.
-            if (options.long.includes('name')) {
+            if (options['name']) {
                 if (!(enabledOptions.name = tool.parseOptionArg('name', msg.content))) {
                     msg.channel.send(
                         `You didn't specify a new name for the role! ${tool.wrap('--name <name>')}`
@@ -491,7 +502,7 @@ function role(msg) {
                     return;
                 }
             }
-            if (options.long.includes('color')) {
+            if (options['color']) {
                 let hexCode;
                 if ((hexCode = tool.parseOptionArg('color', msg.content))) {
                     if (hexCode.indexOf('#') === 0) hexCode = hexCode.slice(1);
@@ -520,15 +531,16 @@ function role(msg) {
             if (type === 'givetake') {
                 let optionCount1 = 0;
                 let optionCount2 = 0;
-                for (let i = 0; i < options.long.length; i++) {
-                    if (options.long[i] === 'bots' || options.long[i] === 'users' || options.long[i] ===
-                        'user') {
+
+                for (let option in options) {
+                    if (option === 'bots' || options === 'users' || options === 'user') {
                         optionCount1++;
-                    } else if (options.long[i] === 'inrole' || options.long[i] === 'notinrole' ||
-                        options.long[i] === 'noroles') {
+                    } else if (option === 'inrole' || option === 'notinrole' || option ===
+                        'noroles') {
                         optionCount2++;
                     }
                 }
+
 
                 if (optionCount1 > 1) {
                     msg.channel.send(
@@ -548,7 +560,7 @@ function role(msg) {
                 }
                 return true;
             } else if (type === 'modify') {
-                if (!options.long.includes('name') && !options.long.includes('color')) {
+                if (!options['name'] && !options['color']) {
                     msg.channel.send(`You didn't specify any options.`);
                     return false;
                 }
@@ -604,6 +616,9 @@ function retrieveImgurAlbum(msg) {
 
     rp(options).then(body => {
         let info = JSON.parse(body);
-        msg.channel.send(new RichEmbed({ image: info.data[tool.randInt(info.data.length)].link }));
+        msg.channel.send(new RichEmbed({
+            image: info.data[tool.randInt(info.data.length)]
+                .link
+        }));
     }).catch(err => console.log(err.message));
 }
