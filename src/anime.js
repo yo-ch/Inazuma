@@ -519,7 +519,7 @@ async function requestAiringData(animeId) {
             anime.schedule = []; //Empty schedule to signify airing completion.
         } else if (animeSchedule.airingSchedule.nodes.length > 0) { //Schedule available and anime still airing.
             let tempSchedule = anime.schedule === null ? [] : anime.schedule;
-            anime.schedule = anime.schedule.filter((node) => node.episode < anime.nextEpisode);
+            tempSchedule = tempSchedule.filter((node) => node.episode < anime.nextEpisode);
             anime.schedule = tempSchedule.concat(animeSchedule.airingSchedule.nodes.filter(
                 node => node.episode >= anime.nextEpisode));
             if (anime.schedule.map(e => e.episode).reduce((a, b) => Math.max(a, b)) <
