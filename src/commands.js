@@ -291,7 +291,7 @@ function role(msg) {
 
     roles = validatePermissions(args[1].split(','));
     if (roles === null) {
-        return;
+        return msg.channel.send('Invalid arguments.');
     } else if (roles.length === 0) {
         return msg.channel.send(`Unable to find matching roles.`);
     }
@@ -416,7 +416,7 @@ function role(msg) {
             let roleName = roleNames[i];
             let roleObj = msg.guild.roles.find(role => role.name.toLowerCase() ===
                 roleName.toLowerCase());
-            if (!roleObj) return;
+            if (!roleObj) return null;
             let botPositionHigher = roleObj.calculatedPosition < msg.guild.me.highestRole
                 .calculatedPosition;
             let userPositionHigher = roleObj.calculatedPosition < msg.member.highestRole
