@@ -177,7 +177,7 @@ function prune(msg) {
         }
     } catch (err) {
         if (err.message === 'err') {
-            msg.channel.send(`Gomen, I couldn't delete your messages. ${tool.inaError}`);
+            msg.channel.send(`Gomen, I couldn't delete your messages.`);
         } else { //err.message === 'args'
             msg.channel.send(`Invalid syntax. Please check ${tool.wrap('~help prune')}.`);
         }

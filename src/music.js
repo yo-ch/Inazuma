@@ -172,7 +172,7 @@ const processYoutube = {
             .catch(err => {
                 console.log(err);
                 msg.channel.send(
-                    `${tool.inaError} Gomen, I couldn't add your playlist to the queue. Try again later.`
+                    `Gomen, I couldn't add your playlist to the queue. Try again later.`
                 )
             });
 

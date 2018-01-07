@@ -289,9 +289,7 @@ function syncList(msg) {
         msg.channel.send(`Sync success! ${tool.inaHappy}`);
     }).catch(err => {
         console.log(err.message);
-        msg.channel.send(
-            `Gomen, I couldn't sync your Anilist. Try again later. ${tool.inaError}`
-        );
+        msg.channel.send(`Gomen, I couldn't sync your Anilist. Try again later.`);
     });
 }
 
