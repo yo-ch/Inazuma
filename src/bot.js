@@ -39,16 +39,6 @@ bot.on('message', msg => {
     call(cmd)(msg);
 });
 
-bot.on('guildMemberAdd', member => {
-    member.guild.defaultChannel.send(
-        `I-It's not like I wanted you to join this server or anything, ${tool.tsunNoun()}. ${member.user}`
-    );
-});
-
-bot.on('guildMemberRemove', member => {
-    member.guild.defaultChannel.send(`S-Sayonara. ${member.user}`);
-});
-
 bot.on('error', (e) => console.error(e));
 bot.on('warn', (e) => console.warn(e));
 // bot.on('debug', (e) => console.info(e));
