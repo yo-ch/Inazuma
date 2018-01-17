@@ -150,7 +150,7 @@ function getAiringList(msg) {
         }
     }
 
-    if (subscribedAnime.length === 0) {
+    if (airingListAnime.length === 0) {
         return msg.channel.send(
             `There aren't any anime in your airing list, ${tool.tsunNoun()}.`);
     }
@@ -390,8 +390,9 @@ function updateAnimeStatuses() {
 
     //Helper function to check if anime has aired.
     function hasAired(anime) {
-        return anime.nextEpisode <= anime.schedule.length && unixts >
-            anime.schedule[anime.nextEpisode - 1].airingAt;
+        return anime.nextEpisode <= anime.schedule.length && (unixts >
+            anime.schedule[anime.nextEpisode - 1].airingAt ||
+            anime.schedule[anime.nextEpisode - 1] == null);
     }
 }
 
@@ -474,7 +475,10 @@ Requests airing schedules for anime missing them.
 */
 function requestMissingSchedules() {
     for (let animeId in subscribedAnime) {
-        if (subscribedAnime[animeId].schedule != null) continue;
+        if (subscribedAnime[animeId].schedule != null &&
+            subscribedAnime[animeId].schedule.length > subscribedAnime[animeId].nextEpisode) {
+            continue;
+        }
         requestAiringData(parseInt(animeId));
     }
 }
@@ -518,8 +522,11 @@ async function requestAiringData(animeId) {
         } else if (animeSchedule.airingSchedule.nodes.length > 0) { //Schedule available and anime still airing.
             let tempSchedule = anime.schedule === null ? [] : anime.schedule;
             tempSchedule = tempSchedule.filter((node) => node.episode < anime.nextEpisode);
-            anime.schedule = tempSchedule.concat(animeSchedule.airingSchedule.nodes.filter(
-                node => node.episode >= anime.nextEpisode));
+            anime.schedule = tempSchedule
+                .concat(new Array(Math.max(anime.nextEpisode - anime.schedule.length - 1, 0))
+                    .fill(null)) //Filler eps.
+                .concat(animeSchedule.airingSchedule.nodes.filter(node => node.episode >=
+                    anime.nextEpisode));
             if (anime.schedule.map(e => e.episode).reduce((a, b) => Math.max(a, b)) <
                 anime.nextEpisode) {
                 anime.schedule = [];
