@@ -392,7 +392,7 @@ function updateAnimeStatuses() {
     function hasAired(anime) {
         return anime.nextEpisode <= anime.schedule.length && (unixts >
             anime.schedule[anime.nextEpisode - 1].airingAt ||
-            anime.schedule[anime.nextEpisode - 1] == null);
+            anime.schedule[anime.nextEpisode - 1].airingAt == null);
     }
 }
 
@@ -524,7 +524,7 @@ async function requestAiringData(animeId) {
             tempSchedule = tempSchedule.filter((node) => node.episode < anime.nextEpisode);
             anime.schedule = tempSchedule
                 .concat(new Array(Math.max(anime.nextEpisode - anime.schedule.length - 1, 0))
-                    .fill(null)) //Filler eps.
+                    .fill({ episode: null, airingAt: null })) //Filler eps.
                 .concat(animeSchedule.airingSchedule.nodes.filter(node => node.episode >=
                     anime.nextEpisode));
             if (anime.schedule.map(e => e.episode).reduce((a, b) => Math.max(a, b)) <
