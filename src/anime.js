@@ -85,14 +85,15 @@ function retrieveAnimeData(msg) {
                 msg.channel.send(choiceString);
 
                 //Wait for response.
-                let choice = msg.channel.createMessageCollector(m =>
-                    tool.isInt(m) && parseInt(m) > 0 && parseInt(m) <= searchResults.length, {
-                        time: 60,
-                        maxMatches: 1
-                    });
+                let filter = m => parseInt(m.content) > 0 &&
+                    parseInt(m.content) <= searchResults.length && !m.author.bot;
+                let choice = msg.channel.createMessageCollector(filter, {
+                    time: 6000,
+                    maxMatches: 1
+                });
 
                 choice.on('collect', m => {
-                    let anime = searchResults[parseInt(m) - 1];
+                    let anime = searchResults[parseInt(m.content) - 1];
                     let aie = animeInfoEmbed(anime.title.romaji, anime.averageScore,
                         anime.format, anime.episodes,
                         anime.description,
