@@ -62,6 +62,11 @@ class MusicPlayer {
             this.dispatch = this.voiceConnection.playStream(stream, {
                 passes: 2,
                 volume: this.volume
+            }).catch(error => {
+                console.log(error);
+                this.dispatch = null;
+                this.queue.shift();
+                setTimeout(() => { this.playSong(msg) }, 100);
             });
 
             this.dispatch.once('start', () => {
