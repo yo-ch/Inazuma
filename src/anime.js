@@ -85,8 +85,8 @@ function retrieveAnimeData(msg) {
                 msg.channel.send(choiceString);
 
                 //Wait for response.
-                let filter = m => parseInt(m.content) > 0 &&
-                    parseInt(m.content) <= searchResults.length && !m.author.bot;
+                let filter = m => parseInt(m.content) > 0 && parseInt(m.content) <=
+                    searchResults.length;
                 let choice = msg.channel.createMessageCollector(filter, {
                     time: 6000,
                     maxMatches: 1
@@ -313,9 +313,9 @@ function retrieveSeasonalAnime(msg) {
     let season = getCurrentSeason();
     let query = stripIndent(
         `
-        query ($season: MediaSeason){
+        query ($season: MediaSeason, $seasonYear: Int){
           Page (page: 1, perPage: 50) {
-            media (type: ANIME, format: TV, sort: TITLE_ROMAJI, season: $season, seasonYear: 2017) {
+            media (type: ANIME, format: TV, sort: TITLE_ROMAJI, season: $season, seasonYear: $seasonYear) {
               id
               title{
                 romaji
@@ -328,7 +328,8 @@ function retrieveSeasonalAnime(msg) {
     );
 
     let variables = {
-        'season': season.season
+        'season': season.season,
+        'seasonYear': season.year
     }
 
     queryAnilist(query, variables).then(body => {
