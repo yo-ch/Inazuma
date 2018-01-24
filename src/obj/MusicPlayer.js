@@ -49,25 +49,18 @@ class MusicPlayer {
         } else if (this.voiceConnection) {
             let song = this.queue[0];
 
-            let badStream = false;
-            let stream = await song.getStream().catch(() => { badStream = true });
-
-            if (badStream) {
-                console.log(`Failed to get stream. ${song.title}`);
+            try {
+                let stream = await song.getStream();
+                this.dispatch = this.voiceConnection.playStream(stream, {
+                    passes: 2,
+                    volume: this.volume
+                });
+            } catch (error) {
+                console.log(error);
                 this.dispatch = null;
                 this.queue.shift();
                 return this.playSong(msg);
             }
-
-            this.dispatch = this.voiceConnection.playStream(stream, {
-                passes: 2,
-                volume: this.volume
-            }).catch(error => {
-                console.log(error);
-                this.dispatch = null;
-                this.queue.shift();
-                setTimeout(() => { this.playSong(msg) }, 100);
-            });
 
             this.dispatch.once('start', () => {
                 this.musicChannel.send(
