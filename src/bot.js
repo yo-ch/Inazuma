@@ -4,7 +4,6 @@ const Discord = require('discord.js');
 const config = require('./json/config.json');
 const cmds = require('./commands.js');
 const ani = require('./anime.js');
-const music = require('./music.js');
 const tool = require('./tool.js');
 
 const bot = new Discord.Client();
@@ -36,7 +35,7 @@ bot.on('message', msg => {
         return; //Not a command.
 
     let cmd = msg.content.split(/\s+/)[0].slice(config.prefix.length).toLowerCase();
-    call(cmd)(msg);
+    if (cmds[cmd]) cmds[cmd](msg); //Call command if it exists.
 });
 
 bot.on('error', (e) => console.error(e));
@@ -44,29 +43,6 @@ bot.on('warn', (e) => console.warn(e));
 // bot.on('debug', (e) => console.info(e));
 
 bot.login(config.token);
-
-function call(cmd) {
-    const COMMANDS = {
-        'help': cmds.help,
-        'tasukete': cmds.help,
-        'andy': cmds.andy,
-        'airing': ani.airing,
-        'ani': ani.anilist,
-        'anilist': ani.anilist,
-        'ban': cmds.ban,
-        'kick': cmds.kick,
-        'cc': cmds.cc,
-        'choose': cmds.choose,
-        'gavquote': cmds.gavquote,
-        'prune': cmds.prune,
-        'role': cmds.role,
-        'roll': cmds.roll,
-        'vigne': cmds.retrieveImgurAlbum,
-        'aoba': cmds.retrieveImgurAlbum,
-        'music': music.processCommand,
-    };
-    return COMMANDS[cmd] ? COMMANDS[cmd] : () => {};
-}
 
 function reply(msg) {
     const replies = [
