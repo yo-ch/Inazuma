@@ -3,6 +3,7 @@ Regular commands.
 */
 'use strict';
 const RichEmbed = require('discord.js').RichEmbed;
+const kuroshiro = require('kuroshiro');
 
 const config = require('./json/config.json');
 const commandHelp = require('./help.js');
@@ -12,24 +13,24 @@ const music = require('./music.js');
 const rp = require('request-promise');
 
 module.exports = {
-  'help': help,
-  'tasukete': help,
-  'andy': andy,
-  'airing': ani.airing,
-  'ani': ani.anilist,
-  'anilist': ani.anilist,
-  'ban': ban,
-  'kick': kick,
-  'cc': cc,
-  'choose': choose,
-  'gavquote': gavquote,
-  'prune': prune,
-  'role': role,
-  'roll': roll,
-  'vigne': retrieveImgurAlbum,
-  'aoba': retrieveImgurAlbum,
-  'music': music.processCommand,
-  'weebify': weebify
+    'help': help,
+    'tasukete': help,
+    'andy': andy,
+    'airing': ani.airing,
+    'ani': ani.anilist,
+    'anilist': ani.anilist,
+    'ban': ban,
+    'kick': kick,
+    'cc': cc,
+    'choose': choose,
+    'gavquote': gavquote,
+    'prune': prune,
+    'role': role,
+    'roll': roll,
+    'vigne': retrieveImgurAlbum,
+    'aoba': retrieveImgurAlbum,
+    'music': music.processCommand,
+    'weebify': weebify
 }
 
 /*
@@ -636,14 +637,17 @@ function retrieveImgurAlbum(msg) {
  * Translates from English to Japanese using Google Translate.
  */
 function weebify(msg) {
-    let sourceText = msg.content.split(/\s+/).slice(1).trim();
+    let sourceText = msg.content.substring(msg.content.indexOf(' ') + 1);
     if (!sourceText) return msg.channel.send(`Give me something to weebify, ${tool.tsunNoun()}!`);
 
     let url =
-        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=jp&dt=t&q=${encodeURI(sourceText)}`;
-    rp({url: url}).then(body => {
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURI(sourceText)}`;
+    rp({ url: url }).then(body => {
         let result = JSON.parse(body);
-    console.log(result);
-
+        msg.channel.send(new RichEmbed()
+            .setDescription(result[0][0][0] + '\n' + kuroshiro.toRomaji(
+                result[0][0][0], { mode: 'spaced' }))
+            .setColor('BLUE'));
     }).catch(err => console.log(err.message));
 }
+kuroshiro.init(err => { if (err) console.log(err) });
