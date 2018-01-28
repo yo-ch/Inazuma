@@ -76,7 +76,7 @@ Processes user input for ~play command calls.
 Determines what kind of input (search query, youtube video/playlist, soundcloud song/playlist) has been given, and proceeds accordingly.
 */
 function processInput(msg, guild) {
-    let url = msg.content.split(/\s+/).slice(2).join(' ');
+    let url = msg.content.substring(msg.content.indexOf(' ', msg.content.indexOf(' ') + 1) + 1);
     if (url && url !== '') {
         if (!url.startsWith('http')) { //Assume its a search.
             processSearch(msg, guild, url);
