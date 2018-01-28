@@ -9,6 +9,7 @@ module.exports = {
       ~choose
       ~roll
       ~music
+      ~weebify
    #Moderation
       ~ban
       ~kick
