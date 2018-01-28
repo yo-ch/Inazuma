@@ -1,6 +1,6 @@
 {
   "name": "inazuma-bot",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Discord bot powered by discord.js.",
   "main": "bot.js",
   "dependencies": {
@@ -9,6 +9,7 @@
     "colors": "^1.1.2",
     "discord.js": "^11.2.1",
     "erlpack": "^0.1.2",
+    "kuroshiro": "^0.2.1",
     "latest": "^0.2.0",
     "libsodium-wrappers": "^0.5.4",
     "node-opus": "^0.2.7",
