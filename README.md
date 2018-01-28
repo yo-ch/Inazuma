@@ -78,6 +78,11 @@ Supports Youtube and search.
     If int2 is given, rolls an integer between int1 and int2 inclusive.
 ```
 
+```
+~weebify <sentence>
+    Translates a sentence from English to Japanese.`
+```
+
 ## Moderation
 
 ```

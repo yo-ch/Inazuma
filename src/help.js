@@ -147,5 +147,9 @@ Requires a #music text channel.`,
    You cannot kick users in a role higher than Inazuma or yourself.
 
    Options:
-      [--reason <reason>] : Specifies a reason for kicking the user.`
+      [--reason <reason>] : Specifies a reason for kicking the user.`,
+
+    'weebify': `
+~weebify <sentence>
+   Translates a sentence from English to Japanese.`
 }
