@@ -131,7 +131,7 @@ module.exports = {
     /*
     Disord emojis.
     */
-    inaAngry: '<:inaAngry:302886932164116480>',
-    inaBaka: '<:inaBaka:301529550783774721>',
-    inaHappy: '<:inaHappy:301529610754195456>'
+    inaAngry: '<:inaAngry:410197799666450473>',
+    inaBaka: '<:inaBaka:410197799666450473>',
+    inaHappy: '<:inaHappy:410197799666450473>'
 }
