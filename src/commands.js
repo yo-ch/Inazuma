@@ -69,7 +69,7 @@ Bans specified user provided that the caller is allowed to ban that user.
 */
 function ban(msg) {
     if (!msg.member.hasPermission('BAN_MEMBERS')) {
-        return msg.channel.send(`You don't have permission to ban members! ${tool.inaAngry}`);
+        return msg.channel.send(`You don't have permission to ban members!`);
     }
     let memberToBan = msg.mentions.members.first();
     if (memberToBan && memberToBan.bannable && (msg.member.highestRole.calculatedPosition >
@@ -91,7 +91,7 @@ Kicks specified user provided that the caller is allowed to kick that user.
 */
 function kick(msg) {
     if (!msg.member.hasPermission('KICK_MEMBERS')) {
-        return msg.channel.send(`You don't have permission to kick members! ${tool.inaAngry}`);
+        return msg.channel.send(`You don't have permission to kick members!`);
     }
     let memberToKick = msg.mentions.members.first();
     if (memberToKick && memberToKick.kickable && (msg.member.highestRole.calculatedPosition >
@@ -129,7 +129,7 @@ function choose(msg) {
     if (choices.length >= 1)
         msg.channel.send(choices[tool.randInt(choices.length)]);
     else
-        msg.channel.send(`I can't choose if you don't give me any choices! ${tool.inaAngry}`);
+        msg.channel.send(`I can't choose if you don't give me any choices!`);
 }
 
 /*
@@ -284,7 +284,7 @@ Role interface.
 function role(msg) {
     if (!msg.guild.available) return;
     if (!msg.member.hasPermission('MANAGE_ROLES')) {
-        return msg.channel.send(`You don't have permission to manage roles. ${tool.inaBaka}`);
+        return msg.channel.send(`You don't have permission to manage roles.`);
     }
 
     let args = msg.content.split(/\s+/).slice(1);
@@ -292,7 +292,7 @@ function role(msg) {
         return msg.channel.send(
             `Invalid arguments. Please refer to ${tool.wrap('~help role')}.`);
     } else if (args.length < 2) {
-        return msg.channel.send(`You haven't specified any roles. ${tool.inaBaka}`);
+        return msg.channel.send(`You haven't specified any roles.`);
     }
 
     //Function params.
@@ -554,13 +554,13 @@ function role(msg) {
 
                 if (optionCount1 > 1) {
                     msg.channel.send(
-                        `You may only use one of ${tool.wrap('--bots, --users, --user')} ${tool.inaBaka}`
+                        `You may only use one of ${tool.wrap('--bots, --users, --user')}.`
                     );
                     return false;
                 }
                 if (optionCount2 > 1) {
                     msg.channel.send(
-                        `You may only use one of ${tool.wrap('--inrole, --notinrole, --noroles')} ${tool.inaBaka}`
+                        `You may only use one of ${tool.wrap('--inrole, --notinrole, --noroles')}.`
                     );
                     return false;
                 }
@@ -644,10 +644,8 @@ function weebify(msg) {
         `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURI(sourceText)}`;
     rp({ url: url }).then(body => {
         let result = JSON.parse(body);
-        msg.channel.send(new RichEmbed()
-            .setDescription(result[0][0][0] + '\n' + kuroshiro.toRomaji(
-                result[0][0][0], { mode: 'spaced' }))
-            .setColor('BLUE'));
+        msg.channel.send(result[0][0][0] + '\n' + kuroshiro.toRomaji(
+                result[0][0][0], { mode: 'spaced' }));
     }).catch(err => console.log(err.message));
 }
 kuroshiro.init(err => { if (err) console.log(err) });

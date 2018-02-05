@@ -51,9 +51,7 @@ function reply(msg) {
         `Hmmmphh.`,
         `Kimochi warui. <:vigneKuzu:270818397380411393>`,
         `Baka janaino?`,
-        `Doushitano?`,
-        `${tool.inaAngry}`,
-        `${tool.inaTehe}`
+        `Doushitano?`
     ];
     msg.channel.send(replies[tool.randInt(replies.length)]);
 }

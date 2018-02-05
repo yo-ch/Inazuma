@@ -39,7 +39,6 @@ module.exports = {
             's-stupid',
             'd-dummy',
             'baaaka',
-            `${this.inaBaka}`,
             'dummy'
         ];
         return nouns[this.randInt(nouns.length)];
@@ -126,12 +125,5 @@ module.exports = {
             array[e] = t;
         }
         return array;
-    },
-
-    /*
-    Disord emojis.
-    */
-    inaAngry: '<:inaAngry:410197799666450473>',
-    inaBaka: '<:inaBaka:410197799666450473>',
-    inaHappy: '<:inaHappy:410197799666450473>'
+    }
 }

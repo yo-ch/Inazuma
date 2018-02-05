@@ -212,7 +212,7 @@ function syncList(msg) {
     } else if (anilistUsers.hasOwnProperty(msg.author.id)) {
         username = anilistUsers[msg.author.id].username;
     } else {
-        return msg.channel.send(`You didn't give me a username! ${tool.inaBaka}`);
+        return msg.channel.send(`You didn't give me a username, ${tool.tsunNoun()}`);
     }
 
     //Get user anime list.
@@ -287,7 +287,7 @@ function syncList(msg) {
             }
         }
         updateAnilistUsers(msg.author.id, username);
-        msg.channel.send(`Sync success! ${tool.inaHappy}`);
+        msg.channel.send(`Sync success!`);
     }).catch(err => {
         console.log(err.message);
         msg.channel.send(`Gomen, I couldn't sync your Anilist. Try again later.`);
@@ -303,7 +303,7 @@ function clearAiringList(msg) {
             delete subscribedAnime[animeId].users[msg.author.id];
         }
     }
-    msg.channel.send(`Your airing list has been cleared! ${tool.inaHappy}`);
+    msg.channel.send(`Your airing list has been cleared!`);
 }
 
 /*
@@ -435,7 +435,7 @@ function setNotificationOption(msg) {
             return;
         }
         anilistUsers[msg.author.id].notifications = on === 'on' ? true : false;
-        msg.channel.send(`Notifications are now ${tool.wrap(on)}! ${tool.inaHappy}`);
+        msg.channel.send(`Notifications are now ${tool.wrap(on)}!`);
     }
 }
 
