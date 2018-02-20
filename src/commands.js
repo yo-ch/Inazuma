@@ -27,8 +27,6 @@ module.exports = {
     'prune': prune,
     'role': role,
     'roll': roll,
-    'vigne': retrieveImgurAlbum,
-    'aoba': retrieveImgurAlbum,
     'music': music.processCommand,
     'weebify': weebify
 }
@@ -609,31 +607,6 @@ function roll(msg) {
 }
 
 /*
-Interacts with the imgur API to pull a random image link from an album.
-*/
-function retrieveImgurAlbum(msg) {
-    const albums = {
-        'aoba': '4e3Dd',
-        'vigne': '90DeF'
-    }
-    let album = albums[msg.content.slice(config.prefix.length)];
-    let options = {
-        url: `https://api.imgur.com/3/album/${album}/images`,
-        headers: {
-            'Authorization': `Client-ID ${config.imgur_id}`
-        }
-    };
-
-    rp(options).then(body => {
-        let info = JSON.parse(body);
-        msg.channel.send(new RichEmbed({
-            image: info.data[tool.randInt(info.data.length)]
-                .link
-        }));
-    }).catch(err => console.log(err.message));
-}
-
-/*
  * Translates from English to Japanese using Google Translate.
  */
 function weebify(msg) {
@@ -645,7 +618,7 @@ function weebify(msg) {
     rp({ url: url }).then(body => {
         let result = JSON.parse(body);
         msg.channel.send(result[0][0][0] + '\n' + kuroshiro.toRomaji(
-                result[0][0][0], { mode: 'spaced' }));
+            result[0][0][0], { mode: 'spaced' }));
     }).catch(err => console.log(err.message));
 }
 kuroshiro.init(err => { if (err) console.log(err) });

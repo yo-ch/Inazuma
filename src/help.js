@@ -19,8 +19,6 @@ module.exports = {
    #Etc.
       ~andy
       ~gavquote
-      ~aoba
-      ~vigne
 
 [] = optional, <> = required, | = or`,
 
@@ -34,10 +32,6 @@ module.exports = {
     'andy': `
 ~andy [mention]
    Shut up weeb. Mentions user, if included.`,
-
-    'aoba': `
-~aoba
-   Returns a random picture of Aoba.`,
 
     'airing': `
 ~airing [function]
@@ -107,10 +101,6 @@ modify
 ~roll <int1> [int2]
    Rolls an integer from 1 to int1 inclusive.
    If int2 is given, rolls an integer between int1 and int2 inclusive.`,
-
-    'vigne': `
-~vigne
-   Returns a random picture of Vigne.`,
 
     'music': `
 [Music Help]
