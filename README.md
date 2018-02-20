@@ -151,10 +151,3 @@ Options:
     Returns a random Gavin quote.
 ```
 
-```
-~aoba
-    Returns a random picture of Aoba.
-
-~vigne   
-    Returns a random picture of Vigne.
-```
