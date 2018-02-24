@@ -49,7 +49,7 @@ function reply(msg) {
         `Nani yo?`,
         `What do you want, ${tool.tsunNoun()}...`,
         `Hmmmphh.`,
-        `Kimochi warui. <:vigneKuzu:270818397380411393>`,
+        `Kimochi warui.`,
         `Baka janaino?`,
         `Doushitano?`
     ];
