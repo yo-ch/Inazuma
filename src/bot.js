@@ -12,7 +12,7 @@ bot.on('ready', () => {
     console.log('Inazuma desu. Yoroshiku onegai itashimasu.');
     console.log(`Serving ${bot.guilds.size} guilds.`);
 
-    bot.user.setGame('~help');
+    bot.user.setActivity('~help');
 
     ani.passClient(bot);
     ani.requestMissingSchedules();
