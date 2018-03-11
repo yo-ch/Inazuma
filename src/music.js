@@ -105,8 +105,8 @@ Processes a search using youtube-dl, pushing the resulting song to the queue.
 @param {String} seachQuery The search query.
 */
 function processSearch(msg, guild, searchQuery) {
-    searchQuery = 'gvsearch1:' + searchQuery;
-    youtubeDL.getInfo(searchQuery, ['--extract-audio', '--buffer-size=4096', '--no-warnings'
+    searchQuery = 'ytsearch1:' + searchQuery;
+    youtubeDL.getInfo(searchQuery, [ '--extract-audio', '--buffer-size=4096', '--no-warnings'
     ], {
         maxBuffer: Infinity
     }, (err, song) => {
