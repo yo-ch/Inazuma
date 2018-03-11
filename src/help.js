@@ -116,7 +116,7 @@ modify
    purge                 : Clears the song queue.
    np                    : Displays the title of the current song.
 
-   vol | v <0-100>       : Sets volume.
+   vol <0-100>           : Sets volume.
 
    join                  : Joins your voice channel.
    leave                 : Leaves voice channel.
