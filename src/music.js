@@ -32,7 +32,7 @@ function processCommand(msg) {
 
     //Add guild to the guild list.
     if (!guilds[msg.guild.id])
-        guilds[msg.guild.id] = new MusicPlayer();
+        guilds[msg.guild.id] = new MusicPlayer(msg);
 
     let guild = guilds[msg.guild.id];
 
@@ -87,7 +87,7 @@ function processInput(msg, guild) {
             } else if (url.search(/v=(\S+?)(&|\s|$|#)/)) { //Video.
                 processYoutube.song(msg, guild, url);
             } else {
-                msg.channel.send(`Invalid Youtube link! ${tool.inaBaka}`);
+                msg.channel.send(`Invalid Youtube link!`);
             }
         } else if (url.search('soundcloud.com')) { //Soundcloud.
             msg.channel.send('Gomen, Soundcloud music isn\'nt functional right now.');
@@ -106,8 +106,7 @@ Processes a search using youtube-dl, pushing the resulting song to the queue.
 */
 function processSearch(msg, guild, searchQuery) {
     searchQuery = 'gvsearch1:' + searchQuery;
-    youtubeDL.getInfo(searchQuery, ['--extract-audio', '--buffer-size=4096', '--no-warnings',
-        `--username=${config.nico_user}`, `--password=${config.nico_pass}`
+    youtubeDL.getInfo(searchQuery, ['--extract-audio', '--buffer-size=4096', '--no-warnings'
     ], {
         maxBuffer: Infinity
     }, (err, song) => {
@@ -123,7 +122,7 @@ function processSearch(msg, guild, searchQuery) {
             'search', duration, song.url, song.thumbnail));
 
         msg.channel.send(
-            new RichEmbed({ description: `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}` })
+            new RichEmbed({ description: `Enqueued ${tool.wrap(song.title.trim())} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)}`})
         );
 
         if (guild.status != Status.PLAYING) {
@@ -151,7 +150,7 @@ const processYoutube = {
                 null,
                 `https://img.youtube.com/vi/${song.video_id}/mqdefault.jpg`));
             msg.channel.send(
-                new RichEmbed({ description: `Enqueued ${tool.wrap(song.title.trim())} to position **${guild.queue.length}** ${tool.inaHappy}` })
+                new RichEmbed({ description: `Enqueued ${tool.wrap(song.title.trim())} to position **${guild.queue.length}** `})
             );
 
             if (guild.status != Status.PLAYING) {
@@ -229,7 +228,7 @@ const processYoutube = {
 
             msg.channel.send(
                 new RichEmbed({
-                    description: `Enqueued ${tool.wrap(playlistItems.length)} songs from ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)} ${tool.inaHappy}`
+                    description: `Enqueued ${tool.wrap(playlistItems.length)} songs from ${tool.wrap(playlistTitle)} requested by ${tool.wrap(msg.author.username + '#' + msg.author.discriminator)}`
                 })
             );
 

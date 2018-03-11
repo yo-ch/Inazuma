@@ -14,9 +14,9 @@ The music player for a guild.
 Handles the queuing, and streaming of Songs.
 */
 class MusicPlayer {
-    constructor() {
+    constructor(msg) {
         this.queue = [];
-        this.musicChannel = null;
+        this.musicChannel = msg.channel;
         this.voiceConnection = null;
         this.dispatch = null;
         this.volume = 0.5;
@@ -109,7 +109,7 @@ class MusicPlayer {
             );
             this.dispatch.end();
         } else {
-            this.musicChannel.send(`There 's nothing to skip! ${tool.inaBaka}`);
+            this.musicChannel.send(`There's nothing to skip!`);
         }
     }
 
@@ -121,7 +121,7 @@ class MusicPlayer {
             this.dispatch.pause();
         else
             this.musicChannel.send(
-                `Nothing is playing right now. ${tool.inaBaka}`
+                `Nothing is playing right now.`
             );
     }
 
@@ -133,7 +133,7 @@ class MusicPlayer {
             this.dispatch.resume();
         else
             this.musicChannel.send(
-                `Nothing is playing right now. ${tool.inaBaka}`
+                `Nothing is playing right now.`
             );
 
     }
@@ -153,7 +153,7 @@ class MusicPlayer {
             } catch (err) {
                 console.log('ERROR CAUGHT:\n' + err);
                 msg.channel.send(
-                    `${tool.inaError} Gomen, I can't display the queue right now. Try again in a few moments onegai.`
+                    `Gomen, I can't display the queue right now. Try again in a few moments onegai.`
                 );
             }
         } else {
@@ -218,10 +218,10 @@ class MusicPlayer {
                 msg.channel.send(
                     new RichEmbed({ description: `:speaker: ${tool.wrap(vol * 100)}` }));
             } else {
-                msg.channel.send(`Nothing is playing right now. ${tool.inaAngry}`);
+                msg.channel.send(`Nothing is playing right now.`);
             }
         } else {
-            msg.channel.send(`Use a number between 0 and 100! ${tool.inaBaka}`);
+            msg.channel.send(`Use a number between 0 and 100!`);
         }
     }
 
@@ -246,7 +246,7 @@ class MusicPlayer {
             }
         } else {
             msg.channel.send(
-                `You're not in a voice channel! ${tool.inaBaka}`
+                `You're not in a voice channel!`
             );
         }
     }
@@ -269,7 +269,7 @@ class MusicPlayer {
             this.dispatch = null;
         } else {
             msg.channel.send(
-                `I'm not in a voice channel! ${tool.inaBaka}`
+                `I'm not in a voice channel!`
             );
         }
     }
