@@ -28,6 +28,7 @@ module.exports = {
     'role': role,
     'roll': roll,
     'music': music.processCommand,
+    'm': music.processCommand,
     'weebify': weebify
 }
 
