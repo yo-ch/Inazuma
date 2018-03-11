@@ -2,7 +2,6 @@
 Regular commands.
 */
 'use strict';
-const RichEmbed = require('discord.js').RichEmbed;
 const kuroshiro = require('kuroshiro');
 
 const config = require('./json/config.json');
