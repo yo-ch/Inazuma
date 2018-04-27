@@ -9,8 +9,9 @@ indev:
 
 planned:
     -DB implementation for airing list.
-    -Soundcloud music when API registration opens back up.
-    -More moderation tools.
+    -Self assignable roles.
+    -Strawpoll functionality.
+    -Soundcloud music when API registration opens back up. i.e; never
 ```
 
 # Commands
