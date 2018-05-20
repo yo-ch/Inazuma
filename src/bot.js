@@ -1,5 +1,6 @@
 'use strict';
 const Discord = require('discord.js');
+const mongoose = require('mongoose');
 
 const config = require('./json/config.json');
 const cmds = require('./commands.js');
@@ -7,6 +8,9 @@ const ani = require('./anime.js');
 const tool = require('./tool.js');
 
 const bot = new Discord.Client();
+
+const mongoURL = 'mongodb://localhost:27017/inazuma';
+
 
 bot.on('ready', () => {
     console.log('Inazuma desu. Yoroshiku onegai itashimasu.');
@@ -41,8 +45,14 @@ bot.on('message', msg => {
 bot.on('error', (e) => console.error(e));
 bot.on('warn', (e) => console.warn(e));
 // bot.on('debug', (e) => console.info(e));
-
 bot.login(config.token);
+
+
+mongoose.connect(mongoURL);
+mongoose.connection.on('error', console.error.bind(console, 'connection:error:'));
+mongoose.connection.once('open', () => {
+    console.log('Connected to database!');
+});
 
 function reply(msg) {
     const replies = [
@@ -55,8 +65,3 @@ function reply(msg) {
     ];
     msg.channel.send(replies[tool.randInt(replies.length)]);
 }
-
-/*
-Common Params:
-@param {Object} msg The message that called the command.
-*/
