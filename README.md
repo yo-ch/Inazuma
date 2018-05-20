@@ -1,6 +1,6 @@
 # Inazuma Bot
 
-A personal Discord bot written using discord.js.
+A Discord bot written using discord.js.
 
 Includes anime lookup (Anilist) and a music player.
 
