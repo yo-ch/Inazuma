@@ -286,150 +286,58 @@ function role(msg) {
     }
 
     let args = msg.content.split(/\s+/).slice(1);
-    if (args[0] != 'give' && args[0] != 'take' && args[0] != 'modify') {
-        return msg.channel.send(
-            `Invalid arguments. Please refer to ${tool.wrap('~help role')}.`);
-    } else if (args.length < 2) {
-        return msg.channel.send(`You haven't specified any roles.`);
+    let funct = args[0];
+
+    if (!['give', 'take', 'modify'].includes(funct)) {
+        return msg.channel.send(`Invalid function. Please refer to ${tool.wrap('~help role')}.`);
     }
 
-    //Function params.
-    let optionArguments;
-    let roles;
-
-    roles = validatePermissions(args[1].split(','));
+    let roles = getRoleObjects(args[1].split(','));
     if (roles === null) {
-        return msg.channel.send('Invalid arguments.');
-    } else if (roles.length === 0) {
-        return msg.channel.send(`Unable to find matching roles.`);
+        return;
+    } else if (!roles.length) {
+        return msg.channel.send('No matching roles were found. Perhaps you mispelled a role?');
     }
 
     let options = tool.parseOptions(msg.content);
-    if (Object.keys(options).length === 0 || !(optionArguments = validateOptions(options))) {
+    if (Object.keys(options).length === 0 || !validOptions(funct, options)) {
         return msg.channel.send('Invalid arguments.');
     }
 
-    switch (args[0]) {
-    case 'give':
-        return processRoleChanges('give');
-    case 'take':
-        return processRoleChanges('take');
-    case 'modify':
-        if (roles.length === 1) {
-            modifyRole();
-        }
-        break;
-    }
-
-    /*
-    Filters users for give|take functions according to the specified options.
-    @param {String} type The type of role change. 'give' or 'take' operation.
-    */
-    function processRoleChanges(type) {
-        let members = msg.guild.members;
-        if (optionArguments.user) { //This option ignores other options.
-            let name = optionArguments.user;
-            let user = members.find(member => member.user.username.toLowerCase() === name.toLowerCase());
-
-            if (user) {
-                changeRoles(user, type);
+    switch (funct) {
+        case 'give':
+            return processRoleChange(roles, 'give', options);
+        case 'take':
+            return processRoleChange(roles, 'take', options);
+        case 'modify':
+            if (roles.length === 1) {
+                modifyRole(roles[0]);
             } else {
-                msg.channel.send(`Unable to find matching user.`);
+                msg.channel.send('You can only modify one role at a time.');
             }
-            return;
-        }
-
-        let membersToChange = members.array();
-        if (optionArguments.bots) {
-            membersToChange = membersToChange.filter(member => {
-                return member.user.bot;
-            });
-        } else if (optionArguments.users) {
-            membersToChange = membersToChange.filter(member => {
-                return !member.user.bot;
-            });
-        }
-
-        if (optionArguments.inrole) {
-            let roleName = optionArguments.inrole;
-            membersToChange = membersToChange.filter(member => {
-                return member.roles.exists(role => role.name.toLowerCase() ===
-                    roleName); //Has specified role.
-            });
-        } else if (optionArguments.notinrole) {
-            let roleName = optionArguments.notinrole;
-            membersToChange = membersToChange.filter(member => {
-                return !member.roles.exists(role => role.name.toLowerCase() ===
-                    roleName); //Doesn't have specified role.
-            });
-        } else if (optionArguments.noroles) {
-            membersToChange = membersToChange.filter(member => {
-                return member.roles.size === 1; //Only has @everyone role.
-            });
-        }
-        changeRoles(membersToChange, type);
+            break;
     }
 
     /*
-    Add/remove roles for each user.
-    @param {Array|Object} users An array of users, or a single User object.
-    @param {String} type The type of role change. 'give' or 'take'.
-    */
-    function changeRoles(users, type) {
-        //If type != 'give', type = 'take'.
-        let changeFunction = type === 'give' ? 'addRoles' : 'removeRoles';
-
-        /*
-          Filter according to change type.
-          Make sure user doesn't have role if adding roles. ('give')
-          Make sure user has role if removing roles. ('take')
-        */
-        if (Array.isArray(users)) { //Multiple users.
-            users.forEach(user => {
-                user[changeFunction](roles.filter(role => {
-                    return !user.roles.has(role.id) && type === 'give' ||
-                        user.roles.has(role.id) && type === 'take';
-                }));
-            }).then(() => msg.channel.send(
-                `Modified roles of ${tool.wrap(users.length)} users.`));
-        } else { //Single user.
-            users[changeFunction](roles.filter(role => {
-                return !users.roles.has(role.id) && type === 'give' ||
-                    users.roles.has(role.id) && type === 'take';
-            })).then(() => msg.channel.send(`Modified roles of ${tool.wrap('1')} user.`));
-        }
-    }
-
-    /*
-    Changes the name or colour of the specified role.
-    */
-    function modifyRole() {
-        let role = roles[0];
-        if (optionArguments.name) {
-            role.setName(optionArguments.name);
-        }
-        if (optionArguments.color) {
-            role.setColor(optionArguments.color);
-        }
-        msg.channel.send(`The role ${tool.wrap(role.name)} has been modified.`);
-    }
-
-    /*
-    Validate that the bot and user have permission to modify/assign the specified roles.
+    Validate that the bot and user have permission to modify/assign the specified roles, and then return
+    the corresponding Role objects.
     @param {Array} roleNames The supplied names of roles.
+    @return {Role} The Role objects corresponding to the params.
     */
-    function validatePermissions(roleNames) {
+    function getRoleObjects(roleNames) {
         let roles = [];
-        for (let i = 0; i < roleNames.length; i++) {
-            let roleName = roleNames[i];
-            let roleObj = msg.guild.roles.find(role => role.name.toLowerCase() ===
-                roleName.toLowerCase());
-            if (!roleObj) return null;
-            let botPositionHigher = roleObj.calculatedPosition < msg.guild.me.highestRole
-                .calculatedPosition;
-            let userPositionHigher = roleObj.calculatedPosition < msg.member.highestRole
-                .calculatedPosition ||
+        for (let roleName of roleNames) {
+            let roleObj = msg.guild.roles.find(role => role.name.toLowerCase() === roleName.toLowerCase());
+            if (!roleObj) {
+                continue;
+            }
+
+            //Check if the bot has higher role than the role to modify.
+            let botPositionHigher = msg.guild.me.highestRole.calculatedPosition > roleObj.calculatedPosition;
+            //Check if the user has a higher role than the role to modify.
+            let userPositionHigher = msg.member.highestRole.calculatedPosition > roleObj.calculatedPosition ||
                 msg.guild.ownerID === msg.author.id;
+
             if (!botPositionHigher) {
                 msg.channel.send(
                     `Inazuma is in a lower or equal ranked role compared to the role you are trying to modify.`
@@ -454,127 +362,212 @@ function role(msg) {
 
     /*
     Check if options and their args are valid, and also if this specific combination of options is valid.
+    @param {String} funct The role function to perform.
     @param {Object} options The options parsed from the command.
-    @return {Object} enabledOptions An object with key/value pairs of <option name, true|argument to the option>.
-
-    i.e;
-    if one of the options was --bots, enabledOptions.bots = true.
-    if one of the options was --user <user>, enabledOptions.user = <user>.
+    @return {Boolean}
     */
-    function validateOptions(options) {
-        let enabledOptions = {};
-
+    function validOptions(funct, options) {
         //Validate options for 'give|take' or 'modify'.
-        if (args[0] === 'give' || args[0] === 'take' && validOptionCombo('givetake')) {
-            //Get arguments for options that take arguments.
-            if (options['user']) {
-                if (!(enabledOptions.user = tool.parseOptionArg('user', msg.content))) {
-                    msg.channel.send(`User not specified. ${tool.wrap('--user <user>')}`);
-                    return;
-                }
-            }
-            if (options['inrole']) {
-                if ((enabledOptions.inrole = tool.parseOptionArg('inrole', msg.content))) {
-                    if (!msg.guild.roles.exists(role => role.name.toLowerCase() ===
-                            enabledOptions.inrole)) {
-                        //Check that role actually exists.
-                        msg.channel.send(`Gomen, I couldn't find a matching role.`)
-                        return;
-                    }
-                } else {
+        if ((args[0] === 'give' || args[0] === 'take') && validOptionCombo('givetake')) {
+            if (options.hasOwnProperty('user') && !options['user']) {
+                msg.channel.send(`You didn't specify a user! ${tool.wrap('--user <user>')}.`);
+                return false;
+            } else if (options.hasOwnProperty('inrole')) {
+                //Role not supplied.
+                if (!options['inrole']) {
                     msg.channel.send(
-                        `You didn't specify a role! ${tool.wrap('--inrole <role>')}`);
-                    return;
+                        `You didn't specify a role! ${tool.wrap('--inrole <role>')}.`);
+                    return false;
                 }
-            } else if (options['notinrole']) {
-                if ((enabledOptions.notinrole = tool.parseOptionArg('notinrole', msg.content))) {
-                    if (!msg.guild.roles.exists(role => role.name.toLowerCase() ===
-                            enabledOptions.notinrole)) {
-                        //Check that role actually exists.
-                        msg.channel.send(`Gomen, I couldn't find a matching role.`)
-                        return;
-                    }
-                } else {
+
+                //Make sure the role exists.
+                if (!msg.guild.roles.exists(role => role.name.toLowerCase() ===
+                        options['inrole'])) {
+                    msg.channel.send(`Gomen, I couldn't find a matching role.`)
+                    return false;
+                }
+            } else if (options.hasOwnProperty('notinrole')) {
+                if (!options['notinrole']) {
                     msg.channel.send(
                         `You didn't specify a role! ${tool.wrap('--notinrole <role>')}`);
-                    return;
+                    return false;
+                }
+
+                //Check that role actually exists.
+                if (!msg.guild.roles.exists(role => role.name.toLowerCase() ===
+                        options['notinrole'])) {
+                    msg.channel.send(`Gomen, I couldn't find a matching role.`)
+                    return false;
                 }
             }
+
+            return true;
         } else if (args[0] === 'modify' && validOptionCombo('modify')) {
-            //Get option arguments.
-            if (options['name']) {
-                if (!(enabledOptions.name = tool.parseOptionArg('name', msg.content))) {
-                    msg.channel.send(
-                        `You didn't specify a new name for the role! ${tool.wrap('--name <name>')}`
-                    );
-                    return;
-                }
-            }
-            if (options['color']) {
-                let hexCode;
-                if ((hexCode = tool.parseOptionArg('color', msg.content))) {
-                    if (hexCode.indexOf('#') === 0) hexCode = hexCode.slice(1);
-                    let decimalCode = parseInt(hexCode, 16);
-                    if (hexCode.length != 6 || isNaN(decimalCode)) {
-                        msg.channel.send(`Invalid hex code!`);
-                        return;
-                    }
-                    enabledOptions.color = hexCode;
-                } else {
+            if (options.hasOwnProperty('name') && !options['name']) {
+                msg.channel.send(
+                    `You didn't specify a new name for the role! ${tool.wrap('--name <name>')}`
+                );
+                return false;
+            } else if (options.hasOwnProperty('color')) {
+                if (!options['color']) {
                     msg.channel.send(
                         `You didn't specify a color! ${tool.wrap('--color <color>')}`
                     );
-                    return;
+                    return false;
+                }
+
+                if (options['color'].indexOf('#') === 0) {
+                    options['color'] = options['color'].slice(1);
+                }
+                if (options['color'].length != 6 || isNaN(parseInt(options['color'], 16))) {
+                    msg.channel.send(`Invalid hex code!`);
+                    return false;
                 }
             }
+
+            return true;
+        } else {
+            return false;
         }
-        return enabledOptions;
+    }
+
+
+    /*
+    Checks if the combination of options is valid.
+    @param {String} type The type of options to check. 'givetake'|'modify'
+    @return {Boolean} true if valid, false otherwise
+    */
+    function validOptionCombo(options, type) {
+        if (type === 'givetake') {
+            if (Object.keys(options).length === 0) {
+                msg.channel.send(`You didn't specify any options, ${tool.tsunNoun()}!`);
+                return false;
+            }
+
+            let optionCount1 = 0;
+            let optionCount2 = 0;
+
+            for (let option in options) {
+                if (['bots', 'users', 'user'].includes(option)) {
+                    optionCount1++;
+                } else if (['inrole', 'notinrole', 'noroles'].includes(option)) {
+                    optionCount2++;
+                }
+            }
+
+            if (optionCount1 > 1) {
+                msg.channel.send(`You may only use one of ${tool.wrap('--bots, --users, --user')}.`);
+                return false;
+            }
+            if (optionCount2 > 1) {
+                msg.channel.send(
+                    `You may only use one of ${tool.wrap('--inrole, --notinrole, --noroles')}.`
+                );
+                return false;
+            }
+        } else if (type === 'modify') {
+            if (!options.hasOwnProperty('name') && !options.hasOwnProperty('color')) {
+                msg.channel.send(`You didn't specify any options, ${tool.tsunNoun()}!`);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /*
+    Filters users for give|take functions according to the specified options.
+    @param {String} type The type of role change. 'give' or 'take' operation.
+    */
+    function processRoleChange(roles, type, options) {
+        let members = msg.guild.members;
+        if (options.hasOwnProperty('user')) { //This option ignores other options.
+            let names = options['user'].split(',');
+            let users = names.map(name =>
+                members.find(member =>
+                    member.user.username.toLowerCase() === name.toLowerCase()));
+
+            if (!users.includes(null)) {
+                changeUserRoles(users, roles, type);
+            } else {
+                msg.channel.send(`Unable to find matching user.`);
+            }
+            return;
+        }
+
+        let membersToChange = members.array();
+        if (options.hasOwnProperty('bots')) {
+            membersToChange = membersToChange.filter(member => {
+                return member.user.bot;
+            });
+        } else if (options.hasOwnProperty('users')) {
+            membersToChange = membersToChange.filter(member => {
+                return !member.user.bot;
+            });
+        }
+
+        if (options.hasOwnProperty('inrole')) {
+            let roleName = options['inrole'];
+            membersToChange = membersToChange.filter(member => {
+                return member.roles.exists(role => role.name.toLowerCase() ===
+                    roleName); //Has specified role.
+            });
+        } else if (options.hasOwnProperty('notinrole')) {
+            let roleName = options['notinrole'];
+            membersToChange = membersToChange.filter(member => {
+                return !member.roles.exists(role => role.name.toLowerCase() ===
+                    roleName); //Doesn't have specified role.
+            });
+        } else if (options.hasOwnProperty('noroles')) {
+            membersToChange = membersToChange.filter(member => {
+                return member.roles.size === 1; //Only has @everyone role.
+            });
+        }
+
+        changeUserRoles(membersToChange, roles, type);
+    }
+
+    /*
+    Add/remove roles for each user.
+    @param {Array|Object} users An array of users, or a single User object.
+    @param {String} type The type of role change. 'give' or 'take'.
+    */
+    function changeUserRoles(users, roles, type) {
+        let changeFunction = type === 'give' ? 'addRoles' : 'removeRoles';
 
         /*
-        Checks if the combination of options is valid.
-        @param {String} type The type of options to check. 'givetake'|'modify'
-        @return {Boolean} true if valid, false otherwise
+          Filter according to change type.
+          Make sure user doesn't have role if adding roles. ('give')
+          Make sure user has role if removing roles. ('take')
         */
-        function validOptionCombo(type) {
-            if (type === 'givetake') {
-                let optionCount1 = 0;
-                let optionCount2 = 0;
-
-                for (let option in options) {
-                    if (option === 'bots' || options === 'users' || options === 'user') {
-                        optionCount1++;
-                    } else if (option === 'inrole' || option === 'notinrole' || option ===
-                        'noroles') {
-                        optionCount2++;
-                    }
-                }
-
-
-                if (optionCount1 > 1) {
-                    msg.channel.send(
-                        `You may only use one of ${tool.wrap('--bots, --users, --user')}.`
-                    );
-                    return false;
-                }
-                if (optionCount2 > 1) {
-                    msg.channel.send(
-                        `You may only use one of ${tool.wrap('--inrole, --notinrole, --noroles')}.`
-                    );
-                    return false;
-                }
-                if (optionCount1 === 0 && optionCount2 === 0) {
-                    msg.channel.send(`You didn't specify any options.`);
-                    return false;
-                }
-                return true;
-            } else if (type === 'modify') {
-                if (!options['name'] && !options['color']) {
-                    msg.channel.send(`You didn't specify any options.`);
-                    return false;
-                }
-                return true;
-            }
+        if (!Array.isArray(users)) {
+            users = [users];
         }
+
+        let promises = [];
+        users.forEach(user => {
+            promises.push(user[changeFunction](roles.filter(role => {
+                return !user.roles.has(role.id) && type === 'give' ||
+                    user.roles.has(role.id) && type === 'take';
+            })));
+        });
+
+        Promise.all(promises).then(() => {
+            msg.channel.send(`Modified roles of ${tool.wrap(users.length)} users.`);
+        });
+    }
+
+    /*
+    Changes the name or colour of the specified role.
+    */
+    function modifyRole(role, options) {
+        if (options.hasOwnProperty('name')) {
+            role.setName(options['name']);
+        }
+        if (options.hasOwnProperty('color')) {
+            role.setColor(options['color']);
+        }
+        msg.channel.send(`The role ${tool.wrap(role.name)} has been modified.`);
     }
 }
 
