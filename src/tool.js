@@ -72,7 +72,7 @@ module.exports = {
     @return The argument for the specified option, or null if the arg couldn't be found.
     */
     parseOptionArg(option, commandString) {
-        let regex = new RegExp(`-${option} (#?\\w+)`);
+        let regex = new RegExp(`-${option} #?([\\w,]+)`);
 
         let matchArg = commandString.match(regex);
         if (matchArg) {
