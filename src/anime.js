@@ -140,64 +140,65 @@ Displays user's airing list.
 */
 function getAiringList(msg) {
     //Get anime that user is subscribed to, and update next episode counter if applicable.
-    let subscribedAnimeIds = Object.keys(subscribedAnime);
-    let airingListAnime = [];
-    let unixts = tool.getUnixTime();
-    for (let i = 0; i < subscribedAnimeIds.length; i++) {
-        let currentAnime = subscribedAnime[subscribedAnimeIds[i]];
-        updateAnimeStatuses(currentAnime, unixts);
-        if (currentAnime.users.hasOwnProperty(msg.author.id)) { //If user is subscribed, add anime to list.
-            airingListAnime.push(currentAnime);
-        }
-    }
+    updateAnimeStatuses().then(() => {
+      let subscribedAnimeIds = Object.keys(subscribedAnime);
+      let airingListAnime = [];
+      let unixts = tool.getUnixTime();
+      for (let i = 0; i < subscribedAnimeIds.length; i++) {
+          let currentAnime = subscribedAnime[subscribedAnimeIds[i]];
+          if (currentAnime.users.hasOwnProperty(msg.author.id)) { //If user is subscribed, add anime to list.
+              airingListAnime.push(currentAnime);
+          }
+      }
 
-    if (airingListAnime.length === 0) {
-        return msg.channel.send(
-            `There aren't any anime in your airing list, ${tool.tsunNoun()}.`);
-    }
+      if (airingListAnime.length === 0) {
+          return msg.channel.send(
+              `There aren't any anime in your airing list, ${tool.tsunNoun()}.`);
+      }
 
-    let info = [];
-    for (let currentAnime of airingListAnime) {
-        let nextEpisode = currentAnime.nextEpisode;
-        let countdown = null;
-        if (currentAnime.schedule) {
-            if (currentAnime.schedule.length === 0) {
-                countdown = Infinity; //Empty schedule means done airing. Infinity makes sense in this case.
-            } else if (currentAnime.nextEpisode <= currentAnime.schedule.length) {
-                countdown = currentAnime.schedule[nextEpisode - 1].airingAt - unixts;
-            }
-        }
+      let info = [];
+      for (let currentAnime of airingListAnime) {
+          let nextEpisode = currentAnime.nextEpisode;
+          let countdown = null;
+          if (currentAnime.schedule) {
+              if (currentAnime.schedule.length === 0) {
+                  countdown = Infinity; //Empty schedule means done airing. Infinity makes sense in this case.
+              } else if (currentAnime.nextEpisode <= currentAnime.schedule.length) {
+                  countdown = currentAnime.schedule[nextEpisode - 1].airingAt - unixts;
+              }
+          }
 
-        let title = currentAnime.title.length > 43 ?
-            `${currentAnime.title.substring(0, 43)}...` :
-            currentAnime.title; //Cut off anime title if needed.
-        //Push tuple of string and airing countdown, which is used to sort by airing countdown.
-        if (countdown === null)
-            info.push([sprintf('%-50s [ SCHEDULE N/A ]\n', title), Infinity]);
-        else if (countdown === Infinity)
-            info.push([
-                sprintf('%-50s [ DONE  AIRING ]\n', title),
-                Infinity
-            ]);
-        else
-            info.push([
-                sprintf('%-50s Ep %-3i in %s\n', title, nextEpisode, secondsToCountdown(
-                    countdown)),
-                countdown
-            ]);
-    }
+          let title = currentAnime.title.length > 43 ?
+              `${currentAnime.title.substring(0, 43)}...` :
+              currentAnime.title; //Cut off anime title if needed.
+          //Push tuple of string and airing countdown, which is used to sort by airing countdown.
+          if (countdown === null)
+              info.push([sprintf('%-50s [ SCHEDULE N/A ]\n', title), Infinity]);
+          else if (countdown === Infinity)
+              info.push([
+                  sprintf('%-50s [ DONE  AIRING ]\n', title),
+                  Infinity
+              ]);
+          else
+              info.push([
+                  sprintf('%-50s Ep %-3i in %s\n', title, nextEpisode, secondsToCountdown(
+                      countdown)),
+                  countdown
+              ]);
+      }
 
-    info.sort((a, b) => { //Sorts, starting with anime closest to airing.
-        return a[1] - b[1]; //compare countdowns.
-    });
+      info.sort((a, b) => { //Sorts, starting with anime closest to airing.
+          return a[1] - b[1]; //compare countdowns.
+      });
 
-    let airing = `${msg.author.username}'s Airing List\n`;
-    airing += '='.repeat(airing.trim().length) + '\n';
-    for (let i = 0; i < info.length; i++) //Add info of each anime to airing string.
-        airing += info[i][0];
+      let airing = `${msg.author.username}'s Airing List\n`;
+      airing += '='.repeat(airing.trim().length) + '\n';
+      for (let i = 0; i < info.length; i++) //Add info of each anime to airing string.
+          airing += info[i][0];
 
-    msg.channel.send(`${airing}`, {
-        'code': 'md'
+      msg.channel.send(`${airing}`, {
+          'code': 'md'
+      });
     });
 }
 
@@ -390,6 +391,8 @@ function updateAnimeStatuses() {
     Promise.all(requested).then(() => writeFiles())
         .catch(() => console.log('Err updating anime statuses.'));
 
+    return Promise.all(requested);
+
     //Helper function to check if anime has aired.
     function hasAired(anime) {
         return anime.nextEpisode <= anime.schedule.length && (unixts >
@@ -478,7 +481,7 @@ Requests airing schedules for anime missing them.
 function requestMissingSchedules() {
     for (let animeId in subscribedAnime) {
         if (subscribedAnime[animeId].schedule == null ||
-            subscribedAnime[animeId].schedule.length < subscribedAnime[animeId].nextEpisode) {
+         subscribedAnime[animeId].schedule.length != 0 && subscribedAnime[animeId].schedule.length < subscribedAnime[animeId].nextEpisode) {
             requestAiringData(parseInt(animeId));
         }
     }

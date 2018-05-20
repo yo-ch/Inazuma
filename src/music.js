@@ -5,8 +5,8 @@ Processes music commands. Constructs Songs and manages MusicPlayers.
 const config = require('./json/config.json');
 const tool = require('./tool.js');
 
-const Song = require('./obj/Song.js');
-const MusicPlayer = require('./obj/MusicPlayer.js');
+const Song = require('./obj/music/Song.js');
+const MusicPlayer = require('./obj/music/MusicPlayer.js');
 const RichEmbed = require('discord.js').RichEmbed;
 
 const youtubeDL = require('youtube-dl');
