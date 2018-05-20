@@ -56,15 +56,10 @@ module.exports = {
 
         let options = {};
         while ((matches = shortRegex.exec(commandString))) {
-            if (matches[1].indexOf('--') === -1) {
-                //Parse combined short args. ex: '-abc' where a, b, c are options.
-                for (let i = 0; i < matches[1].length; i++) {
-                    options[matches[1][i]] = true;
-                }
-            }
+            options[matches[1]] = this.parseOptionArg(matches[1], commandString);
         }
         while ((matches = longRegex.exec(commandString))) {
-            options[matches[1]] = true;
+            options[matches[1]] = this.parseOptionArg(matches[1], commandString);
         }
 
         return options;
@@ -77,25 +72,14 @@ module.exports = {
     @return The argument for the specified option, or null if the arg couldn't be found.
     */
     parseOptionArg(option, commandString) {
-        let regex = new RegExp(`--${option} (.+)`);
+        let regex = new RegExp(`-${option} (\\w+)`);
 
         let matchArg = commandString.match(regex);
         if (matchArg) {
-            return matchArg[1].slice(0, this.getNextArgIndex(matchArg[1])).trim().toLowerCase();
+            return matchArg[1].trim().toLowerCase();
         } else {
             return null;
         }
-    },
-
-    /*
-    Gets the index of the next argument/option. Usually used to ignore off that argument.
-    If next argument does not exist, index = argString.length.
-    @param {String} argString The string to check.
-    @return {Number} The index of the next argument, or as above if the arg does not exist.
-    */
-    getNextArgIndex(argString) {
-        let nextArgIndex = argString.indexOf('-');
-        return nextArgIndex === -1 ? argString.length : nextArgIndex;
     },
 
     /*
