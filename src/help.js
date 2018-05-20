@@ -79,9 +79,9 @@ Airing notifications are sent to subscribed users when an anime airs.`,
 
     'role': `[Role Help]
 
-~role give <role[,...]>  : Gives role(s).
-~role take <role[,...]>  : Removes role(s).
-~role modify <role>      : Modifies a role.
+~role give <role[,...]> [options]  : Gives role(s).
+~role take <role[,...]> [options]  : Removes role(s).
+~role modify <role> [options]      : Modifies a role.
 
 #Options
 give|take

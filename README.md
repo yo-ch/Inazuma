@@ -118,9 +118,9 @@ Supports Youtube and search.
 ```
 
 ```
-~role give <role[role,...]>   : Gives role(s).
-~role take <role[role,...]>   : Removes role(s).
-~role modify <role>           : Modifies a role.
+~role give <role[role,...]> [options]   : Gives role(s).
+~role take <role[role,...]> [options]   : Removes role(s).
+~role modify <role> [options]           : Modifies a role.
 
 Options:
     give|take:
