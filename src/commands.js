@@ -3,13 +3,20 @@ Regular commands.
 */
 'use strict';
 const kuroshiro = require('kuroshiro');
+const mongoose = require('mongoose');
+const rp = require('request-promise');
 
 const config = require('./json/config.json');
 const commandHelp = require('./help.js');
 const tool = require('./tool.js');
 const ani = require('./anime.js');
 const music = require('./music.js');
-const rp = require('request-promise');
+
+//Schema for self assignable roles.
+let sarSchema = new mongoose.Schema({ guildID: Number, sars: Array });
+let SAR = mongoose.model('sar', sarSchema);
+
+kuroshiro.init(err => { if (err) console.log(err) }); //For weebify.
 
 module.exports = {
     'help': help,
@@ -28,7 +35,9 @@ module.exports = {
     'roll': roll,
     'music': music.processCommand,
     'm': music.processCommand,
-    'weebify': weebify
+    'weebify': weebify,
+    'sar': sarInterface,
+    'roleme': roleMe
 }
 
 /*
@@ -554,6 +563,9 @@ function role(msg) {
 
         Promise.all(promises).then(() => {
             msg.channel.send(`Modified roles of ${tool.wrap(users.length)} users.`);
+        }).catch(() => {
+            msg.channel.send(
+                'Gomen, I couldn\'nt process all your changes. Please try again.');
         });
     }
 
@@ -569,6 +581,133 @@ function role(msg) {
         }
         msg.channel.send(`The role ${tool.wrap(role.name)} has been modified.`);
     }
+}
+
+/*
+Manages self assignable roles for the server.
+*/
+function sarInterface(msg) {
+    if (!msg.guild.available) return;
+    let args = msg.content.split(/\s+/).slice(1);
+
+    if (args[0]) {
+        if (args[0] === 'add' && args[1]) {
+            addSAR();
+        } else if (args[0] === 'remove' && args[1]) {
+            removeSAR();
+        } else if (args[0] === 'list') {
+            listSAR();
+        }
+    } else {
+        return msg.channel.send(`Invalid arguments. Please refer to ${tool.wrap('~help sar')}.`);
+    }
+
+    /*
+    Add a SAR to the server.
+    */
+    function addSAR() {
+        if (!canManageRoles(msg.member)) {
+            return msg.channel.send('You don\'t have permission to manage roles!');
+        }
+
+        SAR.findOne({ guildID: msg.guild.id }, (err, guild) => {
+            if (guild.sars.includes(args[1])) {
+                return msg.channel.send('This SAR already exists.');
+            } else {
+                add();
+            }
+        });
+
+
+        function add() {
+            SAR.updateOne({ guildID: msg.guild.id }, { $addToSet: { sars: args[1] } }, { upsert: true },
+                (err) => {
+                    if (err) {
+                        return msg.channel.send('Gomen, I couldn\'t add your SAR.');
+                    }
+                    msg.guild.createRole({ name: args[1] })
+                        .then(role => msg.channel.send(
+                            `Created new SAR ${tool.wrap(role.name)}.`))
+                        .catch(err => console.log(err));
+                });
+        }
+    }
+
+    /*
+    Remove a SAR from the server.
+    */
+    function removeSAR() {
+        if (!canManageRoles(msg.member)) {
+            return msg.channel.send('You don\'t have permission to manage roles!');
+        }
+
+        SAR.updateOne({ guildID: msg.guild.id }, { $pull: { sars: args[1] } }, { upsert: true },
+            (err) => {
+                if (err) {
+                    return msg.channel.send('Gomen, I couldn\'t remove your SAR.');
+                }
+
+                let roleToDelete = msg.guild.roles.find(role => role.name === args[1]);
+                if (roleToDelete) {
+                    roleToDelete.delete('Remove SAR.')
+                        .then(role => msg.channel.send(
+                            `Deleted SAR ${tool.wrap(role.name)}.`))
+                        .catch(() => msg.channel.send('Gomen, I couldn\'t remove your SAR.'));
+                } else {
+                    msg.channel.send(`That SAR doesn't exist, ${tool.tsunNoun()}!`);
+                }
+            });
+    }
+
+    function listSAR() {
+        SAR.findOne().lean().exec((err, guild) => {
+            let reducer = (acc, curVal) => acc + ', ' + curVal;
+            let list = guild.sars.reduce(reducer);
+            msg.channel.send(tool.wrap(list));
+        });
+    }
+
+    function canManageRoles(member) {
+        return member.hasPermission('MANAGE_ROLES');
+    }
+}
+
+function roleMe(msg) {
+    let args = msg.content.split(/\s+/).slice(1);
+
+    if (!args[0]) {
+        return msg.channel.send(`Give me a SAR, ${tool.tsunNoun()}!`);
+    }
+
+    SAR.findOne({ guildID: msg.guild.id }, (err, guild) => {
+        if (guild.sars.includes(args[0])) {
+            let roleToToggle = msg.guild.roles.find(role => role.name === args[0]);
+
+            if (roleToToggle) {
+                if (msg.member.roles.exists('name', args[0])) {
+                    msg.member.removeRole(roleToToggle, 'SAR')
+                        .then(() =>
+                            msg.channel.send(
+                                `Removed ${tool.wrap(args[0])} from ${msg.author.username}.`
+                            ))
+                        .catch(() => msg.channel.send(
+                            'Gomen I couldn\'t toggle your SAR.'));
+                } else {
+                    msg.member.addRole(roleToToggle, 'SAR')
+                        .then(() =>
+                            msg.channel.send(
+                                `Assigned ${tool.wrap(args[0])} to ${msg.author.username}.`
+                            ))
+                        .catch(() => msg.channel.send(
+                            'Gomen I couldn\'t toggle your SAR.'));
+                }
+            } else {
+                msg.channel.send(`The role has been removed manually, please add it back.`);
+            }
+        } else {
+            msg.channel.send(`That SAR doesn't exist, ${tool.tsunNoun()}!`);
+        }
+    });
 }
 
 /*
@@ -604,7 +743,8 @@ function roll(msg) {
  */
 function weebify(msg) {
     let sourceText = msg.content.substring(msg.content.indexOf(' ') + 1);
-    if (!sourceText) return msg.channel.send(`Give me something to weebify, ${tool.tsunNoun()}!`);
+    if (!sourceText) return msg.channel.send(
+        `Give me something to weebify, ${tool.tsunNoun()}!`);
 
     let url =
         `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURI(sourceText)}`;
@@ -614,4 +754,3 @@ function weebify(msg) {
             result[0][0][0], { mode: 'spaced' }));
     }).catch(err => console.log(err.message));
 }
-kuroshiro.init(err => { if (err) console.log(err) });
