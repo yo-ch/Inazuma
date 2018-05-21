@@ -85,7 +85,7 @@ Supports Youtube and search.
     Translates a sentence from English to Japanese.`
 ```
 
-## Moderation
+## Guild/Moderation
 
 ```
 ~ban <@mention> [options]
@@ -120,22 +120,31 @@ Supports Youtube and search.
 ```
 ~role give <role[role,...]> [options]   : Gives role(s).
 ~role take <role[role,...]> [options]   : Removes role(s).
+    [--all]               : Changes roles for everyone.
+    [--bots]              : Only change roles for bots.
+    [--users]             : Only change roles for users.
+    [--user <user[,...]>] : Only change roles for specified users.
+
+    [--inrole <role>]     : Change roles for everyone with the role.
+    [--notinrole <role>]  : Change roles for everyone without the role.
+    [--noroles]           : Change roles for everyone with no roles.
+
 ~role modify <role> [options]           : Modifies a role.
+    [--name <name>]       : Rename role.
+    [--color <color>]     : Change role color. (6 digit HEX)
+```
 
-Options:
-    give|take:
-        [--all]               : Changes roles for everyone.
-        [--bots]              : Only change roles for bots.
-        [--users]             : Only change roles for users.
-        [--user <user[,...]>] : Only change roles for specified users.
+```
+~sar <function>
+    add <role name>    : Add this SAR to the server.
+    remove <role name> : Remove this SAR from the server.
+    list               : List all SARs on this server.
 
-        [--inrole <role>]     : Change roles for everyone with the role.
-        [--notinrole <role>]  : Change roles for everyone without the role.
-        [--noroles]           : Change roles for everyone with no roles.
+The self assignable roles interface.
+Use ~roleme <SAR> to self assign roles.
 
-    modify:
-        [--name <name>]       : Rename role.
-        [--color <color>]     : Change role color. (6 digit HEX)
+~roleme <SAR>
+    Assign/deassign self assignable roles from yourself.`
 ```
 
 ```

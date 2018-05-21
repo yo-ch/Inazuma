@@ -79,12 +79,8 @@ Airing notifications are sent to subscribed users when an anime airs.`,
 
     'role': `[Role Help]
 
-~role give <role[,...]> [options]  : Gives role(s).
-~role take <role[,...]> [options]  : Removes role(s).
-~role modify <role> [options]      : Modifies a role.
-
-#Options
-give|take
+~role give <role[,...]> [options] : Gives role(s).
+~role take <role[,...]> [options] : Removes role(s).
    [--bots]              : Only change roles for bots.
    [--users]             : Only change roles for users.
    [--user <user[,...]>] : Only change roles for specified users.
@@ -93,7 +89,7 @@ give|take
    [--notinrole <role>]  : Change roles for everyone without the role.
    [--noroles]           : Change roles for everyone with no roles.
 
-modify
+~role modify <role> [options] : Modifies a role.
    [--name <name>]       : Rename role.
    [--color <color>]     : Change role color. (6 digit HEX)`,
 
@@ -142,5 +138,19 @@ Requires a #music text channel.`,
 
     'weebify': `
 ~weebify <sentence>
-   Translates a sentence from English to Japanese.`
+   Translates a sentence from English to Japanese.`,
+
+    'sar': `
+~sar <function>
+   add <role name>    : Add this SAR to the server.
+   remove <role name> : Remove this SAR from the server.
+   list               : List all SARs on this server.
+
+   The self assignable roles interface.
+   Use ~roleme <SAR> to self assign roles.
+   `,
+
+    'roleme': `
+~roleme <SAR>
+  Assign/deassign self assignable roles from yourself.`
 }
