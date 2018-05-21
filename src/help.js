@@ -6,16 +6,20 @@ module.exports = {
    #Utility
       ~airing
       ~anilist
+      ~weebify
+
       ~choose
       ~roll
       ~music
-      ~weebify
-   #Moderation
+
+      ~roleme
+   #Guild/Moderation
       ~ban
       ~kick
       ~prune
       ~role
       ~cc
+      ~sar
    #Etc.
       ~andy
       ~gavquote
