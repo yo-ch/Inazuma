@@ -147,8 +147,7 @@ Requires a #music text channel.`,
    list               : List all SARs on this server.
 
    The self assignable roles interface.
-   Use ~roleme <SAR> to self assign roles.
-   `,
+   Use ~roleme <SAR> to self assign roles.`,
 
     'roleme': `
 ~roleme <SAR>
