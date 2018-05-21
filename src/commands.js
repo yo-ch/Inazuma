@@ -625,10 +625,15 @@ function sarInterface(msg) {
                     if (err) {
                         return msg.channel.send('Gomen, I couldn\'t add your SAR.');
                     }
-                    msg.guild.createRole({ name: args[1] })
-                        .then(role => msg.channel.send(
-                            `Created new SAR ${tool.wrap(role.name)}.`))
-                        .catch(err => console.log(err));
+                    if (!msg.guild.roles.exists('name', args[1])) {
+                        msg.guild.createRole({ name: args[1] })
+                            .then(role => msg.channel.send(
+                                `Created new SAR ${args[1]}.`))
+                            .catch(err => console.log(err));
+                    } else {
+                        msg.channel.send(
+                            `Created new SAR ${args[1]}.`)
+                    }
                 });
         }
     }
@@ -651,7 +656,7 @@ function sarInterface(msg) {
                 if (roleToDelete) {
                     roleToDelete.delete('Remove SAR.')
                         .then(role => msg.channel.send(
-                            `Deleted SAR ${tool.wrap(role.name)}.`))
+                            `Deleted SAR ${tool.wrap(args[1])}.`))
                         .catch(() => msg.channel.send('Gomen, I couldn\'t remove your SAR.'));
                 } else {
                     msg.channel.send(`That SAR doesn't exist, ${tool.tsunNoun()}!`);
@@ -672,6 +677,9 @@ function sarInterface(msg) {
     }
 }
 
+/*
+Add/remove SAR from user.
+*/
 function roleMe(msg) {
     let args = msg.content.split(/\s+/).slice(1);
 
