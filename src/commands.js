@@ -627,7 +627,7 @@ function sarInterface(msg) {
                     }
                     if (!msg.guild.roles.exists('name', args[1])) {
                         msg.guild.createRole({ name: args[1] })
-                            .then(role => msg.channel.send(
+                            .then(() => msg.channel.send(
                                 `Created new SAR ${args[1]}.`))
                             .catch(err => console.log(err));
                     } else {
@@ -655,7 +655,7 @@ function sarInterface(msg) {
                 let roleToDelete = msg.guild.roles.find(role => role.name === args[1]);
                 if (roleToDelete) {
                     roleToDelete.delete('Remove SAR.')
-                        .then(role => msg.channel.send(
+                        .then(() => msg.channel.send(
                             `Deleted SAR ${tool.wrap(args[1])}.`))
                         .catch(() => msg.channel.send('Gomen, I couldn\'t remove your SAR.'));
                 } else {
