@@ -611,7 +611,7 @@ function sarInterface(msg) {
         }
 
         SAR.findOne({ guildID: msg.guild.id }, (err, guild) => {
-            if (guild.sars.includes(args[1])) {
+            if (guild && guild.sars.includes(args[1])) {
                 return msg.channel.send('This SAR already exists.');
             } else {
                 add();
@@ -632,7 +632,7 @@ function sarInterface(msg) {
                             .catch(err => console.log(err));
                     } else {
                         msg.channel.send(
-                            `Created new SAR ${args[1]}.`)
+                            `Created new SAR ${tool.wrap(args[1])}.`)
                     }
                 });
         }
@@ -665,11 +665,20 @@ function sarInterface(msg) {
     }
 
     function listSAR() {
-        SAR.findOne().lean().exec((err, guild) => {
-            let reducer = (acc, curVal) => acc + ', ' + curVal;
-            let list = guild.sars.reduce(reducer);
-            msg.channel.send(tool.wrap(list));
+        SAR.findOne({ guildID: msg.guild.id }).lean().exec((err, guild) => {
+            if (err) {
+                return;
+            }
+
+            if (guild) {
+                let reducer = (acc, curVal) => acc + ', ' + curVal;
+                let list = guild.sars.reduce(reducer);
+                msg.channel.send(tool.wrap(list));
+            } else {
+                msg.channel.send('This server has no SARs.');
+            }
         });
+
     }
 
     function canManageRoles(member) {
