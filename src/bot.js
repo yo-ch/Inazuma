@@ -9,9 +9,6 @@ const tool = require('./tool.js');
 
 const bot = new Discord.Client();
 
-const mongoURL = 'mongodb://localhost:27017/inazuma';
-
-
 bot.on('ready', () => {
     console.log('Inazuma desu. Yoroshiku onegai itashimasu.');
     console.log(`Serving ${bot.guilds.size} guilds.`);
@@ -48,7 +45,7 @@ bot.on('warn', (e) => console.warn(e));
 bot.login(config.token);
 
 
-mongoose.connect(mongoURL);
+mongoose.connect(config.mongo_url);
 mongoose.connection.on('error', console.error.bind(console, 'connection:error:'));
 mongoose.connection.once('open', () => {
     console.log('Connected to database!');
