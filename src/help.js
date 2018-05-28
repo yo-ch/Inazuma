@@ -46,7 +46,6 @@ module.exports = {
                                    Name is only required the first time.
                                    This only syncs to be aired/airing anime.
       clear                   : Clears your airing list.
-      seasonal                : Display a list of current season anime.
       notifications <on|off>  : Sets airing notifications on/off. (On by default).
 
 The airing list shows the time until the next episode airs for each anime in your list.

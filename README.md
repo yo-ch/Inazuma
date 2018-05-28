@@ -36,7 +36,6 @@ planned:
                                       You only need to include your username the first time.
                                       This only syncs to be aired/airing anime.
         clear                   : Clears your airing list.
-        seasonal                : Displays a list of the current season of anime.
         notifications <on|off>  : Sets airing notifications on/off. (On by default).
 
 The airing list shows the time until the next episode airs for each anime in your list.
