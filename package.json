@@ -25,7 +25,9 @@
     "youtube-dl": "^1.12.2",
     "ytdl-core": "^0.20.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^4.19.1"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
