@@ -7,14 +7,14 @@ const mongoose = require('mongoose');
 const rp = require('request-promise');
 
 const config = require('./json/config.json');
-const commandHelp = require('./help.js');
-const tool = require('./tool.js');
+const commandHelp = require('./util/help.js');
+const tool = require('./util/tool.js');
 const ani = require('./anime.js');
 const music = require('./music.js');
 
 //Schema for self assignable roles.
 let sarSchema = new mongoose.Schema({ guildID: Number, sars: Array });
-let SAR = mongoose.model('sar', sarSchema);
+let sar = mongoose.model('sar', sarSchema);
 
 kuroshiro.init(err => { if (err) console.log(err) }); //For weebify.
 
@@ -592,11 +592,11 @@ function sarInterface(msg) {
 
     if (args[0]) {
         if (args[0] === 'add' && args[1]) {
-            addSAR();
+            addSar();
         } else if (args[0] === 'remove' && args[1]) {
-            removeSAR();
+            removeSar();
         } else if (args[0] === 'list') {
-            listSAR();
+            listSar();
         }
     } else {
         return msg.channel.send(`Invalid arguments. Please refer to ${tool.wrap('~help sar')}.`);
@@ -605,12 +605,12 @@ function sarInterface(msg) {
     /*
     Add a SAR to the server.
     */
-    function addSAR() {
+    function addSar() {
         if (!canManageRoles(msg.member)) {
             return msg.channel.send('You don\'t have permission to manage roles!');
         }
 
-        SAR.findOne({ guildID: msg.guild.id }, (err, guild) => {
+        sar.findOne({ guildID: msg.guild.id }, (err, guild) => {
             if (guild && guild.sars.includes(args[1])) {
                 return msg.channel.send('This SAR already exists.');
             } else {
@@ -620,7 +620,7 @@ function sarInterface(msg) {
 
 
         function add() {
-            SAR.updateOne({ guildID: msg.guild.id }, { $addToSet: { sars: args[1] } }, { upsert: true },
+            sar.updateOne({ guildID: msg.guild.id }, { $addToSet: { sars: args[1] } }, { upsert: true },
                 (err) => {
                     if (err) {
                         return msg.channel.send('Gomen, I couldn\'t add your SAR.');
@@ -641,12 +641,12 @@ function sarInterface(msg) {
     /*
     Remove a SAR from the server.
     */
-    function removeSAR() {
+    function removeSar() {
         if (!canManageRoles(msg.member)) {
             return msg.channel.send('You don\'t have permission to manage roles!');
         }
 
-        SAR.updateOne({ guildID: msg.guild.id }, { $pull: { sars: args[1] } }, { upsert: true },
+        sar.updateOne({ guildID: msg.guild.id }, { $pull: { sars: args[1] } }, { upsert: true },
             (err) => {
                 if (err) {
                     return msg.channel.send('Gomen, I couldn\'t remove your SAR.');
@@ -664,8 +664,8 @@ function sarInterface(msg) {
             });
     }
 
-    function listSAR() {
-        SAR.findOne({ guildID: msg.guild.id }).lean().exec((err, guild) => {
+    function listSar() {
+        sar.findOne({ guildID: msg.guild.id }).lean().exec((err, guild) => {
             if (err) {
                 return;
             }
@@ -696,7 +696,7 @@ function roleMe(msg) {
         return msg.channel.send(`Give me a SAR, ${tool.tsunNoun()}!`);
     }
 
-    SAR.findOne({ guildID: msg.guild.id }, (err, guild) => {
+    sar.findOne({ guildID: msg.guild.id }, (err, guild) => {
         if (guild.sars.includes(args[0])) {
             let roleToToggle = msg.guild.roles.find(role => role.name === args[0]);
 

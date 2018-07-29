@@ -1,5 +1,5 @@
 'use strict';
-const tool = require('../../tool.js');
+const tool = require('../../util/tool.js');
 const RichEmbed = require('discord.js').RichEmbed;
 
 const Status = {

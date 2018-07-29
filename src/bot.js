@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const config = require('./json/config.json');
 const cmds = require('./commands.js');
 const ani = require('./anime.js');
-const tool = require('./tool.js');
+const tool = require('./util/tool.js');
 
 const bot = new Discord.Client();
 
