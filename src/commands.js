@@ -744,9 +744,9 @@ function roll(msg) {
     } else {
         let num1 = parseInt(args[0]);
         let num2 = parseInt(args[1]);
-        if (!tool.isInt(num1) || !tool.isInt(num2))
-            return
-        msg.channel.send(`These aren't numbers ${tool.tsunNoun()}!`);
+        if (!tool.isInt(num1) || !tool.isInt(num2)) {
+            return msg.channel.send(`These aren't numbers ${tool.tsunNoun()}!`);
+        }
 
         if (num1 > num2)
             msg.channel.send(tool.randInt(num1 - num2 + 1) + num2);

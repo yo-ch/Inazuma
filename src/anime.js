@@ -4,6 +4,7 @@ Anime related commands and functions.
 'use strict';
 const tool = require('./util/tool.js');
 const aniQuery = require('./util/anilist-query.js');
+const AiringAnime = require('./obj/anime/AiringAnime.js');
 const RichEmbed = require('discord.js').RichEmbed;
 
 const rp = require('request-promise');
@@ -36,28 +37,6 @@ Display the specified anime's info, from Anilist.
 function retrieveAnimeData(msg) {
     let search = msg.content.split(/\s+/).slice(1).join(' ').trim();
     if (search.length >= 1) { //A search query was given.
-        let query = stripIndent(
-            `
-            query ($search: String) {
-              Page (page: 1, perPage: 15) {
-                media (search: $search, type: ANIME) {
-                  id
-                  title{
-                    romaji
-                  }
-                  season
-                  description
-                  format
-                  episodes
-                  averageScore
-                  coverImage {
-                    medium
-                  }
-                }
-              }
-            }
-            `
-        );
 
         let variables = {
             'search': search
@@ -219,11 +198,13 @@ function syncUser(msg) {
         })
         .catch(err => {
             console.log(err.message)
-            let error = JSON.parse(err.error).data.errors[0].message;
-            if (error === 'Not Found.') {
-                msg.channel.send(`Your username is invalid! Please give a valid Anilist username.`);
+            let error = JSON.parse(err.error).data
+            if (error.data.length && error === 'Not Found.') {
+                msg.channel.send(
+                    `Your username is invalid! Please give a valid Anilist username.`);
+            } else {
+                msg.channel.send(`Gomen, there was a problem syncing your Anilist.`);
             }
-            msg.channel.send(`Gomen, there was a problem syncing your Anilist.`)
         });
 }
 
@@ -389,21 +370,6 @@ Send request to Anilist api with provided query and variables.
 @param {String} query The GraphQL query.
 @param {Object} variables The variables for the GraphQL query.
 */
-function queryAnilist(query, variables) {
-    let options = {
-        method: 'POST',
-        url: `https://graphql.anilist.co`,
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-            query: query,
-            variables: variables
-        })
-    }
-    return rp(options).then(body => JSON.parse(body).data);
-}
 
 /*
 Requests airing schedules for anime missing them.
