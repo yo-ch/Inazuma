@@ -55,42 +55,42 @@ class MusicPlayer {
                     passes: 2,
                     volume: this.volume
                 });
+
+                this.dispatch.once('start', () => {
+                    this.musicChannel.send(
+                        new RichEmbed()
+                        .setTitle(`:notes: ${tool.wrap(song.title)}`)
+                        .setURL(song.url)
+                        .setThumbnail(song.thumbnail)
+                    );
+                    this.changeStatus(Status.PLAYING);
+                    song.startTime = tool.getUnixTime();
+                });
+
+                this.dispatch.on('error', error => {
+                    console.log(error);
+                    this.dispatch = null;
+                    this.queue.shift();
+                    setTimeout(() => { this.playSong(msg) }, 100);
+                });
+
+                this.dispatch.once('end', reason => {
+                    this.dispatch = null;
+                    this.queue.shift();
+                    if (reason != 'leave') {
+                        setTimeout(() => this.playSong(msg), 100);
+                    }
+                });
+
+                this.dispatch.on('debug', info => {
+                    console.log(info);
+                });
             } catch (error) {
                 console.log(error);
                 this.dispatch = null;
                 this.queue.shift();
                 return this.playSong(msg);
             }
-
-            this.dispatch.once('start', () => {
-                this.musicChannel.send(
-                    new RichEmbed()
-                    .setTitle(`:notes: ${tool.wrap(song.title)}`)
-                    .setURL(song.url)
-                    .setThumbnail(song.thumbnail)
-                );
-                this.changeStatus(Status.PLAYING);
-                song.startTime = tool.getUnixTime();
-            });
-
-            this.dispatch.on('error', error => {
-                console.log(error);
-                this.dispatch = null;
-                this.queue.shift();
-                setTimeout(() => { this.playSong(msg) }, 100);
-            });
-
-            this.dispatch.once('end', reason => {
-                this.dispatch = null;
-                this.queue.shift();
-                if (reason != 'leave') {
-                    setTimeout(() => this.playSong(msg), 100);
-                }
-            });
-
-            this.dispatch.on('debug', info => {
-                console.log(info);
-            });
         } else {
             msg.channel.send(
                 `Please summon me using ${tool.wrap('~music join')} to start playing the queue.`
@@ -231,14 +231,14 @@ class MusicPlayer {
     joinVc(msg) {
         if (msg.member.voiceChannel) {
             if (this.voiceConnection === null) {
-                this.musicChannel = msg.channel;
-                this.musicChannel.send(
-                    new RichEmbed({ description: `Joined and bound to :speaker:**${msg.member.voiceChannel.name}** and #**${this.musicChannel.name}**.` })
-                );
                 msg.member.voiceChannel.join().then(
                     connection => {
                         this.voiceConnection = connection;
                         this.changeStatus(Status.STOPPED);
+                        this.musicChannel = msg.channel;
+                        this.musicChannel.send(
+                            new RichEmbed({ description: `Joined and bound to :speaker:**${msg.member.voiceChannel.name}** and #**${this.musicChannel.name}**.` })
+                        );
                         if (this.queue.length > 0) {
                             this.playSong(msg);
                         }

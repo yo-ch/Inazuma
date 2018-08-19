@@ -732,26 +732,29 @@ Rolls a number between 1 and num1 or num1 and num2 inclusive.
 */
 function roll(msg) {
     let args = msg.content.split(/\s+/).slice(1);
-    if (args.length > 2)
+    if (args.length > 2) {
         return;
+    }
 
     if (args.length === 1) {
         let num = parseInt(args[0]);
-        if (tool.isInt(num))
+        if (tool.isInt(num)) {
             msg.channel.send(tool.randInt(num) + 1);
-        else
+        } else {
             msg.channel.send(`These aren't numbers ${tool.tsunNoun()}!`);
+        }
     } else {
         let num1 = parseInt(args[0]);
         let num2 = parseInt(args[1]);
-        if (!tool.isInt(num1) || !tool.isInt(num2))
-            return
-        msg.channel.send(`These aren't numbers ${tool.tsunNoun()}!`);
+        if (!tool.isInt(num1) || !tool.isInt(num2)) {
+            return msg.channel.send(`These aren't numbers ${tool.tsunNoun()}!`);
+        }
 
-        if (num1 > num2)
+        if (num1 > num2) {
             msg.channel.send(tool.randInt(num1 - num2 + 1) + num2);
-        else
+        } else {
             msg.channel.send(tool.randInt(num2 - num1 + 1) + num1);
+        }
     }
 }
 
@@ -765,7 +768,7 @@ function weebify(msg) {
 
     let url =
         `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURI(sourceText)}`;
-    rp({ url: url }).then(body => {
+    rp({ url }).then(body => {
         let result = JSON.parse(body);
         msg.channel.send(result[0][0][0] + '\n' + kuroshiro.toRomaji(
             result[0][0][0], { mode: 'spaced' }));
