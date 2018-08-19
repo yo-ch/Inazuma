@@ -26,12 +26,12 @@ module.exports = {
 /*
 Display the specified anime's info, from Anilist.
 */
-function retrieveAnimeData(msg) {
+async function retrieveAnimeData(msg) {
     let search = msg.content.split(/\s+/).slice(1).join(' ').trim();
-    if (search) { //A search query was given.
-        aniQuery.getAnimeInfo(search).then(body => {
-            let searchResults = JSON.parse(body).data.Page.media;
-
+    try {
+        if (search) { //A search query was given.
+            let queryResult = await aniQuery.getAnimeInfo(search)
+            let searchResults = queryResult.Page.media;
             if (searchResults.length === 1) { //Send results.
                 let anime = searchResults[0];
                 let aie = animeInfoEmbed(anime.title.romaji, anime.averageScore,
@@ -40,9 +40,9 @@ function retrieveAnimeData(msg) {
                 msg.channel.send(aie);
             } else if (searchResults.length >= 2) {
                 let choiceString = 'Choose a number onegai!\n\n';
-                for (let i = 0; i < searchResults.length; i++)
-                    choiceString +=
-                    `${tool.wrap(`${i + 1} - ${searchResults[i].title.romaji}`)}\n`;
+                for (let i = 0; i < searchResults.length; i++) {
+                    choiceString += `${tool.wrap(`${i + 1} - ${searchResults[i].title.romaji}`)}\n`;
+                }
                 msg.channel.send(choiceString);
 
                 //Wait for response.
@@ -66,12 +66,12 @@ function retrieveAnimeData(msg) {
                     message: 'No results.'
                 };
             }
-        }).catch(err => {
-            console.log(err.message);
-            msg.channel.send('Gomen, I couldn\'t find anything!');
-        });
-    } else {
-        msg.channel.send(`Give me an anime to search for, ${tool.tsunNoun()}!`);
+        } else {
+            msg.channel.send(`Give me an anime to search for, ${tool.tsunNoun()}!`);
+        }
+    } catch (err) {
+        console.log(err);
+        msg.channel.send('Gomen, I couldn\'t find anything!');
     }
 }
 
