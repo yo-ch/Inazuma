@@ -29,17 +29,14 @@ planned:
 
 ```
 ~airing [function]   
-    Displays your airing list.
+    Displays your airing list when used with no arguments.
 
     Functions:
         sync [anilist username] : Sync your Anilist anime list with your airing list.
                                       You only need to include your username the first time.
                                       This only syncs to be aired/airing anime.
-        clear                   : Clears your airing list.
-        notifications <on|off>  : Sets airing notifications on/off. (On by default).
 
 The airing list shows the time until the next episode airs for each anime in your list.
-Airing notifications are sent to subscribed users when an anime airs.  
 
 ~anilist | ~ani <anime name>   
     Displays an anime's data, pulled from Anilist.

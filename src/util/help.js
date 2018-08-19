@@ -39,17 +39,14 @@ module.exports = {
 
     'airing': `
 ~airing [function]
-   Displays your airing list.
+   Displays your airing list when used with no arguments.
 
    Functions:
       sync [anilist name]     : Sync your Anilist to your airing list.
-                                   Name is only required the first time.
-                                   This only syncs to be aired/airing anime.
-      clear                   : Clears your airing list.
-      notifications <on|off>  : Sets airing notifications on/off. (On by default).
+                                Name is only required the first time.
+                                This only syncs to be aired/airing anime.
 
-The airing list shows the time until the next episode airs for each anime in your list.
-Airing notifications are sent to subscribed users when an anime airs.`,
+The airing list shows the time until the next episode airs for each anime in your list.`,
 
     'anilist': `
 ~anilist | ~ani <anime name>
