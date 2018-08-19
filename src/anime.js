@@ -4,45 +4,32 @@ Anime related commands and functions.
 'use strict';
 const tool = require('./util/tool.js');
 const aniQuery = require('./util/anilist-query.js');
-const AiringAnime = require('./obj/anime/AiringAnime.js');
+const AiringSeason = require('./obj/anime/AiringSeason.js');
+const MediaStatus = require('./obj/Anime/AiringAnime.js').MediaStatus;
 const RichEmbed = require('discord.js').RichEmbed;
 
 const rp = require('request-promise');
-const util = require('util');
-const fs = require('fs');
 const sprintf = require('sprintf-js').sprintf;
 const mongoose = require('mongoose');
-const writeFileAsync = util.promisify(fs.writeFile);
 
 //Schema for Anilist users.
-let anilistUsersSchema = new mongoose.Schema({ discordUserID: Number, anilistUserID: Number });
-let anilistUsers = mongoose.model('anilistUser', anilistUsersSchema);
+let anilistUsersSchema = new mongoose.Schema({ discordUserId: Number, anilistUserId: Number });
+let AnilistUsers = mongoose.model('anilistUser', anilistUsersSchema);
 
 module.exports = {
     'anilist': retrieveAnimeData,
     'airing': airingHandler,
     'getAiringList': getAiringList,
-    'clearAiringList': clearAiringList,
     'syncUser': syncUser,
-    'requestMissingSchedules': requestMissingSchedules,
-    'setNotificationOption': setNotificationOption,
-    'passClient': passClient,
 }
-
-let discordClient = null;
 
 /*
 Display the specified anime's info, from Anilist.
 */
 function retrieveAnimeData(msg) {
     let search = msg.content.split(/\s+/).slice(1).join(' ').trim();
-    if (search.length >= 1) { //A search query was given.
-
-        let variables = {
-            'search': search
-        }
-
-        queryAnilist(query, variables).then(body => {
+    if (search) { //A search query was given.
+        aniQuery.getAnimeInfo(search).then(body => {
             let searchResults = JSON.parse(body).data.Page.media;
 
             if (searchResults.length === 1) { //Send results.
@@ -61,12 +48,10 @@ function retrieveAnimeData(msg) {
                 //Wait for response.
                 let filter = m => parseInt(m.content) > 0 && parseInt(m.content) <=
                     searchResults.length;
-                let choice = msg.channel.createMessageCollector(filter, {
-                    time: 6000,
+                msg.channel.createMessageCollector(filter, {
+                    time: 20000,
                     maxMatches: 1
-                });
-
-                choice.on('collect', m => {
+                }).on('collect', m => {
                     let anime = searchResults[parseInt(m.content) - 1];
                     let aie = animeInfoEmbed(anime.title.romaji, anime.averageScore,
                         anime.format, anime.episodes,
@@ -90,9 +75,9 @@ function retrieveAnimeData(msg) {
     }
 }
 
-/*
-Parses ~airing commands and calls the corresponding function.
-*/
+/**
+ * Parses ~airing commands and calls the corresponding function.
+ */
 function airingHandler(msg) {
     let args = msg.content.split(/\s+/);
 
@@ -100,256 +85,94 @@ function airingHandler(msg) {
         getAiringList(msg);
     } else if (args[1] === 'sync') {
         syncUser(msg);
-    } else if (args[1] === 'clear') {
-        clearAiringList(msg);
-    } else if (args[1] === 'notifications') {
-        setNotificationOption(msg);
     }
 }
 
-/*
-Displays user's airing list.
-*/
-function getAiringList(msg) {
-    //Get anime that user is subscribed to, and update next episode counter if applicable.
-    updateAnimeStatuses().then(() => {
-        let subscribedAnimeIds = Object.keys(subscribedAnime);
-        let airingListAnime = [];
-        let unixts = tool.getUnixTime();
-        for (let i = 0; i < subscribedAnimeIds.length; i++) {
-            let currentAnime = subscribedAnime[subscribedAnimeIds[i]];
-            if (currentAnime.users.hasOwnProperty(msg.author.id)) { //If user is subscribed, add anime to list.
-                airingListAnime.push(currentAnime);
-            }
+/**
+ * Displays user's airing list.
+ */
+async function getAiringList(msg) {
+    try {
+        let discordUserId = msg.author.id;
+        let queryResult = await AnilistUsers.findOne({ discordUserId }, { anilistUserId: 1 })
+            .lean().exec();
+        let anilistUserId = queryResult.anilistUserId;
+
+        if (anilistUserId) {
+            let data = await aniQuery.getUserAiringList(anilistUserId);
+            let watchingList = data.MediaListCollection.statusLists.current;
+
+            let airingList = watchingList
+                .filter(anime => anime.media.status === MediaStatus.RELEASING ||
+                    anime.media.status === MediaStatus.NOT_YET_RELEASED)
+                .map(anime => {
+                    if (anime.media.nextAiringEpisode.airingAt === null) {
+                        anime.media.nextAiringEpisode.airingAt = Infinity;
+                    }
+                    if (anime.media.title.romaji.length > 43) {
+                        anime.media.title.romaji = anime.media.title.romaji.substring(0, 43) +
+                            '...';
+                    }
+                    return anime;
+                })
+                .sort((a, b) => {
+                    a.media.nextAiringEpisode.airingAt - b.media.nextAiringEpisode.airingAt;
+                });
+
+            let listResponse = `#${msg.author.username}'s Airing List\n` + airingList.reduce(
+                airingMessageReducer, '');
+            msg.channel.send(listResponse, { code: 'md' });
         }
+    } catch (err) {
+        console.log(err);
+        msg.channel.send('Gomen, there was a problem retrieving your airing list.');
+    }
 
-        if (airingListAnime.length === 0) {
-            return msg.channel.send(
-                `There aren't any anime in your airing list, ${tool.tsunNoun()}.`);
-        }
-
-        let info = [];
-        for (let currentAnime of airingListAnime) {
-            let nextEpisode = currentAnime.nextEpisode;
-            let countdown = null;
-            if (currentAnime.schedule) {
-                if (currentAnime.schedule.length === 0) {
-                    countdown = Infinity; //Empty schedule means done airing. Infinity makes sense in this case.
-                } else if (currentAnime.nextEpisode <= currentAnime.schedule.length) {
-                    countdown = currentAnime.schedule[nextEpisode - 1].airingAt - unixts;
-                }
-            }
-
-            let title = currentAnime.title.length > 43 ?
-                `${currentAnime.title.substring(0, 43)}...` :
-                currentAnime.title; //Cut off anime title if needed.
-            //Push tuple of string and airing countdown, which is used to sort by airing countdown.
-            if (countdown === null)
-                info.push([sprintf('%-50s [ SCHEDULE N/A ]\n', title), Infinity]);
-            else if (countdown === Infinity)
-                info.push([
-                    sprintf('%-50s [ DONE  AIRING ]\n', title),
-                    Infinity
-                ]);
-            else
-                info.push([
-                    sprintf('%-50s Ep %-3i in %s\n', title, nextEpisode,
-                        secondsToCountdown(
-                            countdown)),
-                    countdown
-                ]);
-        }
-
-        info.sort((a, b) => { //Sorts, starting with anime closest to airing.
-            return a[1] - b[1]; //compare countdowns.
-        });
-
-        let airing = `${msg.author.username}'s Airing List\n`;
-        airing += '='.repeat(airing.trim().length) + '\n';
-        for (let i = 0; i < info.length; i++) //Add info of each anime to airing string.
-            airing += info[i][0];
-
-        msg.channel.send(`${airing}`, {
-            'code': 'md'
-        });
-    });
+    function airingMessageReducer(acc, currAnime) {
+        let appendString = currAnime.media.nextAiringEpisode.airingAt === Infinity ?
+            sprintf('%-50s [ SCHEDULE N/A ]', currAnime.media.title.romaji) :
+            sprintf('%-50s  Ep %-3i in %s',
+                currAnime.media.title.romaji,
+                currAnime.media.nextAiringEpisode.episode,
+                secondsToCountdown(currAnime.media.nextAiringEpisode.airingAt - tool.getUnixTime())
+            );
+        return acc + appendString + '\n';
+    }
 }
 
-/*
-Syncs the Anilist user to the Discord user, for use with the airing list functions.
-*/
-function syncUser(msg) {
+/**
+ * Syncs the Anilist user to the Discord user, for use with the airing list functions.
+ */
+async function syncUser(msg) {
     let args = msg.content.split(/\s+/);
-    let username = args[2];
-    if (!username) {
+    let anilistUsername = args[2];
+    if (!anilistUsername) {
         return msg.channel.send(`You didn't give me a username, ${tool.tsunNoun()}`);
     }
 
-    //Get Anilist ID.
-    let query = aniQuery.GET_ANILIST_USER_ID;
-    let variables = {
-        'username': username
-    }
-    queryAnilist(query, variables)
-        .then(data => {
-            let userID = data.User.id;
-            //Save Anilist ID to db.
-            anilistUsers.updateOne({ discordUserID: msg.author.id }, { anilistUserID: userID }, { upsert: true });
-        })
-        .catch(err => {
-            console.log(err.message)
-            let error = JSON.parse(err.error).data
-            if (error.data.length && error === 'Not Found.') {
-                msg.channel.send(
-                    `Your username is invalid! Please give a valid Anilist username.`);
-            } else {
-                msg.channel.send(`Gomen, there was a problem syncing your Anilist.`);
-            }
-        });
-}
-
-/*
-Clears the user's airing list.
-*/
-function clearAiringList(msg) {
-    for (let animeId in subscribedAnime) {
-        if (subscribedAnime[animeId].users.hasOwnProperty(msg.author.id)) {
-            delete subscribedAnime[animeId].users[msg.author.id];
-        }
-    }
-    msg.channel.send(`Your airing list has been cleared!`);
-}
-
-/*
-Updates the airing anime list, and its data.
-*/
-function updateAiringAnimeData(msg) {
-    let season = getCurrentSeason();
-    let query = stripIndent(
-        `
-        query ($season: MediaSeason, $seasonYear: Int){
-          Page (page: 1, perPage: 50) {
-            media (type: ANIME, format: TV, sort: TITLE_ROMAJI, season: $season, seasonYear: $seasonYear) {
-              id
-              title {
-                romaji
-              }
-              format
-              nextAiringEpisode
-            }
-          }
-        }
-        `
-    );
-
-    let variables = season;
-
-    queryAnilist(query, variables).then(body => {
-        let data = JSON.parse(body).data.Page.media;
-        let msgResponse = `[   ${season.season} ${season.year}    ]\n`;
-        msgResponse += '='.repeat(msgResponse.trim().length) + '\n';
-        for (let i = 0; i < data.length; i++) {
-            msgResponse += sprintf('%03s %1s\n', (i + 1).toString() + '.', data[i]
-                .title
-                .romaji);
-            seasonalAnime[i + 1] = data[i].title.romaji;
-        }
-        msg.channel.send(msgResponse, {
-            code: 'md'
-        });
-        msg.channel.send(tool.wrap(
-            'Get more info on an anime using ~anilist <name|number>.'));
-    }).catch(err => console.log(err.message));
-}
-
-/*
-NOTIFICATION/AIRING LIST FUNCTIONS
-*/
-
-/*
-Updates the status of all anime in subscribedAnime.
-Removes anime that have no more subscribers and is done airing.
-*/
-function updateAnimeStatuses() {
-    let unixts = tool.getUnixTime();
-
-    let requested = [];
-
-    for (let animeId in subscribedAnime) {
-        let currentAnime = subscribedAnime[animeId];
-        if (currentAnime.schedule && currentAnime.schedule.length > 0) {
-            if (hasAired(currentAnime)) {
-                //Reupdate airing schedule. (Might've changed since last checked)
-                requested.push(requestAiringData(parseInt(animeId)).then(() => {
-                    //Check if updated schedule still indicates episode has aired.
-                    if (hasAired(currentAnime)) {
-                        notifyAnimeAired(currentAnime, currentAnime.nextEpisode);
-                        currentAnime.nextEpisode++;
-                    }
-                }));
-            }
-        }
-
-        //remove anime.
-        if (currentAnime.schedule && currentAnime.schedule.length === 0 && Object.keys(
-                currentAnime
-                .users).length === 0) {
-            delete subscribedAnime[animeId];
-        }
-    }
-
-    //write to file after updates complete.
-    Promise.all(requested).then(() => writeFiles())
-        .catch(() => console.log('Err updating anime statuses.'));
-
-    return Promise.all(requested);
-
-    //Helper function to check if anime has aired.
-    function hasAired(anime) {
-        return anime.nextEpisode <= anime.schedule.length && (unixts >
-            anime.schedule[anime.nextEpisode - 1].airingAt ||
-            anime.schedule[anime.nextEpisode - 1].airingAt == null);
-    }
-}
-
-/*
-Notifies subscribed users that an anime has aired if they have notifications on.
-@param {Object} airedAnime The anime that has aired.
-@param {Number} episode The episode number.
-*/
-async function notifyAnimeAired(airedAnime, episode) {
-    if (discordClient) {
-        for (let userId in airedAnime.users) {
-            if (anilistUsers.hasOwnProperty(userId) && anilistUsers[userId].notifications ===
-                true) { //Notifications on.
-                try {
-                    let user = await discordClient.fetchUser(userId);
-                    let dm = await user.createDM();
-                    dm.send(`${tool.wrap(airedAnime.title)} **Episode ${episode}** has aired!`);
-                } catch (err) {
+    // Get Anilist Id.
+    try {
+        let data = await aniQuery.getAnilistUserId(anilistUsername);
+        let anilistUserId = data.User.id;
+        //Save Anilist Id to db.
+        AnilistUsers.updateOne({ discordUserId: msg.author.id }, { $set: { anilistUserId: anilistUserId } }, { upsert: true },
+            err => {
+                if (err) {
+                    msg.channel.send('Gomen, there was a problem syncing to Anilist.');
                     console.log(err);
+                } else {
+                    msg.channel.send('Synced to Anilist successfully!');
                 }
-            }
-        }
-    } else {
-        setTimeout(() => notifyAnimeAired(airedAnime, episode), 10000);
-    }
-}
-
-/*
-Sets the notification option of the user.
-*/
-function setNotificationOption(msg) {
-    let args = msg.content.split(/\s+/);
-    if (anilistUsers.hasOwnProperty(msg.author.id)) {
-        let on;
-        if (args[2] && args[2] === 'on' || args[2] === 'off') {
-            on = args[2];
+            });
+    } catch (err) {
+        console.log(err.message);
+        let error = err.error ? JSON.parse(err.error).data : '';
+        if (error.length && error === 'Not Found.') {
+            msg.channel.send(
+                `Your username is invalid! Please give a valid Anilist username.`);
         } else {
-            return;
+            msg.channel.send(`Gomen, there was a problem syncing your Anilist.`);
         }
-        anilistUsers[msg.author.id].notifications = on === 'on' ? true : false;
-        msg.channel.send(`Notifications are now ${tool.wrap(on)}!`);
     }
 }
 
@@ -357,104 +180,6 @@ function setNotificationOption(msg) {
 UTILITY FUNCTIONS
 */
 
-/*
-Periodically update anime statuses. (15 mins)
-*/
-setInterval(function periodicalFuncts() {
-    updateAnimeStatuses();
-}, 900000);
-setTimeout(updateAnimeStatuses, 10000);
-
-/*
-Send request to Anilist api with provided query and variables.
-@param {String} query The GraphQL query.
-@param {Object} variables The variables for the GraphQL query.
-*/
-
-/*
-Requests airing schedules for anime missing them.
-*/
-function requestMissingSchedules() {
-    for (let animeId in subscribedAnime) {
-        if (subscribedAnime[animeId].schedule == null ||
-            subscribedAnime[animeId].schedule.length != 0 && subscribedAnime[animeId].schedule.length <
-            subscribedAnime[animeId].nextEpisode) {
-            requestAiringData(parseInt(animeId));
-        }
-    }
-}
-
-/*
-Requests the latest airing data (25 eps) for an anime, and updates the anime entry accordingly.
-*/
-async function requestAiringData(animeId) {
-    let anime = subscribedAnime[animeId];
-
-    let query = stripIndent(
-        `
-      query ($id: Int, $page: Int){
-        Media(id: $id, type: ANIME){
-          id
-          status
-          nextAiringEpisode{
-            episode
-          }
-          airingSchedule (page: $page){
-            nodes{
-              airingAt
-              episode
-            }
-          }
-        }
-      }
-      `
-    );
-    let variables = {
-        'id': animeId,
-        'page': Math.floor(subscribedAnime[animeId].nextEpisode / 25) + 1
-    }
-
-    return queryAnilist(query, variables).then(body => {
-        let animeSchedule = JSON.parse(body).data.Media;
-
-        if (animeSchedule.status != 'RELEASING' && animeSchedule.status !=
-            'NOT_YET_RELEASED') {
-            anime.schedule = []; //Empty schedule to signify airing completion.
-        } else if (animeSchedule.airingSchedule.nodes.length > 0) { //Schedule available and anime still airing.
-            let tempSchedule = anime.schedule === null ? [] : anime.schedule;
-            tempSchedule = tempSchedule.filter((node) => node.episode < anime.nextEpisode);
-            anime.schedule = tempSchedule
-                .concat(new Array(Math.max(anime.nextEpisode - anime.schedule.length - 1, 0))
-                    .fill({ episode: null, airingAt: null })) //Filler eps.
-                .concat(animeSchedule.airingSchedule.nodes.filter(node => node.episode >=
-                    anime.nextEpisode));
-            if (anime.schedule.map(e => e.episode).reduce((a, b) => Math.max(a, b)) <
-                anime.nextEpisode) {
-                anime.schedule = [];
-            }
-        } else if (animeSchedule.airingSchedule.nodes.length === 0) {
-            anime.schedule = anime.nextEpisode > 0 ? [] : null;
-        } else {
-            return;
-        }
-        console.log(`Updated schedule of an anime! ID: ${animeSchedule.id}`);
-    }).catch(err => console.log(err.message));
-}
-
-/*
-Updates the anilistUsers obj with a user's information.
-@param {Number} userId The user's Discord id.
-@param {String} username The user's Anilist name.
-*/
-function updateAnilistUsers(userId, username) {
-    if (!anilistUsers.hasOwnProperty(userId) || anilistUsers[userId] !=
-        username) {
-        anilistUsers[userId] = {
-            username: username,
-            notifications: true
-        }
-    }
-}
 /*
 Formats the given anime information into an embed.
 @params {Strings} params Self explanatory.
@@ -510,49 +235,4 @@ function secondsToCountdown(seconds) {
     } else {
         return `${days}${hours}`;
     }
-}
-
-/*
-Returns the current anime season.
-@return {Object} An object with a season and year property.
-*/
-function getCurrentSeason() {
-    let date = new Date();
-    let month = date.getMonth();
-    let year = date.getFullYear();
-
-    let season;
-    if (0 <= month && month <= 2)
-        season = 'WINTER';
-    else if (3 <= month && month <= 5)
-        season = 'SPRING';
-    else if (6 <= month && month <= 8)
-        season = 'SUMMER';
-    else if (9 <= month && month <= 11)
-        season = 'FALL';
-
-    return {
-        season: season,
-        seasonYear: year
-    };
-}
-
-/*
-Write data in memory to JSON files.
-*/
-async function writeFiles() {
-    let wfPromises = Promise.all([
-        writeFileAsync('./json/subscribedAnime.json', JSON.stringify(subscribedAnime)),
-        writeFileAsync('./json/anilistUsers.json', JSON.stringify(anilistUsers))
-    ]);
-    wfPromises.catch(err => console.log('Error saving JSON files: ' + err));
-    return wfPromises;
-}
-
-/*
-Receive Discord client instance.
-@param {Object} client The Discord client.
-*/
-function passClient(client) {
-    discordClient = client;
 }

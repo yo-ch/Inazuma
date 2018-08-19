@@ -58,16 +58,10 @@ function getUserAiringList(userId) {
                 status
                 title {
                   romaji
-                  english
                 }
                 nextAiringEpisode {
                   episode
-                }
-                airingSchedule{
-                  nodes{
-                    airingAt
-                    episode
-                  }
+                  airingAt
                 }
               }
             }
