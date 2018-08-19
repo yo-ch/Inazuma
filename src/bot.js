@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 
 const config = require('./json/config.json');
 const cmds = require('./commands.js');
-const ani = require('./anime.js');
 const tool = require('./util/tool.js');
 
 const bot = new Discord.Client();
@@ -13,11 +12,7 @@ bot.on('ready', () => {
     console.log('Inazuma desu. Yoroshiku onegai itashimasu.');
     console.log(`Serving ${bot.guilds.size} guilds.`);
 
-    bot.user.setActivity('~help');
-
-    ani.passClient(bot);
-    ani.requestMissingSchedules();
-    setInterval(ani.requestMissingSchedules, 86400000); //Request every 24 hours.
+    bot.user.setActivity(config.prefix + 'help');
 });
 
 bot.on('message', msg => {
