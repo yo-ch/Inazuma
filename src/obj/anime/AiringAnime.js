@@ -28,17 +28,17 @@ class AiringAnime {
      * @returns {Object} the AiringAnime object and the aired status or just the aired status if not aired.
      */
     async updateAiringData(animeAiringData = null) {
-        if (this.isUpdatable() &&
+        if (this.isAiring() &&
             (this.hasAired() || this.isMissingAiringData() || animeAiringData)) {
             try {
                 // Get the up-to-date schedule for the anime if necessary.
                 let currentEpisode = this.nextAiringEpisode.episode;
                 let updatedAnimeInfo = animeAiringData ?
-                    animeAiringData : await aniQuery.getAiringData(this.id).Media;
+                    animeAiringData : (await aniQuery.getAiringData(this.id)).Media;
 
                 this.status = updatedAnimeInfo.status;
                 this.nextAiringEpisode = updatedAnimeInfo.nextAiringEpisode;
-
+                    console.log(this.id + 'might have aired' + this.nextAiringEpisode.episode > currentEpisode);
                 return returnData(this.nextAiringEpisode.episode > currentEpisode);
             } catch (err) {
                 console.log('Error updating airing anime.', err);
@@ -75,8 +75,8 @@ class AiringAnime {
      * or confirmed to be airing.
      * @returns {Boolean} if this anime is updatable.
      */
-    isUpdatable() {
-        return this.status === this.MediaStatus.RELEASING || this.status === this.MediaStatus.NOT_YET_RELEASED;
+    isAiring() {
+        return this.status === AiringAnime.MediaStatus.RELEASING || this.status === AiringAnime.MediaStatus.NOT_YET_RELEASED;
     }
 }
 

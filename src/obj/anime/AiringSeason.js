@@ -21,10 +21,11 @@ class AiringSeason {
      * @param {Object} seasonAiringData Optional - The season airing data to use to update.
      */
     async updateSeasonAiringData(seasonAiringData = null) {
+        console.log('big check');
         try {
             // Get the up-to-date season data if necessary.
             seasonAiringData = seasonAiringData ?
-                seasonAiringData : await aniQuery.getSeasonAiringData().Page.media;
+                seasonAiringData : (await aniQuery.getSeasonAiringData()).Page.media;
 
             // Transform data to local format.
             for (const airingData of seasonAiringData) {
@@ -56,15 +57,21 @@ class AiringSeason {
      * Check each anime in the season list to see if they have aired.
      */
     async checkAiringAnimeAired() {
-        let updates = [];
-        for (const anime of this.season) {
-            updates.push(anime.updateAiringData());
+        try {
+            let updates = [];
+            for (const anime of Object.values(this.season)) {
+                updates.push(anime.updateAiringData());
+            }
+
+            let checkResults = await Promise.all(updates.map(p => p.catch(() => null)));
+            for (const result of checkResults) {
+                if (result && result.aired) { this.onAiring(result.anime);
+                    console.log(result) }
+            }
+        } catch (err) {
+            console.log(err);
         }
 
-        let checkResults = await Promise.all(updates.map(p => p.catch(() => null)));
-        for (const result in checkResults) {
-            if (result.aired) this.onAiring(result.anime);
-        }
     }
 
     /**
@@ -75,12 +82,13 @@ class AiringSeason {
         let tick = 0;
         setInterval(() => {
             tick += 1;
+            console.log('checking');
             // Skip check when season updates overlap.
             if (tick % (UPDATE_SEASON_INTERVAL / CHECK_AIRED_INTERVAL) !== 0) this.checkAiringAnimeAired();
         }, CHECK_AIRED_INTERVAL);
 
         // Update every 12 hours.
-        setInterval(this.updateSeasonAiringData, UPDATE_SEASON_INTERVAL);
+        setInterval(() => this.updateSeasonAiringData, UPDATE_SEASON_INTERVAL);
     }
 }
 

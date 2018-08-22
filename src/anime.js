@@ -8,13 +8,9 @@ const AiringSeason = require('./obj/anime/AiringSeason.js');
 const MediaStatus = require('./obj/Anime/AiringAnime.js').MediaStatus;
 const RichEmbed = require('discord.js').RichEmbed;
 
-const rp = require('request-promise');
-const sprintf = require('sprintf-js').sprintf;
-const mongoose = require('mongoose');
+const { AnilistUsers, Guilds } = require('./util/mongoose-schema.js');
 
-//Schema for Anilist users.
-let anilistUsersSchema = new mongoose.Schema({ discordUserId: Number, anilistUserId: Number });
-let AnilistUsers = mongoose.model('anilistUser', anilistUsersSchema);
+const sprintf = require('sprintf-js').sprintf;
 
 module.exports = {
     'anilist': retrieveAnimeData,
@@ -23,9 +19,29 @@ module.exports = {
     'syncUser': syncUser,
 }
 
-/*
-Display the specified anime's info, from Anilist.
-*/
+// Init airing notifications.
+initAiringNotifications();
+
+/*******************************
+ * AIRING NOTIFICATION FUNCTIONS
+ *******************************/
+
+async function initAiringNotifications() {
+    try {
+        let currentSeasonData = (await aniQuery.getSeasonAiringData()).Page.media;
+        let currentSeason = new AiringSeason(currentSeasonData, onAnimeAiring);
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+function onAnimeAiring(anime) {
+    console.log(anime.toString() + 'has aired.');
+}
+
+/**
+ * Display the specified anime's info, from Anilist.
+ */
 async function retrieveAnimeData(msg) {
     let search = msg.content.split(/\s+/).slice(1).join(' ').trim();
     try {
@@ -99,8 +115,8 @@ async function getAiringList(msg) {
         let anilistUserId = queryResult.anilistUserId;
 
         if (anilistUserId) {
-            let data = await aniQuery.getUserAiringList(anilistUserId);
-            let watchingList = data.MediaListCollection.statusLists.current;
+            let watchingList =
+                (await aniQuery.getUserAiringList(anilistUserId)).MediaListCollection.statusLists.current;
 
             let airingList = watchingList
                 .filter(anime => anime.media.status === MediaStatus.RELEASING ||
@@ -152,8 +168,7 @@ async function syncUser(msg) {
 
     // Get Anilist Id.
     try {
-        let data = await aniQuery.getAnilistUserId(anilistUsername);
-        let anilistUserId = data.User.id;
+        let anilistUserId = (await aniQuery.getAnilistUserId(anilistUsername)).User.id;
         //Save Anilist Id to db.
         AnilistUsers.updateOne({ discordUserId: msg.author.id }, { $set: { anilistUserId: anilistUserId } }, { upsert: true },
             err => {
@@ -176,14 +191,14 @@ async function syncUser(msg) {
     }
 }
 
-/*
-UTILITY FUNCTIONS
-*/
+/**
+ * UTILITY FUNCTIONS
+ */
 
-/*
-Formats the given anime information into an embed.
-@params {Strings} params Self explanatory.
-*/
+/**
+ * Formats the given anime information into an embed.
+ * @param {Strings} params Self explanatory.
+ */
 function animeInfoEmbed(name, score, type, episodes, synopsis, url, image) {
     let embed = new RichEmbed();
 
@@ -216,10 +231,10 @@ function animeInfoEmbed(name, score, type, episodes, synopsis, url, image) {
     return embed;
 }
 
-/*
-Converts a countdown in seconds to days/hours/minutes.
-@param {Number} seconds The number of seconds.
-*/
+/**
+ * Converts a countdown in seconds to days/hours/minutes.
+ * @param {Number} seconds The number of seconds.
+ */
 function secondsToCountdown(seconds) {
     let days = Math.floor(seconds / 86400);
     let hours = Math.floor((seconds % 86400) / 3600);

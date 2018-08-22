@@ -3,7 +3,6 @@ Regular commands.
 */
 'use strict';
 const kuroshiro = require('kuroshiro');
-const mongoose = require('mongoose');
 const rp = require('request-promise');
 
 const config = require('./json/config.json');
@@ -12,9 +11,7 @@ const tool = require('./util/tool.js');
 const ani = require('./anime.js');
 const music = require('./music.js');
 
-//Schema for self assignable roles.
-let sarSchema = new mongoose.Schema({ guildID: Number, sars: Array });
-let sar = mongoose.model('sar', sarSchema);
+
 
 kuroshiro.init(err => { if (err) console.log(err) }); //For weebify.
 

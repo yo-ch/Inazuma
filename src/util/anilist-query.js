@@ -161,8 +161,8 @@ function getSeasonAiringData() {
     const GET_AIRING_ANIME_SCHEDULES = stripIndent(
         `
         query ($season: MediaSeason, $seasonYear: Int) {
-          Page (page: $page, perPage: 50) {
-            media (type: ANIME, format: TV, season: $season, seasonYear: $seasonYear)
+          Page (page: 1, perPage: 50) {
+            media (type: ANIME, format: TV, season: $season, seasonYear: $seasonYear) {
               id
               status
               title {
@@ -173,6 +173,7 @@ function getSeasonAiringData() {
                 airingAt
                 episode
               }
+            }
           }
         }
       `
