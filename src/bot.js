@@ -40,7 +40,7 @@ bot.on('warn', (e) => console.warn(e));
 bot.login(config.token);
 
 
-mongoose.connect(config.mongo_url);
+mongoose.connect(config.mongo_url, { useNewUrlParser: true });
 mongoose.connection.on('error', console.error.bind(console, 'connection:error:'));
 mongoose.connection.once('open', () => {
     console.log('Connected to database!');
