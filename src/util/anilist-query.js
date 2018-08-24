@@ -141,7 +141,7 @@ function getAnimeInfo(anime) {
 function getAiringData(id) {
     const GET_AIRING_ANIME_SCHEDULE = stripIndent(
         `
-          query ($id: Int, $page: Int) {
+          query ($id: Int) {
             Media(id: $id, type: ANIME) {
               id
               status
