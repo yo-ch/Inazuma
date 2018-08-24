@@ -5,11 +5,11 @@ const aniQuery = require('../..//util/anilist-query.js');
  * A currently airing anime.
  */
 class AiringAnime {
-    constuctor(anime) {
+    constructor(anime) {
         this.id = anime.id;
         this.status = anime.status;
         this.name = anime.name;
-        this.nextAiringEpisode = {};
+        this.nextAiringEpisode = anime.nextAiringEpisode;
     }
 
     //Anilist GraphQL MediaStatus enum.
