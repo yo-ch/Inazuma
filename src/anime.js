@@ -36,7 +36,7 @@ async function initAiringNotifications() {
 }
 
 function onAnimeAiring(anime) {
-    console.log(anime.toString() + 'has aired.');
+    console.log(anime + 'has aired.');
 }
 
 /**
@@ -131,9 +131,9 @@ async function getAiringList(msg) {
                     }
                     return anime;
                 })
-                .sort((a, b) => {
-                    a.media.nextAiringEpisode.airingAt - b.media.nextAiringEpisode.airingAt;
-                });
+                .sort((a, b) =>
+                    a.media.nextAiringEpisode.airingAt - b.media.nextAiringEpisode.airingAt
+                );
 
             let listResponse = `#${msg.author.username}'s Airing List\n` + airingList.reduce(
                 airingMessageReducer, '');
