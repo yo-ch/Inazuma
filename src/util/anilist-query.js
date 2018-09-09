@@ -173,6 +173,7 @@ function getSeasonAiringData() {
                 airingAt
                 episode
               }
+              synonyms
             }
           }
         }
