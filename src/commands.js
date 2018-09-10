@@ -11,7 +11,7 @@ const tool = require('./util/tool.js');
 const ani = require('./anime.js');
 const music = require('./music.js');
 
-
+const Guilds = require('./util/mongoose-schema.js').Guilds;
 
 kuroshiro.init(err => { if (err) console.log(err) }); //For weebify.
 
@@ -607,7 +607,7 @@ function sarInterface(msg) {
             return msg.channel.send('You don\'t have permission to manage roles!');
         }
 
-        sar.findOne({ guildID: msg.guild.id }, (err, guild) => {
+        Guilds.findOne({ guildID: msg.guild.id }, (err, guild) => {
             if (guild && guild.sars.includes(args[1])) {
                 return msg.channel.send('This SAR already exists.');
             } else {
@@ -617,7 +617,7 @@ function sarInterface(msg) {
 
 
         function add() {
-            sar.updateOne({ guildID: msg.guild.id }, { $addToSet: { sars: args[1] } }, { upsert: true },
+            Guilds.updateOne({ guildID: msg.guild.id }, { $addToSet: { sars: args[1] } }, { upsert: true },
                 (err) => {
                     if (err) {
                         return msg.channel.send('Gomen, I couldn\'t add your SAR.');
@@ -643,7 +643,7 @@ function sarInterface(msg) {
             return msg.channel.send('You don\'t have permission to manage roles!');
         }
 
-        sar.updateOne({ guildID: msg.guild.id }, { $pull: { sars: args[1] } }, { upsert: true },
+        Guilds.updateOne({ guildID: msg.guild.id }, { $pull: { sars: args[1] } }, { upsert: true },
             (err) => {
                 if (err) {
                     return msg.channel.send('Gomen, I couldn\'t remove your SAR.');
@@ -662,7 +662,7 @@ function sarInterface(msg) {
     }
 
     function listSar() {
-        sar.findOne({ guildID: msg.guild.id }).lean().exec((err, guild) => {
+        Guilds.findOne({ guildID: msg.guild.id }).lean().exec((err, guild) => {
             if (err) {
                 return;
             }
@@ -693,7 +693,7 @@ function roleMe(msg) {
         return msg.channel.send(`Give me a SAR, ${tool.tsunNoun()}!`);
     }
 
-    sar.findOne({ guildID: msg.guild.id }, (err, guild) => {
+    Guilds.findOne({ guildID: msg.guild.id }, (err, guild) => {
         if (guild.sars.includes(args[0])) {
             let roleToToggle = msg.guild.roles.find(role => role.name === args[0]);
 

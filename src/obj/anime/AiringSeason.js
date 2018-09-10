@@ -1,7 +1,7 @@
 const AiringAnime = require('./AiringAnime.js');
 const aniQuery = require('../../util/anilist-query.js');
 
-const CHECK_AIRED_INTERVAL = 300000;
+const CHECK_AIRED_INTERVAL = 60000;
 const UPDATE_SEASON_INTERVAL = 43200000;
 
 /**
@@ -10,7 +10,7 @@ const UPDATE_SEASON_INTERVAL = 43200000;
 class AiringSeason {
     constructor(seasonAiringData, onAiring) {
         this.season = {};
-        this.onAiring = onAiring;
+        this.onAiring = onAiring.bind(this);
         this.updateSeasonAiringData(seasonAiringData);
 
         this.setIntervals();
@@ -65,8 +65,9 @@ class AiringSeason {
 
             let checkResults = await Promise.all(updates.map(p => p.catch(() => null)));
             for (const result of checkResults) {
-                if (result && result.aired) { this.onAiring(result.anime);
-                    console.log(result) }
+                if (result && result.aired) {
+                    this.onAiring(result.anime);
+                }
             }
         } catch (err) {
             console.log(err);
@@ -89,6 +90,20 @@ class AiringSeason {
 
         // Update every 12 hours.
         setInterval(() => this.updateSeasonAiringData, UPDATE_SEASON_INTERVAL);
+    }
+
+    /**
+     * Find airing anime based on the search term.
+     * @param {string} search the search term (anime name)
+     * @return {AiringAnime|null} the anime corresponding to the search term.
+     */
+    findAnime(search) {
+        for (let airingAnime in Object.values(this.season)) {
+            if (airingAnime.name.toLowerCase().indexOf(search.toLowerCase()) > -1) {
+                return airingAnime.id;
+            }
+        }
+        return null;
     }
 }
 

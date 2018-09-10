@@ -28,6 +28,10 @@ class AiringAnime {
      * @returns {Object} the AiringAnime object and the aired status or just the aired status if not aired.
      */
     async updateAiringData(animeAiringData = null) {
+        let returnData = (aired) => {
+            return aired ? { anime: this, episode: this.nextEpisode - 1, aired, } : { aired };
+        }
+
         if (this.isAiring() &&
             (this.hasAired() || this.isMissingAiringData() || animeAiringData)) {
             try {
@@ -38,18 +42,12 @@ class AiringAnime {
 
                 this.status = updatedAnimeInfo.status;
                 this.nextAiringEpisode = updatedAnimeInfo.nextAiringEpisode;
-                    console.log(this.id + 'might have aired' + this.nextAiringEpisode.episode > currentEpisode);
                 return returnData(this.nextAiringEpisode.episode > currentEpisode);
             } catch (err) {
-                console.log('Error updating airing anime.', err);
-                return returnData(false);
+                return {aired: false};
             }
         }
-        return returnData(false);
-
-        function returnData(aired) {
-            return aired ? { anime: this, aired } : { aired };
-        }
+        return {aired: false};
     }
 
     /**
@@ -76,7 +74,8 @@ class AiringAnime {
      * @returns {Boolean} if this anime is updatable.
      */
     isAiring() {
-        return this.status === AiringAnime.MediaStatus.RELEASING || this.status === AiringAnime.MediaStatus.NOT_YET_RELEASED;
+        return this.status === AiringAnime.MediaStatus.RELEASING || this.status === AiringAnime
+            .MediaStatus.NOT_YET_RELEASED;
     }
 }
 
