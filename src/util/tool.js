@@ -56,7 +56,6 @@ module.exports = {
 
         let options = {};
         while ((matches = shortRegex.exec(commandString))) {
-            console.log(matches[1])
             options[matches[1]] = this.parseOptionArg(matches[1], commandString);
         }
         while ((matches = longRegex.exec(commandString))) {

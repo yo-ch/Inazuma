@@ -32,7 +32,6 @@ module.exports = {
     'roll': roll,
     'music': music.processCommand,
     'm': music.processCommand,
-    'weebify': weebify,
     'sar': sarInterface,
     'roleme': roleMe
 }
@@ -620,6 +619,7 @@ function sarInterface(msg) {
             Guilds.updateOne({ guildID: msg.guild.id }, { $addToSet: { sars: args[1] } }, { upsert: true },
                 (err) => {
                     if (err) {
+                      console.log(err);
                         return msg.channel.send('Gomen, I couldn\'t add your SAR.');
                     }
                     if (!msg.guild.roles.exists('name', args[1])) {
@@ -750,21 +750,4 @@ function roll(msg) {
         else
             msg.channel.send(tool.randInt(num2 - num1 + 1) + num1);
     }
-}
-
-/*
- * Translates from English to Japanese using Google Translate.
- */
-function weebify(msg) {
-    let sourceText = msg.content.substring(msg.content.indexOf(' ') + 1);
-    if (!sourceText) return msg.channel.send(
-        `Give me something to weebify, ${tool.tsunNoun()}!`);
-
-    let url =
-        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURI(sourceText)}`;
-    rp({ url: url }).then(body => {
-        let result = JSON.parse(body);
-        msg.channel.send(result[0][0][0] + '\n' + kuroshiro.toRomaji(
-            result[0][0][0], { mode: 'spaced' }));
-    }).catch(err => console.log(err.message));
 }

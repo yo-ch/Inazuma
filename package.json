@@ -9,6 +9,7 @@
     "colors": "^1.3.1",
     "discord.js": "^11.4.2",
     "erlpack": "^0.1.2",
+    "glob": "^7.1.4",
     "hoek": "^5.0.4",
     "kuroshiro": "^0.2.4",
     "latest": "^0.2.0",

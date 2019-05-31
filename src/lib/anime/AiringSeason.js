@@ -21,7 +21,6 @@ class AiringSeason {
      * @param {Object} seasonAiringData Optional - The season airing data to use to update.
      */
     async updateSeasonAiringData(seasonAiringData = null) {
-        console.log('big check');
         try {
             // Get the up-to-date season data if necessary.
             seasonAiringData = seasonAiringData ?

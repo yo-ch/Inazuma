@@ -6,11 +6,11 @@ const tool = require('../../util/tool.js');
 An object representing a song.
 */
 class Song {
-    constructor(title, url, type, duration = null, stream = null, thumbnail = null) {
+    constructor({ title, url, type, duration = null, stream = null, thumbnail = null }) {
         this.title = title;
         this.url = url;
         this.duration = tool.formatTime(duration);
-        this.type = type; //youtube, soundcloud, search
+        this.type = type; //youtube, youtubepl, search
         this.stream = stream;
         this.thumbnail = thumbnail;
         this.startTime = null;
@@ -39,12 +39,7 @@ class Song {
             });
             return this.stream;
         }
-        if (this.type === 'soundcloud') {
-            return null; //need api key.
-        }
     }
-
-
 }
 
 module.exports = Song;

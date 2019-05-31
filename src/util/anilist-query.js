@@ -39,10 +39,7 @@ function queryAnilist(query, variables) {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         },
-        body: JSON.stringify({
-            query: query,
-            variables: variables
-        })
+        body: JSON.stringify({ query, variables })
     }
     return rp(options).then(body => JSON.parse(body).data);
 }
