@@ -13,6 +13,10 @@ class AbstractCommand {
         throw new Error('name must be overwritten.');
     }
 
+    get aliases() {
+        return [];
+    }
+
     get description() {
         return helpLibrary.descriptions[this.name] || `Gomen, there's no help info for ${wrap(this.name)}.`;
     }

@@ -4,7 +4,6 @@
 
 const stripIndent = require('strip-indent');
 const rp = require('request-promise');
-const util = require('./util.js');
 
 /**
  *Returns the current anime season.
@@ -117,7 +116,7 @@ function getAnimeInfo(anime) {
               title {
                 romaji
               }
-              season
+              seasonInt
               description
               format
               episodes

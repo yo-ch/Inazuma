@@ -37,34 +37,40 @@ class AnimeCommand extends AbstractCommand {
         return 'anime';
     }
 
+    get aliases() {
+        return ['ani', 'anilist'];
+    }
+
     async handleMessage({ msg, cmdStr, options }) {
         const searchQuery = cmdStr;
 
-        if (searchQuery) { //A search query was given.
+        if (searchQuery) {
             try {
                 const searchResults = (await aniQuery.getAnimeInfo(searchQuery)).Page.media;
                 if (searchResults.length === 1 || (searchResults.length && !options.choose)) {
                     const animeInfoEmbed = this.getAnimeInfoEmbedByIndex(searchResults, 0);
                     msg.channel.send(animeInfoEmbed);
                 } else if (searchResults.length) {
-                    const choiceString = 'Choose a number onegai!\n\n' +
-                        searchResults.reduce(this.choiceReducer, '');
-                    msg.channel.send(choiceString).then(m => m.delete(this.choiceTimeout));
+                    // Ask the user to choose from search results.
+                    const choiceString =
+                        'Choose a number onegai!\n\n' + searchResults.reduce(this.choiceReducer, '');
 
-                    //Wait for response.
-                    const filter = m =>
-                        parseInt(m.content) > 0 && parseInt(m.content) <= searchResults.length;
-                    const respond = m => {
-                        const animeInfoEmbed =
-                            this.getAnimeInfoEmbedByIndex(searchResults, parseInt(m.content) -
-                                1);
-                        msg.channel.send(animeInfoEmbed);
-                    };
+                    msg.channel.send(choiceString).then((m) => m.delete(this.choiceTimeout));
 
-                    msg.channel.createMessageCollector(filter, {
+                    // Wait for response.
+                    const collectorFilter =
+                        (msg) => parseInt(msg.content) > 0 && parseInt(msg.content) <= searchResults.length;
+                    const onResponse =
+                        (msg) => {
+                            const animeInfoEmbed =
+                                this.getAnimeInfoEmbedByIndex(searchResults, parseInt(msg.content) - 1);
+                            msg.channel.send(animeInfoEmbed);
+                        };
+
+                    msg.channel.createMessageCollector(collectorFilter, {
                         time: this.choiceTimeout,
                         maxMatches: 1
-                    }).on('collect', respond);
+                    }).on('collect', onResponse);
                 } else {
                     throw new Error('No results.');
                 }
@@ -87,7 +93,8 @@ class AnimeCommand extends AbstractCommand {
             episodes: anime.episodes,
             synopsis: anime.description,
             url: `https://anilist.co/anime/${anime.id}`,
-            image: anime.coverImage.medium
+            image: anime.coverImage.medium,
+            seasonInt: anime.seasonInt
         });
     }
 
@@ -95,36 +102,66 @@ class AnimeCommand extends AbstractCommand {
      * Formats the given anime information into an embed.
      * @param {Strings} params Self explanatory.
      */
-    getAnimeInfoEmbed({ name, score, type, episodes, synopsis, url, image }) {
+    getAnimeInfoEmbed({ name, score, type, episodes, synopsis, url, image, seasonInt }) {
         let embed = new RichEmbed();
 
-        if (!episodes) episodes = 'N/A';
-        if (!score) score = 'N/A';
-        const formatType = {
-            'TV': 'TV',
-            'TV_SHORT': 'TV Short',
-            'MOVIE': 'Movie',
-            'SPECIAL': 'Special',
-            'OVA': 'OVA',
-            'ONA': 'ONA',
-            'MUSIC': 'Music'
-        };
-        type = formatType[type] ? formatType[type] : type;
-        synopsis = synopsis.replace(/<br>\\n|<br>/g, '\n'); //Remove <b> tags.
-        synopsis = synopsis.replace(/<i>|<\/i>/g, '*'); //Remove <i> tags.
-        synopsis = synopsis.slice(0, synopsis.indexOf('(Source:')).trim(); //Remove source information.
+        if (!episodes) {
+            episodes = 'N/A';
+        }
+        if (!score) {
+            score = 'N/A';
+        }
 
         embed.setTitle(name);
         embed.setImage(image);
-        embed.addField('Type:', util.wrap(type), true);
+        embed.addField('Type:', util.wrap(formatType(type)), true);
+        embed.addField('Season:', util.wrap(formatSeason(seasonInt)), true);
         embed.addField('Score:', util.wrap(score), true);
         embed.addField('Episodes:', util.wrap(episodes), true);
-        embed.addField('Synopsis:', synopsis, false);
+        embed.addField('Synopsis:', formatSynopsis(synopsis), false);
         embed.setURL(url);
         embed.setColor('BLUE');
         embed.setFooter('Powered by Anilist');
 
         return embed;
+
+        function formatType(type) {
+            const typeStrings = {
+                'TV': 'TV',
+                'TV_SHORT': 'TV Short',
+                'MOVIE': 'Movie',
+                'SPECIAL': 'Special',
+                'OVA': 'OVA',
+                'ONA': 'ONA',
+                'MUSIC': 'Music'
+            };
+
+            return typeStrings[type] ? typeStrings[type] : type;
+        }
+
+        function formatSeason(seasonInt) {
+            const seasonStrings = {
+                1: 'Winter',
+                2: 'Spring',
+                3: 'Summer',
+                4: 'Fall'
+            };
+            const seasonData = seasonInt.toString();
+
+            const season = seasonStrings[seasonData.slice(-1)];
+            let rawYear = seasonData.slice(0, 2);
+            rawYear = parseInt(rawYear) < 52 ? `20${rawYear}` : `19${rawYear}`;
+
+            return season + ' ' + rawYear;
+        }
+
+        function formatSynopsis(synopsis) {
+            synopsis = synopsis.replace(/<br>\\n|<br>/g, '\n'); // Remove <b> tags.
+            synopsis = synopsis.replace(/<i>|<\/i>/g, '*'); // Remove <i> tags.
+            synopsis = synopsis.slice(0, synopsis.indexOf('(Source:')).trim(); // Remove source information.
+
+            return synopsis;
+        }
     }
 
     choiceReducer(acc, currChoice, currIndex) {

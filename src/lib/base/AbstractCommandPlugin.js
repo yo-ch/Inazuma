@@ -33,8 +33,12 @@ class AbstractCommandPlugin {
         const cmdArgs = args.slice(1);
         const options = util.parseOptions(msg.content);
 
+        const commandCall = args[0].slice(this.client.prefix.length);
+
         for (const command of this.commands) {
-            if (command.name === args[0].slice(this.client.prefix.length)) {
+            if (command.name === commandCall ||
+                command.aliases.indexOf(commandCall) >= 0
+            ) {
                 return command.handleMessage({
                     msg: msg,
                     args: cmdArgs,
