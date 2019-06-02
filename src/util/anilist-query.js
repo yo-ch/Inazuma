@@ -4,7 +4,7 @@
 
 const stripIndent = require('strip-indent');
 const rp = require('request-promise');
-const tool = require('./tool.js');
+const util = require('./util.js');
 
 /**
  *Returns the current anime season.

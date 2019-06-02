@@ -13,7 +13,7 @@ class Bot extends Discord.Client {
             console.log('Inazuma ready.');
             console.log(`Serving ${this.guilds.size} guilds.`);
 
-            this.user.setActivity(config.prefix + 'help');
+            this.user.setActivity('Kantai Collection');
         });
         this.on('message', this.handleMessage);
         this.on('error', e => console.error(e));
@@ -31,7 +31,16 @@ class Bot extends Discord.Client {
         return result;
     }
 
-    findPluginCommand(commandName) {
+    findCommandPlugin(pluginName) {
+        for (const commandPlugin of Object.values(this.commandPlugins)) {
+            if (commandPlugin.name.toLowerCase() === pluginName.toLowerCase()) {
+                return commandPlugin;
+            }
+        }
+        return null;
+    }
+
+    findCommand(commandName) {
         for (const commandPlugin of Object.values(this.commandPlugins)) {
             for (const command of commandPlugin.commands) {
                 if (command.name.toLowerCase() === commandName.toLowerCase()) {

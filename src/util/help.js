@@ -1,43 +1,14 @@
 module.exports = {
-    'default': `
-[Help Menu]
-   ~help [command]
-
-   #Utility
-      ~airing
-      ~anilist
-      ~weebify
-
-      ~choose
-      ~roll
-      ~music
-
-      ~roleme
-   #Guild/Moderation
-      ~ban
-      ~kick
-      ~prune
-      ~role
-      ~cc
-      ~sar
-   #Etc.
-      ~andy
-      ~gavquote
-
-[] = optional, <> = required, | = or`,
-
-    'help': `
+   descriptions: {
+      help: `
 ~help [command]
    Brings up the command page. Pass a command for further information.`,
-    'tasukete': `
-~tasukete [command]
-   Brings up the command page. Pass a command for further information.`,
 
-    'andy': `
+      andy: `
 ~andy [mention]
    Shut up weeb. Mentions user, if included.`,
 
-    'airing': `
+      airing: `
 ~airing [function]
    Displays your airing list when used with no arguments.
 
@@ -48,24 +19,24 @@ module.exports = {
 
 The airing list shows the time until the next episode airs for each anime in your list.`,
 
-    'anilist': `
+      anilist: `
 ~anilist | ~ani <anime name>
    Displays an anime's data, pulled from Anilist.
    If multiple choices are given, simply reply with the number.`,
 
-    'cc': `
+      cc: `
 ~cc <voice channel> <mention>
    Changes the mentioned user's voice channel to the given channel.`,
 
-    'choose': `
+      choose: `
 ~choose <arg1> | [arg2] ...
    Randomly chooses between the provided choice(s).`,
 
-    'gavquote': `
+      gavquote: `
 ~gavquote
    Returns a random Gavin quote.`,
 
-    'prune': `
+      prune: `
 ~prune <amount> [options]
    Prunes the last <amount> messages.
 
@@ -77,7 +48,7 @@ The airing list shows the time until the next episode airs for each anime in you
       [--pinned | -p]     : Also prunes pinned messages.
       [--silent | -s]     : Deletes command and doesn't display results.`,
 
-    'role': `[Role Help]
+      role: `[Role Help]
 
 ~role give <role[,...]> [options] : Gives role(s).
 ~role take <role[,...]> [options] : Removes role(s).
@@ -93,12 +64,12 @@ The airing list shows the time until the next episode airs for each anime in you
    [--name <name>]       : Rename role.
    [--color <color>]     : Change role color. (6 digit HEX)`,
 
-    'roll': `
+      roll: `
 ~roll <int1> [int2]
    Rolls an integer from 1 to int1 inclusive.
    If int2 is given, rolls an integer between int1 and int2 inclusive.`,
 
-    'music': `
+      music: `
 [Music Help]
 
 ~music | m <function>
@@ -119,7 +90,7 @@ The airing list shows the time until the next episode airs for each anime in you
 
 Requires a #music text channel.`,
 
-    'ban': `
+      ban: `
 ~ban <mention> [options]
    Bans the mentioned user.
    You cannot ban users in a role higher than Inazuma or yourself.
@@ -128,7 +99,7 @@ Requires a #music text channel.`,
       [--days <number>]   : Deletes the message history of the user.
       [--reason <reason>] : Specifies a reason for banning the user.`,
 
-    'kick': `
+      kick: `
 ~kick <mention> [options]
    Kicks the mentioned user.
    You cannot kick users in a role higher than Inazuma or yourself.
@@ -136,11 +107,11 @@ Requires a #music text channel.`,
    Options:
       [--reason <reason>] : Specifies a reason for kicking the user.`,
 
-    'weebify': `
+      weebify: `
 ~weebify <sentence>
    Translates a sentence from English to Japanese.`,
 
-    'sar': `
+      sar: `
 ~sar <function>
    add <role name>    : Add this SAR to the server.
    remove <role name> : Remove this SAR from the server.
@@ -149,7 +120,12 @@ Requires a #music text channel.`,
    The self assignable roles interface.
    Use ~roleme <SAR> to self assign roles.`,
 
-    'roleme': `
+      'roleme': `
 ~roleme <SAR>
   Assign/deassign self assignable roles from yourself.`
-}
+   },
+
+   usages: {
+
+   }
+};

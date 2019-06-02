@@ -1,5 +1,5 @@
 'use strict';
-const tool = require('../../util/tool.js');
+const util = require('../../util/util.js');
 const RichEmbed = require('discord.js').RichEmbed;
 
 const Status = {
@@ -65,12 +65,12 @@ class MusicPlayer {
             this.dispatch.once('start', () => {
                 this.musicChannel.send(
                     new RichEmbed()
-                    .setTitle(`:notes: ${tool.wrap(song.title)}`)
+                    .setTitle(`:notes: ${util.wrap(song.title)}`)
                     .setURL(song.url)
                     .setThumbnail(song.thumbnail)
                 );
                 this.changeStatus(Status.PLAYING);
-                song.startTime = tool.getUnixTime();
+                song.startTime = util.getUnixTime();
             });
 
             this.dispatch.on('error', error => {
@@ -93,7 +93,7 @@ class MusicPlayer {
             });
         } else {
             msg.channel.send(
-                `Please summon me using ${tool.wrap('~music join')} to start playing the queue.`
+                `Please summon me using ${util.wrap('~music join')} to start playing the queue.`
             );
         }
     }
@@ -105,7 +105,7 @@ class MusicPlayer {
     skipSong() {
         if (this.dispatch && this.status === Status.PLAYING) {
             this.musicChannel.send(
-                new RichEmbed({ description: `:fast_forward: ${tool.wrap(this.queue[0].title)}` })
+                new RichEmbed({ description: `:fast_forward: ${util.wrap(this.queue[0].title)}` })
             );
             this.dispatch.end();
         } else {
@@ -178,10 +178,10 @@ class MusicPlayer {
     */
     shuffleQueue(msg) {
         if (this.status === Status.PLAYING || this.status === Status.PAUSED) {
-            this.queue = [this.queue[0]].concat(tool.shuffle(
+            this.queue = [this.queue[0]].concat(util.shuffle(
                 this.queue.slice(1)));
         } else {
-            this.queue = tool.shuffle(this.queue);
+            this.queue = util.shuffle(this.queue);
         }
         msg.channel.send(new RichEmbed({ description: ':twisted_rightwards_arrows: Queue shuffled!' }));
     }
@@ -191,12 +191,12 @@ class MusicPlayer {
     */
     nowPlaying(msg) {
         if (this.queue.length > 0) {
-            let elapsedTime = tool.formatTime(tool.getUnixTime() -
+            let elapsedTime = util.formatTime(util.getUnixTime() -
                 this.queue[0].startTime);
             msg.channel.send(
                 new RichEmbed()
-                .setTitle(`:notes: ${tool.wrap(this.queue[0].title)}`)
-                .setDescription(tool.wrap(
+                .setTitle(`:notes: ${util.wrap(this.queue[0].title)}`)
+                .setDescription(util.wrap(
                     `|${elapsedTime}/${this.queue[0].duration}|`))
             );
         } else {
@@ -216,7 +216,7 @@ class MusicPlayer {
                 this.dispatch.setVolume(vol);
                 this.volume = vol;
                 msg.channel.send(
-                    new RichEmbed({ description: `:speaker: ${tool.wrap(vol * 100)}` }));
+                    new RichEmbed({ description: `:speaker: ${util.wrap(vol * 100)}` }));
             } else {
                 msg.channel.send(`Nothing is playing right now.`);
             }

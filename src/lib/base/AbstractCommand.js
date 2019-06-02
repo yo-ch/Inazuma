@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 const helpLibrary = require('../../util/help.js');
+const { wrap } = require('../../util/util.js');
 
 class AbstractCommand {
     constructor() {
@@ -13,7 +14,11 @@ class AbstractCommand {
     }
 
     get description() {
-        return helpLibrary[this.name] || `${this.name} help`;
+        return helpLibrary.descriptions[this.name] || `Gomen, there's no help info for ${wrap(this.name)}.`;
+    }
+
+    get usage() {
+        return helpLibrary.usages[this.name] || `Gomen, there's no usage info for ${wrap(this.name)}.`;
     }
 
     get requiresParent() {

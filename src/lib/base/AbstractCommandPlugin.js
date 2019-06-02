@@ -1,7 +1,7 @@
-const tool = require('../../util/tool.js');
+const util = require('../../util/util.js');
 
 class AbstractCommandPlugin {
-    constructor(commands) {
+    constructor(...commands) {
         if (this.constructor === AbstractCommandPlugin) {
             throw new Error('Cannot instantiate an abstract class.');
         }
@@ -11,7 +11,7 @@ class AbstractCommandPlugin {
     }
 
     get name() {
-        throw new Error('name must be overwritten.')
+        throw new Error('name must be overwritten.');
     }
 
     get description() {
@@ -20,7 +20,7 @@ class AbstractCommandPlugin {
 
     loadCommands(commands) {
         this.commands = commands.slice().map(c => new c());
-        this.commands.forEach(c => { if (c.requiresParent) c.loadParent(this); })
+        this.commands.forEach(c => { if (c.requiresParent) c.loadParent(this); });
     }
 
     load(client) {
@@ -31,7 +31,7 @@ class AbstractCommandPlugin {
     handleMessage(msg, pluginParams) {
         const args = msg.content.split(/\s+/).filter(arg => arg !== '');
         const cmdArgs = args.slice(1);
-        const options = tool.parseOptions(msg.content);
+        const options = util.parseOptions(msg.content);
 
         for (const command of this.commands) {
             if (command.name === args[0].slice(this.client.prefix.length)) {

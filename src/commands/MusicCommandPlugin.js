@@ -1,7 +1,7 @@
 const AbstractCommandPlugin = require('../lib/base/AbstractCommandPlugin.js');
 const AbstractCommand = require('../lib/base/AbstractCommand.js');
 
-const tool = require('../util/tool.js');
+const util = require('../util/util.js');
 const config = require('../json/config.json')
 
 const Song = require('./lib/music/Song.js');

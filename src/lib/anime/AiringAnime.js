@@ -1,4 +1,4 @@
-const tool = require('../../util/tool.js');
+const util = require('../../util/util.js');
 const aniQuery = require('../..//util/anilist-query.js');
 
 /**
@@ -65,7 +65,7 @@ class AiringAnime {
      * @returns {Boolean} if this anime's latest episode has aired
      */
     hasAired() {
-        return this.nextAiringEpisode && tool.getUnixTime() > this.nextAiringEpisode.airingAt;
+        return this.nextAiringEpisode && util.getUnixTime() > this.nextAiringEpisode.airingAt;
     }
 
     /**

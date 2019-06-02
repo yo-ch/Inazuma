@@ -51,8 +51,8 @@ module.exports = {
      */
     parseOptions(commandString) {
         let matches;
-        let shortRegex = / -(\w)/g;
-        let longRegex = / --(\w+)/g;
+        const shortRegex = / -(\w)/g;
+        const longRegex = / --(\w+)/g;
 
         let options = {};
         while ((matches = shortRegex.exec(commandString))) {
@@ -72,7 +72,7 @@ module.exports = {
      * @return The argument for the specified option, or true if the arg couldn't be found.
      */
     parseOptionArg(option, commandString) {
-        let matchArg = commandString.match(new RegExp(`-${option} #?([\\w,]+)`));
+        const matchArg = commandString.match(new RegExp(`-${option} #?([\\w,]+)`));
         return matchArg ? matchArg[1].trim().toLowerCase() : true;
     },
 

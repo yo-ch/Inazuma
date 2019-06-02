@@ -2,7 +2,7 @@
 Anime related commands and functions.
 */
 'use strict';
-const tool = require('./util/tool.js');
+const tool = require('./util/util.js/index.js');
 const aniQuery = require('./util/anilist-query.js');
 const AiringSeason = require('./lib/anime/AiringSeason.js');
 const MediaStatus = require('./lib/anime/AiringAnime.js').MediaStatus;

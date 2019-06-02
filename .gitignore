@@ -2,3 +2,4 @@ node_modules/*
 json/*
 npm-debug.log
 .tern-project
+.vscode/*

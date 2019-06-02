@@ -1,6 +1,6 @@
 'use strict';
 const ytdl = require('ytdl-core');
-const tool = require('../../util/tool.js');
+const util = require('../../util/util.js');
 
 /*
 An object representing a song.
@@ -9,7 +9,7 @@ class Song {
     constructor({ title, url, type, duration = null, stream = null, thumbnail = null }) {
         this.title = title;
         this.url = url;
-        this.duration = tool.formatTime(duration);
+        this.duration = util.formatTime(duration);
         this.type = type; //youtube, youtubepl, search
         this.stream = stream;
         this.thumbnail = thumbnail;
@@ -30,7 +30,7 @@ class Song {
         if (this.type === 'youtubepl') {
             //Get duration first.
             let info = await ytdl.getInfo(this.url);
-            this.duration = tool.formatTime(info.length_seconds);
+            this.duration = util.formatTime(info.length_seconds);
             this.thumbnail = `https://img.youtube.com/vi/${info.video_id}/mqdefault.jpg`;
 
             this.stream = ytdl.downloadFromInfo(info, {

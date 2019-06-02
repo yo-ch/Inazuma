@@ -6,18 +6,16 @@ const MediaStatus = require('../lib/anime/AiringAnime.js').MediaStatus;
 const AnilistUsers = require('../util/mongoose-schema.js').AnilistUsers;
 
 const rp = require('request-promise');
-const kuroshiro = require('kuroshiro');
 const aniQuery = require('../util/anilist-query.js');
-const tool = require('../util/tool.js');
+const util = require('../util/util.js');
 const sprintf = require('sprintf-js').sprintf;
 
 class AnimeCommandPlugin extends AbstractCommandPlugin {
     constructor() {
-        super([
+        super(
             AnimeCommand,
-            AiringCommand,
             WeebifyCommand
-        ]);
+        );
     }
 
     get name() {
@@ -39,20 +37,16 @@ class AnimeCommand extends AbstractCommand {
         return 'anime';
     }
 
-    get description() {
-        return '';
-    }
-
-    async handleMessage({ msg, args }) {
-        const searchQuery = args.join(' ').trim();
+    async handleMessage({ msg, cmdStr, options }) {
+        const searchQuery = cmdStr;
 
         if (searchQuery) { //A search query was given.
             try {
                 const searchResults = (await aniQuery.getAnimeInfo(searchQuery)).Page.media;
-                if (searchResults.length === 1) {
+                if (searchResults.length === 1 || (searchResults.length && !options.choose)) {
                     const animeInfoEmbed = this.getAnimeInfoEmbedByIndex(searchResults, 0);
                     msg.channel.send(animeInfoEmbed);
-                } else if (searchResults.length >= 2) {
+                } else if (searchResults.length) {
                     const choiceString = 'Choose a number onegai!\n\n' +
                         searchResults.reduce(this.choiceReducer, '');
                     msg.channel.send(choiceString).then(m => m.delete(this.choiceTimeout));
@@ -79,7 +73,7 @@ class AnimeCommand extends AbstractCommand {
                 msg.channel.send('Gomen, I couldn\'t find anything!');
             }
         } else {
-            msg.channel.send(`Give me an anime to search for, ${tool.tsunNoun()}!`);
+            msg.channel.send(`Give me an anime to search for, ${util.tsunNoun()}!`);
         }
     }
 
@@ -114,7 +108,7 @@ class AnimeCommand extends AbstractCommand {
             'OVA': 'OVA',
             'ONA': 'ONA',
             'MUSIC': 'Music'
-        }
+        };
         type = formatType[type] ? formatType[type] : type;
         synopsis = synopsis.replace(/<br>\\n|<br>/g, '\n'); //Remove <b> tags.
         synopsis = synopsis.replace(/<i>|<\/i>/g, '*'); //Remove <i> tags.
@@ -122,9 +116,9 @@ class AnimeCommand extends AbstractCommand {
 
         embed.setTitle(name);
         embed.setImage(image);
-        embed.addField('Type:', tool.wrap(type), true);
-        embed.addField('Score:', tool.wrap(score), true);
-        embed.addField('Episodes:', tool.wrap(episodes), true);
+        embed.addField('Type:', util.wrap(type), true);
+        embed.addField('Score:', util.wrap(score), true);
+        embed.addField('Episodes:', util.wrap(episodes), true);
         embed.addField('Synopsis:', synopsis, false);
         embed.setURL(url);
         embed.setColor('BLUE');
@@ -134,7 +128,7 @@ class AnimeCommand extends AbstractCommand {
     }
 
     choiceReducer(acc, currChoice, currIndex) {
-        let appendString = tool.wrap((currIndex + 1) + ' - ' + currChoice.title.romaji);
+        let appendString = util.wrap((currIndex + 1) + ' - ' + currChoice.title.romaji);
         return acc + appendString + '\n';
     }
 }
@@ -145,7 +139,7 @@ class AiringCommand extends AbstractCommandPlugin {
     }
 
     get description() {
-        return ''
+        return '';
     }
 
     async handleMessage({ msg, args }) {
@@ -205,7 +199,7 @@ class AiringCommand extends AbstractCommandPlugin {
     async syncUser(msg, args) {
         const anilistUsername = args[1];
         if (!anilistUsername) {
-            return msg.channel.send(`You didn't give me a username, ${tool.tsunNoun()}`);
+            return msg.channel.send(`You didn't give me a username, ${util.tsunNoun()}`);
         }
 
         // Get Anilist Id.
@@ -260,7 +254,7 @@ class AiringCommand extends AbstractCommandPlugin {
             sprintf('%-50s  Ep %-3i in %s',
                 currAnime.media.title.romaji,
                 currAnime.media.nextAiringEpisode.episode,
-                this.convertSecToMin(currAnime.media.nextAiringEpisode.airingAt - tool.getUnixTime())
+                this.convertSecToMin(currAnime.media.nextAiringEpisode.airingAt - util.getUnixTime())
             );
         return acc + appendString + '\n';
     }
@@ -272,27 +266,24 @@ class AiringCommand extends AbstractCommandPlugin {
 class WeebifyCommand extends AbstractCommand {
     constructor() {
         super();
-        kuroshiro.init(err => { if (err) console.log(err) });
+        this.kuroshiro = require('kuroshiro');
+        this.kuroshiro.init(err => { if (err) console.log(err); });
     }
     get name() {
         return 'weebify';
     }
 
-    get description() {
-        return '';
-    }
 
-    async handleMessage({ msg, args }) {
-        let sourceText = args.join(' ');
-        if (!sourceText) {
-            return msg.channel.send(`Give me something to translate, ${tool.tsunNoun()}!`);
+    async handleMessage({ msg, cmdStr }) {
+        if (!cmdStr) {
+            return msg.channel.send(`Give me something to translate, ${util.tsunNoun()}!`);
         }
 
-        let url =
-            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURI(sourceText)}`;
+        const url =
+            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURI(cmdStr)}`;
         rp({ url: url }).then(body => {
-            let result = JSON.parse(body);
-            msg.channel.send(result[0][0][0] + '\n' + kuroshiro.toRomaji(
+            const result = JSON.parse(body);
+            msg.channel.send(result[0][0][0] + '\n' + this.kuroshiro.toRomaji(
                 result[0][0][0], { mode: 'spaced' }));
         }).catch(err => console.log(err.message));
     }
