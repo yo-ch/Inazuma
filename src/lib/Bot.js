@@ -34,6 +34,12 @@ class Bot extends Discord.Client {
         return result;
     }
 
+    loadMiddleware(middleware) {
+        if (middleware && typeof middleware === 'function') {
+            this.middleware.push(middleware);
+        }
+    }
+
     findCommandPlugin(pluginName) {
         for (const commandPlugin of Object.values(this.commandPlugins)) {
             if (util.stringEqualsIgnoreCase(commandPlugin.name, pluginName)) {
@@ -54,12 +60,6 @@ class Bot extends Discord.Client {
         return null;
     }
 
-    loadMiddleware(middleware) {
-        if (middleware && typeof middleware === 'function') {
-            this.middleware.push(middleware);
-        }
-    }
-
     handleMessage(msg) {
         if (msg.author.bot || msg.channel.type !== 'text') {
             return;
@@ -76,18 +76,6 @@ class Bot extends Discord.Client {
         for (const plugin of Object.values(this.commandPlugins)) {
             plugin.handleMessage(msg);
         }
-    }
-
-    reply(msg) {
-        const replies = [
-            `Nani yo?`,
-            `What do you want, ${util.tsunNoun()}...`,
-            `Hmmmphh.`,
-            `Kimochi warui.`,
-            `Baka janaino?`,
-            `Doushitano?`
-        ];
-        msg.channel.send(replies[util.randInt(replies.length)]);
     }
 }
 

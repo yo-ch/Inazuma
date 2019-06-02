@@ -19,8 +19,8 @@ class AbstractCommandPlugin {
     }
 
     loadCommands(commands) {
-        this.commands = commands.slice().map(c => new c());
-        this.commands.forEach(c => { if (c.requiresParent) c.loadParent(this); });
+        this.commands = commands.slice().map((c) => new c());
+        this.commands.forEach((c) => { if (c.requiresParent) c.loadParent(this); });
     }
 
     load(client) {
@@ -29,7 +29,7 @@ class AbstractCommandPlugin {
     }
 
     handleMessage(msg, pluginParams) {
-        const args = msg.content.split(/\s+/).filter(arg => arg !== '');
+        const args = msg.content.split(/\s+/).filter((arg) => arg !== '');
         const cmdArgs = args.slice(1);
         const options = util.parseOptions(msg.content);
 
