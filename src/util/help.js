@@ -1,15 +1,47 @@
 module.exports = {
    descriptions: {
+      help: `Brings up the help page.`,
+
+      andy: `Shut up weeb.`,
+
+      anilist: `Displays an anime's data, pulled from Anilist.`,
+
+      cc: `Changes the mentioned user's voice channel to the given channel.`,
+
+      choose: `Randomly chooses between the provided choices.`,
+
+      gavquote: `Returns a random Gavin quote.`,
+
+      prune: `Prunes messages in the channel it was used in.`,
+
+      role: `Role management functions.`,
+
+      roll: `Rolls a random number.`,
+
+      music: `Music streaming functions.`,
+
+      ban: `Bans the mentioned user.`,
+
+      kick: `Kicks the mentioned user.`,
+
+      weebify: `Translates a given sentence from English to Japanese.`,
+
+      sar: `Self assignable roles interface`,
+
+      roleme: `Assign/deassign self assignable roles from yourself.`
+   },
+
+   usages: {
       help: `
-~help [command]
+help [command]
    Brings up the command page. Pass a command for further information.`,
 
       andy: `
-~andy [mention]
+andy [mention]
    Shut up weeb. Mentions user, if included.`,
 
       airing: `
-~airing [function]
+airing [function]
    Displays your airing list when used with no arguments.
 
    Functions:
@@ -20,24 +52,24 @@ module.exports = {
 The airing list shows the time until the next episode airs for each anime in your list.`,
 
       anilist: `
-~anilist | ~ani <anime name>
+anilist | ~ani <anime name>
    Displays an anime's data, pulled from Anilist.
    If multiple choices are given, simply reply with the number.`,
 
       cc: `
-~cc <voice channel> <mention>
+cc <voice channel> <mention>
    Changes the mentioned user's voice channel to the given channel.`,
 
       choose: `
-~choose <arg1> | [arg2] ...
+choose <arg1> | [arg2] ...
    Randomly chooses between the provided choice(s).`,
 
       gavquote: `
-~gavquote
+gavquote
    Returns a random Gavin quote.`,
 
       prune: `
-~prune <amount> [options]
+prune <amount> [options]
    Prunes the last <amount> messages.
 
    Options:
@@ -50,8 +82,8 @@ The airing list shows the time until the next episode airs for each anime in you
 
       role: `[Role Help]
 
-~role give <role[,...]> [options] : Gives role(s).
-~role take <role[,...]> [options] : Removes role(s).
+role give <role[,...]> [options] : Gives role(s).
+role take <role[,...]> [options] : Removes role(s).
    [--bots]              : Only change roles for bots.
    [--users]             : Only change roles for users.
    [--user <user[,...]>] : Only change roles for specified users.
@@ -60,19 +92,19 @@ The airing list shows the time until the next episode airs for each anime in you
    [--notinrole <role>]  : Change roles for everyone without the role.
    [--noroles]           : Change roles for everyone with no roles.
 
-~role modify <role> [options] : Modifies a role.
+role modify <role> [options] : Modifies a role.
    [--name <name>]       : Rename role.
    [--color <color>]     : Change role color. (6 digit HEX)`,
 
       roll: `
-~roll <int1> [int2]
+roll <int1> [int2]
    Rolls an integer from 1 to int1 inclusive.
    If int2 is given, rolls an integer between int1 and int2 inclusive.`,
 
       music: `
 [Music Help]
 
-~music | m <function>
+music | m <function>
    play <url> | <search> : Adds the song/playlist to the queue.
    skip                  : Skips the current song.
    pause                 : Pauses the song.
@@ -91,7 +123,7 @@ The airing list shows the time until the next episode airs for each anime in you
 Requires a #music text channel.`,
 
       ban: `
-~ban <mention> [options]
+ban <mention> [options]
    Bans the mentioned user.
    You cannot ban users in a role higher than Inazuma or yourself.
 
@@ -100,7 +132,7 @@ Requires a #music text channel.`,
       [--reason <reason>] : Specifies a reason for banning the user.`,
 
       kick: `
-~kick <mention> [options]
+kick <mention> [options]
    Kicks the mentioned user.
    You cannot kick users in a role higher than Inazuma or yourself.
 
@@ -108,11 +140,11 @@ Requires a #music text channel.`,
       [--reason <reason>] : Specifies a reason for kicking the user.`,
 
       weebify: `
-~weebify <sentence>
+weebify <sentence>
    Translates a sentence from English to Japanese.`,
 
       sar: `
-~sar <function>
+sar <function>
    add <role name>    : Add this SAR to the server.
    remove <role name> : Remove this SAR from the server.
    list               : List all SARs on this server.
@@ -121,11 +153,7 @@ Requires a #music text channel.`,
    Use ~roleme <SAR> to self assign roles.`,
 
       'roleme': `
-~roleme <SAR>
+roleme <SAR>
   Assign/deassign self assignable roles from yourself.`
-   },
-
-   usages: {
-
    }
 };

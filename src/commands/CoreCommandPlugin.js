@@ -1,6 +1,5 @@
 const AbstractCommandPlugin = require('../lib/base/AbstractCommandPlugin.js');
 const AbstractCommand = require('../lib/base/AbstractCommand.js');
-const stripIndent = require('strip-indent');
 
 const util = require('../util/util.js');
 
@@ -52,13 +51,10 @@ class HelpCommand extends AbstractCommand {
     }
 
     getPluginList() {
-        let pluginList = stripIndent(`
-        **Inazuma Command Plugins**
-        `);
+        let pluginList = '**Inazuma Command Plugins**\n';
         for (const commandPlugin of Object.values(this.parent.client.commandPlugins)) {
             const { name, description } = commandPlugin;
-            pluginList +=
-                `${util.wrap(name)}: ${description}\n`;
+            pluginList += `${util.wrap(name)}: ${description}\n`;
         }
         return pluginList;
     }
@@ -92,8 +88,8 @@ class ChooseCommand extends AbstractCommand {
     handleMessage({ msg, cmdStr }) {
         const choices = cmdStr
             .split('|')
-            .map(arg => arg.trim())
-            .filter(arg => arg !== '');
+            .map((arg) => arg.trim())
+            .filter((arg) => arg !== '');
 
         if (choices.length >= 1) {
             msg.channel.send(choices[util.randInt(choices.length)]);

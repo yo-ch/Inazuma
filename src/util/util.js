@@ -69,7 +69,7 @@ module.exports = {
      * Parse the argument for the specified option from commandString.
      * @param {String} option The option to parse the argument for.
      * @param {String} commandString The command to search.
-     * @return The argument for the specified option, or true if the arg couldn't be found.
+     * @return {String} The argument for the specified option, or true if the arg couldn't be found.
      */
     parseOptionArg(option, commandString) {
         const matchArg = commandString.match(new RegExp(`-${option} #?([\\w,]+)`));
@@ -86,18 +86,19 @@ module.exports = {
 
     /**
      * Formats time in seconds to minutes:seconds.
-     * @param seconds the time in seconds.
-     * @return the time in minutes:seconds.
+     * @param {Number} seconds the time in seconds.
+     * @return {String} the time in minutes:seconds.
      */
     formatTime(seconds) {
-        return seconds !== 'N/A' ? `${Math.floor(seconds/60)}:${sprintf('%02d', seconds % 60)}` :
+        return seconds !== 'N/A' ?
+            `${Math.floor(seconds / 60)}:${sprintf('%02d', seconds % 60)}` :
             'N/A';
     },
 
     /**
      * Shuffles the given array, returning it.
-     * @param array the array
-     * @return the shuffled array.
+     * @param {Array} array the array
+     * @return {Array} the shuffled array.
      */
     shuffle(array) {
         for (let i = array.length - 1; i > 0; i--) {
@@ -111,8 +112,9 @@ module.exports = {
 
     /**
      * Check for string equality ignoring case.
+     * @return {Boolean}
      */
     stringEqualsIgnoreCase(string1, string2) {
         return string1.toLowerCase() === string2.toLowerCase();
     }
-}
+};

@@ -31,7 +31,7 @@ function getCurrentSeason() {
 }
 
 function queryAnilist(query, variables) {
-    let options = {
+    const options = {
         method: 'POST',
         url: `https://graphql.anilist.co/`,
         headers: {
@@ -39,8 +39,8 @@ function queryAnilist(query, variables) {
             'Accept': 'application/json'
         },
         body: JSON.stringify({ query, variables })
-    }
-    return rp(options).then(body => JSON.parse(body).data);
+    };
+    return rp(options).then((body) => JSON.parse(body).data);
 }
 
 function getUserAiringList(userId) {

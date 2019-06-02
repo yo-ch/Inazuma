@@ -8,7 +8,6 @@ const AnilistUsers = require('../util/mongoose-schema.js').AnilistUsers;
 const rp = require('request-promise');
 const aniQuery = require('../util/anilist-query.js');
 const util = require('../util/util.js');
-const sprintf = require('sprintf-js').sprintf;
 
 class AnimeCommandPlugin extends AbstractCommandPlugin {
     constructor() {
@@ -38,7 +37,7 @@ class AnimeCommand extends AbstractCommand {
     }
 
     get aliases() {
-        return ['ani', 'anilist'];
+        return ['ani'];
     }
 
     async handleMessage({ msg, cmdStr, options }) {
@@ -47,6 +46,7 @@ class AnimeCommand extends AbstractCommand {
         if (searchQuery) {
             try {
                 const searchResults = (await aniQuery.getAnimeInfo(searchQuery)).Page.media;
+                
                 if (searchResults.length === 1 || (searchResults.length && !options.choose)) {
                     const animeInfoEmbed = this.getAnimeInfoEmbedByIndex(searchResults, 0);
                     msg.channel.send(animeInfoEmbed);
@@ -204,9 +204,9 @@ class AiringCommand extends AbstractCommandPlugin {
                     .current;
 
             const airingList = watchingList
-                .filter(anime => anime.media.status === MediaStatus.RELEASING ||
+                .filter((anime) => anime.media.status === MediaStatus.RELEASING ||
                     anime.media.status === MediaStatus.NOT_YET_RELEASED)
-                .map(anime => {
+                .map((anime) => {
                     if (anime.media.nextAiringEpisode.airingAt === null) {
                         anime.media.nextAiringEpisode.airingAt = Infinity;
                     }
@@ -244,7 +244,7 @@ class AiringCommand extends AbstractCommandPlugin {
             const anilistUserId = (await aniQuery.getAnilistUserId(anilistUsername)).User.id;
             //Save Anilist Id to db.
             AnilistUsers.updateOne({ discordUserId: msg.author.id }, { $set: { anilistUserId: anilistUserId } }, { upsert: true },
-                err => {
+                (err) => {
                     if (err) {
                         msg.channel.send('Gomen, there was a problem syncing to Anilist.');
                         console.log(err);
@@ -284,17 +284,6 @@ class AiringCommand extends AbstractCommandPlugin {
             return `${days}${hours}`;
         }
     }
-
-    airingMessageReducer(acc, currAnime) {
-        let appendString = currAnime.media.nextAiringEpisode.airingAt === Infinity ?
-            sprintf('%-50s [ SCHEDULE N/A ]', currAnime.media.title.romaji) :
-            sprintf('%-50s  Ep %-3i in %s',
-                currAnime.media.title.romaji,
-                currAnime.media.nextAiringEpisode.episode,
-                this.convertSecToMin(currAnime.media.nextAiringEpisode.airingAt - util.getUnixTime())
-            );
-        return acc + appendString + '\n';
-    }
 }
 
 /*
@@ -304,7 +293,7 @@ class WeebifyCommand extends AbstractCommand {
     constructor() {
         super();
         this.kuroshiro = require('kuroshiro');
-        this.kuroshiro.init(err => { if (err) console.log(err); });
+        this.kuroshiro.init((err) => { if (err) console.log(err); });
     }
     get name() {
         return 'weebify';
@@ -318,11 +307,11 @@ class WeebifyCommand extends AbstractCommand {
 
         const url =
             `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURI(cmdStr)}`;
-        rp({ url: url }).then(body => {
+        rp({ url: url }).then((body) => {
             const result = JSON.parse(body);
             msg.channel.send(result[0][0][0] + '\n' + this.kuroshiro.toRomaji(
                 result[0][0][0], { mode: 'spaced' }));
-        }).catch(err => console.log(err.message));
+        }).catch((err) => console.log(err.message));
     }
 }
 

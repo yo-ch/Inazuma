@@ -23,6 +23,7 @@
     "no-console": ["error", {
       "allow": ["log", "warn", "error"]
     }],
-	"semi": ["error", "always"]
+	"semi": ["error", "always"],
+	"arrow-parens": ["error", "always"]
   }
 }

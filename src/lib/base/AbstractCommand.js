@@ -5,7 +5,7 @@ const { wrap } = require('../../util/util.js');
 class AbstractCommand {
     constructor() {
         if (constructor === AbstractCommand) {
-            throw new Error('Cannot instantiate an abstract class.')
+            throw new Error('Cannot instantiate an abstract class.');
         }
     }
 
@@ -18,7 +18,7 @@ class AbstractCommand {
     }
 
     get description() {
-        return helpLibrary.descriptions[this.name] || `Gomen, there's no help info for ${wrap(this.name)}.`;
+        return helpLibrary.descriptions[this.name] || 'No description.';
     }
 
     get usage() {

@@ -1,12 +1,15 @@
 const Discord = require('discord.js');
 const config = require('../json/config.json');
 
+const util = require('../util/util.js');
+
 class Bot extends Discord.Client {
     constructor() {
         super();
 
         this.prefix = config.prefix;
         this.commandPlugins = {};
+        this.middleware = [];
 
         // Events.
         this.on('ready', () => {
@@ -16,8 +19,8 @@ class Bot extends Discord.Client {
             this.user.setActivity('Kantai Collection');
         });
         this.on('message', this.handleMessage);
-        this.on('error', e => console.error(e));
-        this.on('warn', e => console.warn(e));
+        this.on('error', (e) => console.error(e));
+        this.on('warn', (e) => console.warn(e));
     }
 
     loadCommandPlugin(plugin) {
@@ -33,7 +36,7 @@ class Bot extends Discord.Client {
 
     findCommandPlugin(pluginName) {
         for (const commandPlugin of Object.values(this.commandPlugins)) {
-            if (commandPlugin.name.toLowerCase() === pluginName.toLowerCase()) {
+            if (util.stringEqualsIgnoreCase(commandPlugin.name, pluginName)) {
                 return commandPlugin;
             }
         }
@@ -43,7 +46,7 @@ class Bot extends Discord.Client {
     findCommand(commandName) {
         for (const commandPlugin of Object.values(this.commandPlugins)) {
             for (const command of commandPlugin.commands) {
-                if (command.name.toLowerCase() === commandName.toLowerCase()) {
+                if (util.stringEqualsIgnoreCase(command.name, commandName)) {
                     return command;
                 }
             }
@@ -51,19 +54,19 @@ class Bot extends Discord.Client {
         return null;
     }
 
+    loadMiddleware(middleware) {
+        if (middleware && typeof middleware === 'function') {
+            this.middleware.push(middleware);
+        }
+    }
+
     handleMessage(msg) {
         if (msg.author.bot || msg.channel.type !== 'text') {
             return;
         }
 
-        // Replies to non-commands.
-        if (msg.content.toLowerCase().match(/^ay{2,}$/)) {
-            msg.channel.send('lmao');
-        } else if (msg.content.toLowerCase().search(/^same+$/) >= 0) {
-            msg.channel.send('same');
-        } else if (msg.content.search('299400284906717186') >= 0) {
-            //Random reply when bot is mentioned.
-            reply(msg);
+        for (const middleware of this.middleware) {
+            middleware(msg);
         }
 
         if (!msg.content.startsWith(config.prefix)) {
@@ -73,6 +76,18 @@ class Bot extends Discord.Client {
         for (const plugin of Object.values(this.commandPlugins)) {
             plugin.handleMessage(msg);
         }
+    }
+
+    reply(msg) {
+        const replies = [
+            `Nani yo?`,
+            `What do you want, ${util.tsunNoun()}...`,
+            `Hmmmphh.`,
+            `Kimochi warui.`,
+            `Baka janaino?`,
+            `Doushitano?`
+        ];
+        msg.channel.send(replies[util.randInt(replies.length)]);
     }
 }
 

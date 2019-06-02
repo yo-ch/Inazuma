@@ -7,13 +7,13 @@ const rp = require('request-promise');
 
 const config = require('./json/config.json');
 const commandHelp = require('./util/help.js');
-const tool = require('./util/tool.js');
+const tool = require('./util/util.js/index.js');
 const ani = require('./anime.js');
 const music = require('./music.js');
 
 const Guilds = require('./util/mongoose-schema.js').Guilds;
 
-kuroshiro.init(err => { if (err) console.log(err) }); //For weebify.
+kuroshiro.init((err) => { if (err) console.log(err); }); //For weebify.
 
 module.exports = {
     'help': help,
