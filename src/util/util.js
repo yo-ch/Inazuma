@@ -21,12 +21,13 @@ module.exports = {
     },
 
     /**
-     * Wraps the content in an unformatted text box.
+     * Wraps the content with the supplied string.
      * @param {String} content The content to wrap.
+     * @param {String} wrapper The wrapper.
      * @return {String} The wrapped content.
      */
-    wrap(content) {
-        return '``' + content + '``';
+    wrap(content, wrapper = '``') {
+        return wrapper + content + wrapper;
     },
 
     /**
@@ -52,7 +53,7 @@ module.exports = {
     parseOptions(commandString) {
         let matches;
         const shortRegex = / -(\w)/g;
-        const longRegex = / --(\w+)/g;
+        const longRegex = / --(\w{2,})/g;
 
         let options = {};
         while ((matches = shortRegex.exec(commandString))) {
@@ -74,6 +75,26 @@ module.exports = {
     parseOptionArg(option, commandString) {
         const matchArg = commandString.match(new RegExp(`-${option} #?([\\w,]+)`));
         return matchArg ? matchArg[1].trim().toLowerCase() : true;
+    },
+
+    /**
+     * Removes the given options from the command string. Used to get the pure arguments of the command.
+     * @param {String} commandString The command to remove strings from.
+     * @return {String} The cleaned command string. 
+     */
+    removeOptions(commandString, options) {
+        for (const [option, value] of Object.entries(options)) {
+            if (option.length === 1) {
+                commandString = value === true ?
+                    commandString.replace(new RegExp(`\\s+-${option}`), '') :
+                    commandString.replace(new RegExp(`\\s+-${option}\\s+${value}`), '');
+            } else {
+                commandString = value === true ?
+                    commandString.replace(new RegExp(`\\s+--${option}`), '') :
+                    commandString.replace(new RegExp(`\\s+--${option}\\s+${value}`), '');
+            }
+        }
+        return commandString;
     },
 
     /***

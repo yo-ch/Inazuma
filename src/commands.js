@@ -2,6 +2,7 @@
 Regular commands.
 */
 'use strict';
+/*eslint-disable*/
 const kuroshiro = require('kuroshiro');
 const rp = require('request-promise');
 
@@ -11,9 +12,9 @@ const tool = require('./util/util.js/index.js');
 const ani = require('./anime.js');
 const music = require('./music.js');
 
-const Guilds = require('./util/mongoose-schema.js').Guilds;
+const Guilds = require('./util/mongooseSchema.js').Guilds;
 
-kuroshiro.init((err) => { if (err) console.log(err); }); //For weebify.
+kuroshiro.init(err => { if (err) console.log(err) }); //For weebify.
 
 module.exports = {
     'help': help,
@@ -76,7 +77,7 @@ function ban(msg) {
     }
     let memberToBan = msg.mentions.members.first();
     if (memberToBan && memberToBan.bannable && (msg.member.highestRole.calculatedPosition >
-            memberToBan.highestRole.calculatedPosition || msg.guild.ownerID === msg.author.id)) {
+        memberToBan.highestRole.calculatedPosition || msg.guild.ownerID === msg.author.id)) {
         //Parse arguments to options, if they exist.
         let reason = tool.parseOptionArg('reason', msg.content);
         let days = parseInt(tool.parseOptionArg('days', msg.content));
@@ -98,7 +99,7 @@ function kick(msg) {
     }
     let memberToKick = msg.mentions.members.first();
     if (memberToKick && memberToKick.kickable && (msg.member.highestRole.calculatedPosition >
-            memberToKick.highestRole.calculatedPosition || msg.guild.ownerID === msg.author.id)) {
+        memberToKick.highestRole.calculatedPosition || msg.guild.ownerID === msg.author.id)) {
         let reason = tool.parseOptionArg('reason', msg.content);
         memberToKick.kick(reason ? reason : 'none');
     }
@@ -387,7 +388,7 @@ function role(msg) {
 
                 //Make sure the role exists.
                 if (!msg.guild.roles.exists(role => role.name.toLowerCase() ===
-                        options['inrole'])) {
+                    options['inrole'])) {
                     msg.channel.send(`Gomen, I couldn't find a matching role.`)
                     return false;
                 }
@@ -400,7 +401,7 @@ function role(msg) {
 
                 //Check that role actually exists.
                 if (!msg.guild.roles.exists(role => role.name.toLowerCase() ===
-                        options['notinrole'])) {
+                    options['notinrole'])) {
                     msg.channel.send(`Gomen, I couldn't find a matching role.`)
                     return false;
                 }
@@ -619,7 +620,7 @@ function sarInterface(msg) {
             Guilds.updateOne({ guildID: msg.guild.id }, { $addToSet: { sars: args[1] } }, { upsert: true },
                 (err) => {
                     if (err) {
-                      console.log(err);
+                        console.log(err);
                         return msg.channel.send('Gomen, I couldn\'t add your SAR.');
                     }
                     if (!msg.guild.roles.exists('name', args[1])) {

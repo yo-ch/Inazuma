@@ -121,7 +121,7 @@ class PruneCommand extends AbstractCommand {
                         let userPass = userOption ? msg.author.username.toLowerCase() ===
                             name || nickname === name : true;
                         let filterPass = filterOption ? msg.content.toLowerCase()
-                            .indexOf(stringToFilter) >= 0 : true;
+                            .indexOf(stringToFilter) > -1 : true;
                         let pinnedPass = pinOption ? !msg.pinned : true;
 
                         return botPass && userPass && filterPass &&

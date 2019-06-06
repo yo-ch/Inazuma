@@ -38,6 +38,7 @@ class Bot extends Discord.Client {
         if (middleware && typeof middleware === 'function') {
             this.middleware.push(middleware);
         }
+        return Promise.resolve(middleware);
     }
 
     findCommandPlugin(pluginName) {
@@ -73,8 +74,17 @@ class Bot extends Discord.Client {
             return;
         }
 
+        const args = msg.content.split(/\s+/).filter((arg) => arg !== '');
+        const options = util.parseOptions(msg.content);
+        const commandStr = util.removeOptions(args.slice(1).join(' '), options);
+
         for (const plugin of Object.values(this.commandPlugins)) {
-            plugin.handleMessage(msg);
+            plugin.handleMessage({
+                msg,
+                args,
+                commandStr,
+                options
+            });
         }
     }
 }

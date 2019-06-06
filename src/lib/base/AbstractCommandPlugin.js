@@ -19,8 +19,12 @@ class AbstractCommandPlugin {
     }
 
     loadCommands(commands) {
-        this.commands = commands.slice().map((c) => new c());
-        this.commands.forEach((c) => { if (c.requiresParent) c.loadParent(this); });
+        this.commands = commands.slice().map((command) => new command());
+        this.commands.forEach((c) => {
+            if (c.requiresParent) {
+                c.loadParent(this);
+            }
+        });
     }
 
     load(client) {
@@ -28,23 +32,18 @@ class AbstractCommandPlugin {
         return Promise.resolve(this);
     }
 
-    handleMessage(msg, pluginParams) {
-        const args = msg.content.split(/\s+/).filter((arg) => arg !== '');
-        const cmdArgs = args.slice(1);
-        const options = util.parseOptions(msg.content);
-
-        const commandCall = args[0].slice(this.client.prefix.length);
+    handleMessage({ msg, args, commandStr, options, plugin }) {
+        const commandName = args[0].slice(this.client.prefix.length);
+        const commandArgs = args.slice(1);
 
         for (const command of this.commands) {
-            if (command.name === commandCall ||
-                command.aliases.indexOf(commandCall) >= 0
-            ) {
+            if (command.name === commandName || command.aliases.indexOf(commandName) > -1) {
                 return command.handleMessage({
-                    msg: msg,
-                    args: cmdArgs,
-                    cmdStr: cmdArgs.join(' '),
-                    options: options,
-                    plugin: pluginParams
+                    msg,
+                    args: commandArgs,
+                    commandStr,
+                    options,
+                    plugin
                 });
             }
         }

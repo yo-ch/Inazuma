@@ -25,12 +25,14 @@ class MusicCommandPlugin extends AbstractCommandPlugin {
         return 'music commands';
     }
 
-    handleMessage(msg) {
-        if (!msg.guild.available) {
+    handleMessage(params) {
+        if (!params.msg.guild.available) {
             return;
         }
 
-        super.handleMessage(msg, { player: this.getGuildPlayer(msg.guild) });
+        const player = this.getGuildPlayer(params.msg.guild);
+
+        super.handleMessage({ ...params, plugin: { player } });
     }
 
     getGuildPlayer(msg) {
@@ -72,7 +74,7 @@ class PlayCommand extends AbstractCommand {
                         msg.channel.send('Invalid Youtube link!');
                     }
                 }
-                
+
                 if (mediaResult) {
                     if (isPlaylist) {
                         plugin.player.queuePlaylist(mediaResult);

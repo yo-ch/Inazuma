@@ -42,7 +42,7 @@ class HelpCommand extends AbstractCommand {
     }
 
     getPluginCommands(plugin) {
-        let pluginCommands = `**${plugin.name} commands**\n`;
+        let pluginCommands = util.wrap(`${plugin.name} commands`, '**') + '\n';
         for (const command of plugin.commands) {
             const { name, description } = command;
             pluginCommands += `${util.wrap(name)}: ${description}\n`;
@@ -85,9 +85,8 @@ class ChooseCommand extends AbstractCommand {
         return 'choose';
     }
 
-    handleMessage({ msg, cmdStr }) {
-        const choices = cmdStr
-            .split('|')
+    handleMessage({ msg, commandStr }) {
+        const choices = commandStr.split('|')
             .map((arg) => arg.trim())
             .filter((arg) => arg !== '');
 

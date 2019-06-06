@@ -1,18 +1,21 @@
 const AbstractCommandPlugin = require('../lib/base/AbstractCommandPlugin.js');
 const AbstractCommand = require('../lib/base/AbstractCommand.js');
 
-const RichEmbed = require('discord.js').RichEmbed;
-const MediaStatus = require('../lib/anime/AiringAnime.js').MediaStatus;
-const AnilistUsers = require('../util/mongoose-schema.js').AnilistUsers;
-
 const rp = require('request-promise');
-const aniQuery = require('../util/anilist-query.js');
+const { RichEmbed } = require('discord.js');
+
+const anilistUtil = require('../util/anilistUtil.js');
 const util = require('../util/util.js');
+
+const MediaStatus = require('../constants/MediaStatus.js');
+const ArgError = require('../lib/error/ArgError.js');
+
 
 class AnimeCommandPlugin extends AbstractCommandPlugin {
     constructor() {
         super(
             AnimeCommand,
+            AiringNotificationCommand,
             WeebifyCommand
         );
     }
@@ -40,14 +43,16 @@ class AnimeCommand extends AbstractCommand {
         return ['ani'];
     }
 
-    async handleMessage({ msg, cmdStr, options }) {
-        const searchQuery = cmdStr;
+    async handleMessage({ msg, commandStr, options }) {
+        const searchQuery = commandStr;
 
         if (searchQuery) {
             try {
-                const searchResults = (await aniQuery.getAnimeInfo(searchQuery)).Page.media;
-                
-                if (searchResults.length === 1 || (searchResults.length && !options.choose)) {
+                const searchResults = await anilistUtil.getAnimeInfo(searchQuery);
+
+                if (searchResults.length === 1 ||
+                    searchResults.length && !(options.choose || options.c)
+                ) {
                     const animeInfoEmbed = this.getAnimeInfoEmbedByIndex(searchResults, 0);
                     msg.channel.send(animeInfoEmbed);
                 } else if (searchResults.length) {
@@ -105,12 +110,8 @@ class AnimeCommand extends AbstractCommand {
     getAnimeInfoEmbed({ name, score, type, episodes, synopsis, url, image, seasonInt }) {
         let embed = new RichEmbed();
 
-        if (!episodes) {
-            episodes = 'N/A';
-        }
-        if (!score) {
-            score = 'N/A';
-        }
+        if (!episodes) { episodes = 'N/A'; }
+        if (!score) { score = 'N/A'; }
 
         embed.setTitle(name);
         embed.setImage(image);
@@ -170,118 +171,192 @@ class AnimeCommand extends AbstractCommand {
     }
 }
 
-class AiringCommand extends AbstractCommandPlugin {
+class AiringNotificationCommand extends AbstractCommand {
+    constructor() {
+        super();
+
+        const AiringSeasonMonitor = require('../lib/anime/AiringSeasonMonitor');
+        const { AiringSubscribers } = require('../util/mongooseSchema.js');
+
+        // Initialize the airing season monitor that tracks anime airing times.
+        this.monitor = new AiringSeasonMonitor((anime) => this.notifyAired(anime));
+        this.subscriberDatabase = AiringSubscribers;
+
+        this.functions = {
+            subscribe: (params) => this.handleSubscribe(params),
+            unsubscribe: (params) => this.handleUnsubscribe(params),
+            list: (params) => this.handleListSubscriptions(params),
+            sync: (params) => this.handleSyncAnilistUser(params),
+        };
+    }
+
     get name() {
         return 'airing';
     }
 
-    get description() {
-        return '';
-    }
-
-    async handleMessage({ msg, args }) {
-        if (args.length === 0) {
-            this.getAiringList(msg);
-        } else if (args[0] === 'sync') {
-            this.syncUser(msg, args);
-        }
+    get requiresParent() {
+        return true;
     }
 
     /**
-     * Displays user's airing list.
+     * Notifies subscribers of an anime that it has aired by sending them a direct message.
+     * @param {Object} anime Aired anime's details.
      */
-    async getAiringList(msg) {
+    async notifyAired(anime) {
         try {
-            const discordUserId = msg.author.id;
-            const anilistUserId = (await AnilistUsers.findOne({ discordUserId })
-                .lean().exec()).anilistUserId;
-            if (!anilistUserId) {
-                return msg.channel.send('Your Anilist profile is not linked to Inazuma.');
+            const discordUsers = await this.getAnimeSubscribers(anime.id);
+            for (const userId of discordUsers) {
+                try {
+                    const discordUser = await this.parent.client.fetchUser(userId);
+                    discordUser.send(util.wrap(`Episode ${anime.nextEpisode}`) + ` of ${util.wrap(anime.name, '**')} has aired.`);
+                } catch (err) {
+                    console.log(err);
+                }
             }
-
-            const watchingList =
-                (await aniQuery.getUserAiringList(anilistUserId)).MediaListCollection.statusLists
-                    .current;
-
-            const airingList = watchingList
-                .filter((anime) => anime.media.status === MediaStatus.RELEASING ||
-                    anime.media.status === MediaStatus.NOT_YET_RELEASED)
-                .map((anime) => {
-                    if (anime.media.nextAiringEpisode.airingAt === null) {
-                        anime.media.nextAiringEpisode.airingAt = Infinity;
-                    }
-                    if (anime.media.title.romaji.length > 43) {
-                        anime.media.title.romaji = anime.media.title.romaji.substring(0,
-                            43) +
-                            '...';
-                    }
-                    return anime;
-                })
-                .sort((a, b) =>
-                    a.media.nextAiringEpisode.airingAt - b.media.nextAiringEpisode.airingAt
-                );
-
-            const listResponse = `#${msg.author.username}'s Airing List\n` +
-                airingList.reduce(this.airingMessageReducer, '');
-            msg.channel.send(listResponse, { code: 'md' });
         } catch (err) {
             console.log(err);
-            msg.channel.send('Gomen, there was a problem retrieving your airing list.');
         }
     }
 
-    /**
-     * Syncs the Anilist user to the Discord user, for use with the airing list functions.
-     */
-    async syncUser(msg, args) {
-        const anilistUsername = args[1];
-        if (!anilistUsername) {
-            return msg.channel.send(`You didn't give me a username, ${util.tsunNoun()}`);
-        }
+    handleMessage({ msg, args, commandStr }) {
+        const airingFunction = args[0];
+        if (!airingFunction) { return; }
+        if (!this.functions[airingFunction]) { msg.channel.send('Invalid airing function.'); }
 
-        // Get Anilist Id.
+        const query = commandStr.slice(airingFunction.length).trim();
+        this.functions[airingFunction]({ msg, query });
+    }
+
+    handleSubscribe({ msg, query }) {
         try {
-            const anilistUserId = (await aniQuery.getAnilistUserId(anilistUsername)).User.id;
-            //Save Anilist Id to db.
-            AnilistUsers.updateOne({ discordUserId: msg.author.id }, { $set: { anilistUserId: anilistUserId } }, { upsert: true },
-                (err) => {
-                    if (err) {
-                        msg.channel.send('Gomen, there was a problem syncing to Anilist.');
-                        console.log(err);
-                    } else {
-                        msg.channel.send('Synced to Anilist successfully!');
-                    }
-                });
+            if (!query) { throw new Error('Invalid arguments.'); }
+
+            const anime = this.findMonitorAnimeByQuery(query);
+            this.subscribeUser(anime.id, msg.author.id)
+                .then(() => msg.author.send(`Successfully subscribed to ${util.wrap(anime.name, '**')}.`))
+                .catch(() => msg.author.send(`Failed to save subscription to ${util.wrap(anime.name, '**')}. Please try again.`));
+        } catch (err) {
+            msg.author.send(err.name === 'ArgError' ? err.message : `Failed to subscribe.`);
+        }
+    }
+
+    handleUnsubscribe({ msg, query }) {
+        try {
+            if (!query) { throw new Error('Invalid arguments.'); }
+
+            const anime = this.findMonitorAnimeByQuery(query);
+            this.unsubscribeUser(anime.id, msg.author.id)
+                .then(() => msg.author.send(`Successfully unsubscribed from ${util.wrap(anime.name, '**')}.`))
+                .catch(() => msg.author.send(`Failed to cancel subscription to ${util.wrap(anime.name, '**')}. Please try again.`));
+        } catch (err) {
+            msg.author.send(err.name === 'ArgError' ? err.message : 'Failed to cancel subscription.');
+        }
+    }
+
+    async handleListSubscriptions({ msg }) {
+        try {
+            const subscriptionList = await this.getUserSubscriptions(msg.author.id);
+            const listHeading = util.wrap('Airing Notification Subscriptions:', '**') + '\n';
+            const subscriptionsMsg = subscriptionList.map((subscription) => this.monitor.getMonitorAnimeById(subscription.animeId))
+                .filter((anime) => !!anime)
+                .map((anime) => util.wrap(anime.name) + '\n')
+                .sort()
+                .reduce((acc, name) => acc + name, listHeading);
+
+            msg.author.send(subscriptionsMsg);
+        } catch (err) {
+            console.log(err);
+            msg.author.send(`Gomen, I couldn't retrieve your list of subscriptions.`);
+        }
+    }
+
+    async handleSyncAnilistUser({ msg, query: anilistUsername }) {
+        try {
+            const anilistUserId = await anilistUtil.getUserId(anilistUsername);
+            const userWatchingLists = await anilistUtil.getUserWatchingLists(anilistUserId);
+
+            // Get all anime that the user is watching and currently airing.
+            const userAiringAnimeIds = userWatchingLists.reduce((acc, list) => [...acc, ...list.entries], [])
+                .filter((anime) => anime.media.status === MediaStatus.RELEASING)
+                .map((anime) => anime.media.id);
+
+            const subscribePromises = userAiringAnimeIds.map((animeId) => this.subscribeUser(animeId, msg.author.id));
+            const results = await Promise.all(subscribePromises);
+            msg.author.send(`Succesfully subscribed to airing notifications for ${util.wrap(results.length)} anime.`);
         } catch (err) {
             console.log(err);
             const error = err.error ? JSON.parse(err.error).data : '';
-            if (error.length && error === 'Not Found.') {
-                msg.channel.send(
-                    `Your username is invalid! Please give a valid Anilist username.`);
+            if (error === 'Not Found.') {
+                msg.author.send('Please give me a valid Anilist username.');
             } else {
-                msg.channel.send(`Gomen, there was a problem syncing your Anilist.`);
+                msg.author.send('Gomen, there was a problem syncing your Anilist anime list.');
             }
         }
     }
 
     /**
-     * Converts a countdown in seconds to days/hours/minutes.
-     * @param {Number} seconds The number of seconds.
+     * Subscribes a user to airing notifications for the given anime.
+     * @param {Number} animeId The id of the anime to subscribe to.
+     * @param {String} userId The discord id of the user to subscribe.
+     * @return {Promise}
      */
-    convertSecToMin(seconds) {
-        let days = Math.floor(seconds / 86400);
-        let hours = Math.floor((seconds % 86400) / 3600);
-        days = (days === 0) ?
-            null :
-            days + 'd ';
-        hours = (hours === 0) ?
-            null :
-            hours + 'h';
+    subscribeUser(animeId, userId) {
+        return this.subscriberDatabase.updateOne(
+            { animeId },
+            { $addToSet: { discordUsers: userId } },
+            { upsert: true }
+        );
+    }
 
-        if (days === null && hours === null) {
-            return `${Math.ceil(seconds / 60)}m`;
+    /**
+     * Unsubscribes a user from airing notifications for the given anime.
+     * @param {Number} animeId The id of the anime to unsubcribe from.
+     * @param {String} userId The discord id of the user to unsubscribe.
+     * @return {Promise}
+     */
+    unsubscribeUser(animeId, userId) {
+        return this.subscriberDatabase.updateOne(
+            { animeId },
+            { $pull: { discordUsers: userId } },
+        );
+    }
+
+    getUserSubscriptions(userId) {
+        return this.subscriberDatabase.find(
+            { discordUsers: { $all: userId } },
+            { animeId: true }
+        );
+    }
+
+    getAnimeSubscribers(animeId) {
+        return this.subscriberDatabase.findOne(
+            { animeId: animeId },
+            { discordUsers: true }
+        ).lean().then((result) => result.discordUsers);
+    }
+
+    /**
+     * Finds the AiringAnime in the monitor given a query.
+     * @param {String} subscribeQuery A URL for the Anilist anime or the name of the anime to find.
+     * @return {AiringAnime}
+     * @throws {String} A reason for failing to find the AiringAnime.
+     */
+    findMonitorAnimeByQuery(subscribeQuery) {
+        if (subscribeQuery.indexOf('anilist.co/anime') > -1) {
+            // Find AiringAnime given an Anilist anime url.
+            const matchIdResult = subscribeQuery.match(/anilist\.co\/anime\/(\d+)/);
+            if (!matchIdResult) { throw new ArgError('Invalid Anilist anime link.'); }
+
+            const monitorAnime = this.monitor.getMonitorAnimeById(matchIdResult[1]);
+            if (!monitorAnime) { throw new ArgError('This anime is not currently airing.'); }
+
+            return monitorAnime;
         } else {
-            return `${days}${hours}`;
+            // Find AiringAnime given a name.
+            const monitorAnime = this.monitor.getMonitorAnimeByName(subscribeQuery);
+            if (!monitorAnime) { throw new ArgError(`Sorry there's no anime airing by the name ${util.wrap(subscribeQuery)}.`); }
+
+            return monitorAnime;
         }
     }
 }
@@ -293,25 +368,32 @@ class WeebifyCommand extends AbstractCommand {
     constructor() {
         super();
         this.kuroshiro = require('kuroshiro');
-        this.kuroshiro.init((err) => { if (err) console.log(err); });
+        this.kuroshiro.init((err) => {
+            if (err) {
+                console.log(err);
+            }
+        });
     }
+
     get name() {
         return 'weebify';
     }
 
-
-    async handleMessage({ msg, cmdStr }) {
-        if (!cmdStr) {
+    async handleMessage({ msg, commandStr }) {
+        if (!commandStr) {
             return msg.channel.send(`Give me something to translate, ${util.tsunNoun()}!`);
         }
 
         const url =
-            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURI(cmdStr)}`;
-        rp({ url: url }).then((body) => {
+            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURI(commandStr)}`;
+
+        try {
+            const body = await rp({ url });
             const result = JSON.parse(body);
-            msg.channel.send(result[0][0][0] + '\n' + this.kuroshiro.toRomaji(
-                result[0][0][0], { mode: 'spaced' }));
-        }).catch((err) => console.log(err.message));
+            msg.channel.send(result[0][0][0] + '\n' + this.kuroshiro.toRomaji(result[0][0][0], { mode: 'spaced' }));
+        } catch (err) {
+            console.log(err.message);
+        }
     }
 }
 

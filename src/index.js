@@ -20,9 +20,7 @@ inazuma.login(config.token);
 
 
 mongoose.connect(config.mongo_url, { useNewUrlParser: true });
-mongoose.connection.once('open', () => {
-    console.log('Connected to database!');
-});
+mongoose.connection.once('open', () => console.log('Connected to database!'));
 mongoose.connection.on('error', console.error.bind(console, 'connection:error:'));
 
 
@@ -34,18 +32,18 @@ function ayyLmaoMiddleware(msg) {
 }
 
 function sameMiddleware(msg) {
-    if (msg.content.toLowerCase().search(/^same+$/) >= 0) { msg.channel.send('same'); }
+    if (msg.content.toLowerCase().search(/^same+$/) > -1) { msg.channel.send('same'); }
 }
 
 function mentionReplyMiddleware(msg) {
-    if (msg.content.search(inazuma.user.id) >= 0) {
+    if (msg.content.search(inazuma.user.id) > -1) {
         const replies = [
-            `Nani yo?`,
             `What do you want, ${util.tsunNoun()}...`,
             `Hmmmphh.`,
             `Kimochi warui.`,
             `Baka janaino?`,
-            `Doushitano?`
+            `Doushitano?`,
+            `I-It's not like I want to be in this server or anything, ${util.tsunNoun}...`
         ];
         msg.channel.send(replies[util.randInt(replies.length)]);
     }

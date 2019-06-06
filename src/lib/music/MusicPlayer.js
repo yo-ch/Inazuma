@@ -1,4 +1,3 @@
-'use strict';
 const util = require('../../util/util.js');
 const RichEmbed = require('discord.js').RichEmbed;
 
@@ -9,10 +8,10 @@ const Status = {
     PLAYING: 3
 };
 
-/*
-The music player for a guild.
-Handles the queuing, and streaming of Songs.
-*/
+/**
+ * The music player for a guild.
+ * Handles the queuing, and streaming of Songs.
+ */
 class MusicPlayer {
     constructor(msg) {
         this.queue = [];
@@ -65,22 +64,22 @@ class MusicPlayer {
             this.dispatch.once('start', () => {
                 this.musicChannel.send(
                     new RichEmbed()
-                    .setTitle(`:notes: ${util.wrap(song.title)}`)
-                    .setURL(song.url)
-                    .setThumbnail(song.thumbnail)
+                        .setTitle(`:notes: ${util.wrap(song.title)}`)
+                        .setURL(song.url)
+                        .setThumbnail(song.thumbnail)
                 );
                 this.changeStatus(Status.PLAYING);
                 song.startTime = util.getUnixTime();
             });
 
-            this.dispatch.on('error', error => {
+            this.dispatch.on('error', (error) => {
                 console.log(error);
                 this.dispatch = null;
                 this.queue.shift();
                 setTimeout(() => { this.playSong(msg) }, 100);
             });
 
-            this.dispatch.once('end', reason => {
+            this.dispatch.once('end', (reason) => {
                 this.dispatch = null;
                 this.queue.shift();
                 if (reason != 'leave') {
@@ -88,7 +87,7 @@ class MusicPlayer {
                 }
             });
 
-            this.dispatch.on('debug', info => {
+            this.dispatch.on('debug', (info) => {
                 console.log(info);
             });
         } else {
@@ -117,25 +116,22 @@ class MusicPlayer {
     Pauses the dispatcher.
     */
     pauseSong() {
-        if (this.dispatch)
+        if (this.dispatch) {
             this.dispatch.pause();
-        else
-            this.musicChannel.send(
-                `Nothing is playing right now.`
-            );
+        } else {
+            this.musicChannel.send('Nothing is playing right now.');
+        }
     }
 
     /*
     Resumes the dispatcher.
     */
     resumeSong() {
-        if (this.dispatch)
+        if (this.dispatch) {
             this.dispatch.resume();
-        else
-            this.musicChannel.send(
-                `Nothing is playing right now.`
-            );
-
+        } else {
+            this.musicChannel.send('Nothing is playing right now.');
+        }
     }
 
     /*
@@ -145,10 +141,12 @@ class MusicPlayer {
         if (this.queue.length > 0) {
             try {
                 let queueString = '';
-                for (let i = 0; i < this.queue.length && i < 15; i++)
+                for (let i = 0; i < this.queue.length && i < 15; i++) {
                     queueString += `${i + 1}. ${this.queue[i].title}\n`;
-                if (this.queue.length > 15)
+                }
+                if (this.queue.length > 15) {
                     queueString += `\nand ${this.queue.length - 15} more.`;
+                }
                 msg.channel.send(queueString, { 'code': true });
             } catch (err) {
                 console.log('ERROR CAUGHT:\n' + err);
@@ -195,9 +193,9 @@ class MusicPlayer {
                 this.queue[0].startTime);
             msg.channel.send(
                 new RichEmbed()
-                .setTitle(`:notes: ${util.wrap(this.queue[0].title)}`)
-                .setDescription(util.wrap(
-                    `|${elapsedTime}/${this.queue[0].duration}|`))
+                    .setTitle(`:notes: ${util.wrap(this.queue[0].title)}`)
+                    .setDescription(util.wrap(
+                        `|${elapsedTime}/${this.queue[0].duration}|`))
             );
         } else {
             msg.channel.send(
@@ -233,10 +231,10 @@ class MusicPlayer {
             if (this.voiceConnection === null) {
                 this.musicChannel = msg.channel;
                 this.musicChannel.send(
-                    new RichEmbed({ description: `Joined and bound to :speaker:**${msg.member.voiceChannel.name}** and #**${this.musicChannel.name}**.` })
+                    new RichEmbed({ description: `Joined and bound to :speaker:${util.wrap(msg.member.voiceChannel.name, '**')} and #${util.wrap(this.musicChannel.name, '**')}.` })
                 );
                 msg.member.voiceChannel.join().then(
-                    connection => {
+                    (connection) => {
                         this.voiceConnection = connection;
                         this.changeStatus(Status.STOPPED);
                         if (this.queue.length > 0) {
@@ -257,7 +255,7 @@ class MusicPlayer {
     leaveVc(msg) {
         if (this.voiceConnection) {
             this.musicChannel.send(
-                new RichEmbed({ description: `:no_entry: Leaving **${this.voiceConnection.channel.name}**.` })
+                new RichEmbed({ description: `:no_entry: Leaving ${util.wrap(this.voiceConnection.channel.name, '**')}.` })
             );
             this.musicChannel = null;
             if (this.dispatch) this.dispatch.end('leave');
@@ -268,9 +266,7 @@ class MusicPlayer {
             this.voiceConnection = null;
             this.dispatch = null;
         } else {
-            msg.channel.send(
-                `I'm not in a voice channel!`
-            );
+            msg.channel.send(`I'm not in a voice channel!`);
         }
     }
 

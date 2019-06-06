@@ -2,14 +2,15 @@
 Anime related commands and functions.
 */
 'use strict';
+/*eslint-disable*/
 const tool = require('./util/util.js/index.js');
 const aniQuery = require('./util/anilist-query.js');
 const AiringSeason = require('./lib/anime/AiringSeason.js');
 const MediaStatus = require('./lib/anime/AiringAnime.js').MediaStatus;
 const RichEmbed = require('discord.js').RichEmbed;
 
-const AnilistUsers = require('./util/mongoose-schema.js').AnilistUsers;
-const AiringSubscribers = require('./util/mongoose-schema.js').AiringSubscribers;
+const AnilistUsers = require('./util/mongooseSchema.js/index.js').AnilistUsers;
+const AiringSubscribers = require('./util/mongooseSchema.js/index.js').AiringSubscribers;
 
 const sprintf = require('sprintf-js').sprintf;
 
@@ -50,10 +51,10 @@ function addAiringAnimeSubscriber(msg) {
     let anime = currentSeason.findAnime(search);
     if (anime) {
         AiringSubscribers.updateOne({ animeId: anime.id }, {
-                $addToSet: {
-                    discordUsers: msg.author.id
-                }
-            }, { upsert: true },
+            $addToSet: {
+                discordUsers: msg.author.id
+            }
+        }, { upsert: true },
             err => {
                 if (err) {
                     msg.channel.send('Gomen there was a problem subscribing to the anime.');
