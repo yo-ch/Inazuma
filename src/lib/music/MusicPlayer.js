@@ -37,6 +37,15 @@ class MusicPlayer {
     }
 
     /**
+     * Adds songs to the end of the queue.
+     * 
+     * @param {Array<Song>} songs 
+     */
+    queueSongs(songs) {
+        this.queue = this.queue.concat(songs);
+    }
+
+    /**
      * Adds the song to the start of the queue.
      * 
      * @param {Song} song The song to queue.

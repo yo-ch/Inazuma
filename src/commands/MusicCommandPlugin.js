@@ -3,10 +3,10 @@ const AbstractCommand = require('../lib/base/AbstractCommand.js');
 
 const util = require('../util/util.js');
 
-
 const Song = require('../lib/music/Song.js');
 const MusicPlayer = require('../lib/music/MusicPlayer.js');
 const YoutubeProcessor = require('../lib/music/processor/YoutubeProcessor.js');
+const YoutubeSearchProcessor = require('../lib/music/processor/YoutubeSearchProcessor.js');
 const RichEmbed = require('discord.js').RichEmbed;
 
 class MusicCommandPlugin extends AbstractCommandPlugin {
@@ -27,7 +27,10 @@ class MusicCommandPlugin extends AbstractCommandPlugin {
 
         this.guildPlayers = {};
         this.timeouts = {};
-        this.processors = [YoutubeProcessor];
+        this.processors = [
+            YoutubeProcessor,
+            YoutubeSearchProcessor
+        ];
     }
 
     get name() {
@@ -43,15 +46,15 @@ class MusicCommandPlugin extends AbstractCommandPlugin {
             ...params,
             plugin: {
                 processors: this.processors,
-                getPlayer: () => this.getGuildPlayer(params.msg.guild.id),
+                getPlayer: (init) => this.getGuildPlayer(params.msg.guild.id, init),
                 destroyPlayer: () => this.destroyGuildPlayer(params.msg.guild.id)
             }
         });
     }
 
-    getGuildPlayer(guildId) {
+    getGuildPlayer(guildId, init = true) {
         delete this.timeouts[guildId];
-        return this.guildPlayers[guildId] || this.initGuildPlayer(guildId);
+        return this.guildPlayers[guildId] || init && this.initGuildPlayer(guildId);
     }
 
     initGuildPlayer(guildId) {
@@ -79,21 +82,38 @@ class PlayCommand extends AbstractCommand {
         }
 
         try {
+            const processed = false;
             for (const processor of plugin.processors) {
                 if (processor.isValidRequest(playRequest)) {
                     const player = plugin.getPlayer();
 
                     if (processor.isValidSong(playRequest)) {
-                        player.queueSong(await processor.processSong(playRequest));
+                        const song = await processor.processSong(playRequest);
+                        player.queueSong(song);
+
+                        msg.channel.send(new RichEmbed({
+                            description: `Enqueued ${util.wrap(song.title.trim())} to position **${player.getQueue().length}**`
+                        }));
                     } else if (processor.isValidPlaylist(playRequest)) {
                         const { playlistName, songs } = await processor.processPlaylist(playRequest);
-                        songs.forEach((song) => player.queueSong(song));
+                        player.queueSongs(songs);
+
+                        msg.channel.send(new RichEmbed({
+                            description: `Enqueued ${util.wrap(songs.length)} songs from ${util.wrap(playlistName)}`
+                        }));
                     }
 
                     if (!player.inVoice()) {
-                        msg.channel.send(`${util.commandString('join')} to start playing the queue.`);
+                        msg.channel.send(`Summon me with ${util.commandString('join')} to start playing the queue.`);
                     }
+
+                    processed = true;
+                    break;
                 }
+            }
+
+            if (!processed) {
+                // TODO: Help msg.
             }
         } catch (err) {
             console.log(err);
@@ -296,8 +316,11 @@ class LeaveCommand extends AbstractCommand {
     }
 
     handleMessage({ msg, plugin }) {
-        plugin.getPlayer().leave(msg);
-        plugin.destroyPlayer();
+        const player = plugin.getPlayer(false);
+        if (player) {
+            player.leave(msg);
+            plugin.destroyPlayer();
+        }
     }
 }
 

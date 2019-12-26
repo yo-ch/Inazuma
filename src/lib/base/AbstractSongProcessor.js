@@ -20,11 +20,11 @@ class AbstractProviderProcessor {
         throw new Error('isValidPlaylist must be overwritten.');
     }
 
-    static processSong(url) {
+    static processSong(query) {
         throw new Error('processSong must be overwritten.');
     }
 
-    static processPlaylist(url) {
+    static processPlaylist(query) {
         throw new Error('processPlaylist must be overwritten.');
     }
 
