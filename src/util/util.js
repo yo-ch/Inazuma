@@ -1,4 +1,5 @@
 const sprintf = require('sprintf-js').sprintf;
+const config = require('../json/config.json');
 
 module.exports = {
     /**
@@ -137,5 +138,13 @@ module.exports = {
      */
     stringEqualsIgnoreCase(string1, string2) {
         return string1.toLowerCase() === string2.toLowerCase();
+    },
+
+    /**
+     * Returns a formatted string to represent a command.
+     * @param {String} cmdStr The command string.
+     */
+    commandString(cmdStr) {
+        return `${this.wrap(`${config.prefix}${cmdStr}`)}`;
     }
 };

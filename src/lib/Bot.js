@@ -34,6 +34,10 @@ class Bot extends Discord.Client {
         return result;
     }
 
+    unloadCommandPlugin(pluginName) {
+        delete this.commandPlugins[pluginName];
+    }
+
     loadMiddleware(middleware) {
         if (middleware && typeof middleware === 'function') {
             this.middleware.push(middleware);

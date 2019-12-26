@@ -13,52 +13,59 @@ const Status = {
  * Handles the queuing, and streaming of Songs.
  */
 class MusicPlayer {
-    constructor(msg) {
+    constructor(guildId) {
+        this.guildId = guildId;
         this.queue = [];
-        this.musicChannel = msg.channel;
+        this.musicChannel = null;
         this.voiceConnection = null;
         this.dispatch = null;
-        this.volume = 0.5;
-        this.status = Status.OFFLINE; //States: offline, playing, stopped, paused
-        this.inactivityTimer = 300;
+        this.volume = 0.2;
+        this.status = Status.OFFLINE;
     }
 
-    /*
-    Adds the song to the queue.
-    If an index argument is included, insert the song at that index instead of pushing it to the queue.
-
-    @param {Object} song The song to queue.
-    @param {Number} [index] The index to insert the song at.
-    */
-    queueSong(song, index = null) {
-        if (index != null) {
-            this.queue[index] = song;
-        } else {
-            this.queue.push(song);
-        }
+    getTextChannel(msg) {
+        return this.musicChannel || msg.channel;
     }
 
-    /*
-    A recursive function that plays the queue.
-    */
-    async playSong(msg) {
+    /**
+     * Adds the song to the end of the queue.
+     * 
+     * @param {Song} song The song to queue.
+     */
+    queueSong(song) {
+        this.queue.push(song);
+    }
+
+    /**
+     * Adds the song to the start of the queue.
+     * 
+     * @param {Song} song The song to queue.
+     */
+    queueStart(song) {
+        this.queue.unshift(song);
+    }
+
+    /**
+     * Recursive function to start playing the queue.
+     */
+    async play(msg) {
         if (this.queue.length === 0) {
-            this.musicChannel.send('Queue complete.');
+            this.musicChannel.send(new RichEmbed({ description: ':stop_button: Queue complete.' }));
             this.changeStatus(Status.STOPPED);
         } else if (this.voiceConnection) {
-            let song = this.queue[0];
+            const song = this.queue[0];
 
             try {
-                let stream = await song.getStream();
+                const stream = await song.processor.getStream(song);
                 this.dispatch = this.voiceConnection.playStream(stream, {
                     passes: 2,
-                    volume: this.volume
                 });
+                this.dispatch.setVolumeLogarithmic(this.volume);
             } catch (error) {
                 console.log(error);
                 this.dispatch = null;
                 this.queue.shift();
-                return this.playSong(msg);
+                return this.play(msg);
             }
 
             this.dispatch.once('start', () => {
@@ -76,193 +83,156 @@ class MusicPlayer {
                 console.log(error);
                 this.dispatch = null;
                 this.queue.shift();
-                setTimeout(() => { this.playSong(msg) }, 100);
+                setTimeout(() => this.play(msg), 100);
             });
 
             this.dispatch.once('end', (reason) => {
                 this.dispatch = null;
                 this.queue.shift();
-                if (reason != 'leave') {
-                    setTimeout(() => this.playSong(msg), 100);
+                if (reason !== 'leave') {
+                    setTimeout(() => this.play(msg), 100);
                 }
             });
 
             this.dispatch.on('debug', (info) => {
                 console.log(info);
             });
-        } else {
-            msg.channel.send(
-                `Please summon me using ${util.wrap('~music join')} to start playing the queue.`
-            );
         }
     }
 
 
-    /*
-    Skips the current song.
-    */
-    skipSong() {
-        if (this.dispatch && this.status === Status.PLAYING) {
+    /**
+     * Skips the current song.
+     */
+    skip() {
+        if (this.isPlaying()) {
             this.musicChannel.send(
                 new RichEmbed({ description: `:fast_forward: ${util.wrap(this.queue[0].title)}` })
             );
             this.dispatch.end();
-        } else {
-            this.musicChannel.send(`There's nothing to skip!`);
         }
     }
 
-    /*
-    Pauses the dispatcher.
-    */
-    pauseSong() {
-        if (this.dispatch) {
+    /**
+     * Pauses the current song.
+     */
+    pause() {
+        if (this.isPlaying()) {
             this.dispatch.pause();
-        } else {
-            this.musicChannel.send('Nothing is playing right now.');
         }
     }
 
-    /*
-    Resumes the dispatcher.
-    */
-    resumeSong() {
-        if (this.dispatch) {
+    /**
+     * Resumes the current song.
+     */
+    resume() {
+        if (this.isPlaying()) {
             this.dispatch.resume();
-        } else {
-            this.musicChannel.send('Nothing is playing right now.');
         }
     }
 
-    /*
-    Prints the queue.
-    */
-    printQueue(msg) {
-        if (this.queue.length > 0) {
-            try {
-                let queueString = '';
-                for (let i = 0; i < this.queue.length && i < 15; i++) {
-                    queueString += `${i + 1}. ${this.queue[i].title}\n`;
-                }
-                if (this.queue.length > 15) {
-                    queueString += `\nand ${this.queue.length - 15} more.`;
-                }
-                msg.channel.send(queueString, { 'code': true });
-            } catch (err) {
-                console.log('ERROR CAUGHT:\n' + err);
-                msg.channel.send(
-                    `Gomen, I can't display the queue right now. Try again in a few moments onegai.`
-                );
-            }
-        } else {
-            msg.channel.send(`There are no songs in the queue!`);
-        }
+    /**
+     * Returns the queue.
+     */
+    getQueue() {
+        return this.queue.slice();
     }
 
-    /*
-    Clears the queue.
-    */
+    /**
+     * Clears the queue.
+     */
     purgeQueue(msg) {
-        if (this.status === Status.PLAYING || this.status === Status.PAUSED) {
+        if (this.isPlaying()) {
             this.queue = [this.queue[0]];
         } else {
             this.queue = [];
         }
-        msg.channel.send('The queue has been cleared.');
+        this.getTextChannel(msg).send(
+            new RichEmbed({ description: 'The queue has been cleared.' })
+        );
     }
 
-    /*
-    Shuffles the queue.
-    */
+    /**
+     * Shuffles the queue.
+     */
     shuffleQueue(msg) {
-        if (this.status === Status.PLAYING || this.status === Status.PAUSED) {
-            this.queue = [this.queue[0]].concat(util.shuffle(
-                this.queue.slice(1)));
+        if (this.isPlaying()) {
+            this.queue = [this.queue[0]].concat(util.shuffle(this.queue.slice(1)));
         } else {
             this.queue = util.shuffle(this.queue);
         }
-        msg.channel.send(new RichEmbed({ description: ':twisted_rightwards_arrows: Queue shuffled!' }));
+        this.getTextChannel(msg).send(
+            new RichEmbed({ description: ':twisted_rightwards_arrows: Queue shuffled!' })
+        );
     }
 
-    /*
-    Displays the currently playing song and elapsed time.
-    */
-    nowPlaying(msg) {
-        if (this.queue.length > 0) {
+    /**
+     * Displays the currently playing song and elapsed time.
+     */
+    nowPlaying() {
+        if (this.isPlaying()) {
             let elapsedTime = util.formatTime(util.getUnixTime() -
                 this.queue[0].startTime);
-            msg.channel.send(
-                new RichEmbed()
-                    .setTitle(`:notes: ${util.wrap(this.queue[0].title)}`)
-                    .setDescription(util.wrap(
-                        `|${elapsedTime}/${this.queue[0].duration}|`))
+            this.musicChannel.send(
+                new RichEmbed({
+                    title: `:notes: ${util.wrap(this.queue[0].title)}`,
+                    description: util.wrap(`|${elapsedTime}/${this.queue[0].duration}|`, '**')
+                })
             );
-        } else {
-            msg.channel.send(
-                'Nothing is playing right now.');
         }
     }
 
-    /*
-    Sets the volume of the dispatcher.
-    */
-    setVolume(msg) {
-        let vol = parseInt(msg.content.split(/\s+/)[2]) /
-            100;
-        if (vol && (vol >= 0 && vol <= 1)) {
-            if (this.dispatch) {
-                this.dispatch.setVolume(vol);
-                this.volume = vol;
-                msg.channel.send(
-                    new RichEmbed({ description: `:speaker: ${util.wrap(vol * 100)}` }));
-            } else {
-                msg.channel.send(`Nothing is playing right now.`);
-            }
-        } else {
-            msg.channel.send(`Use a number between 0 and 100!`);
+    /**
+     * Sets the volume of the music player.
+     * @param {Number} vol A value between 0 and 100 to set the volume to.
+     */
+    setVolume(vol) {
+        if (this.isPlaying()) {
+            vol /= 100;
+            this.dispatch.setVolumeLogarithmic(vol);
+            this.volume = vol;
+            this.musicChannel.send(new RichEmbed({ description: `:speaker: ${util.wrap(vol * 100)}` }));
         }
     }
 
-    /*
-    Summons the bot to the user's voice channel.
-    */
-    joinVc(msg) {
+    /**
+     * Summons the bot to the user's voice channel.
+     */
+    async join(msg) {
         if (msg.member.voiceChannel) {
             if (this.voiceConnection === null) {
                 this.musicChannel = msg.channel;
                 this.musicChannel.send(
                     new RichEmbed({ description: `Joined and bound to :speaker:${util.wrap(msg.member.voiceChannel.name, '**')} and #${util.wrap(this.musicChannel.name, '**')}.` })
                 );
-                msg.member.voiceChannel.join().then(
-                    (connection) => {
-                        this.voiceConnection = connection;
-                        this.changeStatus(Status.STOPPED);
-                        if (this.queue.length > 0) {
-                            this.playSong(msg);
-                        }
-                    });
+                this.voiceConnection = await msg.member.voiceChannel.join();
+                this.changeStatus(Status.STOPPED);
+
+                if (this.queue.length > 0) {
+                    this.play(msg);
+                }
             }
         } else {
-            msg.channel.send(
-                `You're not in a voice channel!`
-            );
+            msg.channel.send(`You're not in a voice channel!`);
         }
     }
 
-    /*
-    Disconnects from the voice channel.
-    */
-    leaveVc(msg) {
+    /**
+     * Disconnects from the voice channel.
+     */
+    leave(msg) {
         if (this.voiceConnection) {
             this.musicChannel.send(
                 new RichEmbed({ description: `:no_entry: Leaving ${util.wrap(this.voiceConnection.channel.name, '**')}.` })
             );
-            this.musicChannel = null;
-            if (this.dispatch) this.dispatch.end('leave');
+            if (this.dispatch) {
+                this.dispatch.end('leave');
+            }
             this.voiceConnection.disconnect();
 
             this.changeStatus(Status.OFFLINE);
 
+            this.musicChannel = null;
             this.voiceConnection = null;
             this.dispatch = null;
         } else {
@@ -270,15 +240,20 @@ class MusicPlayer {
         }
     }
 
-    /*
-    Changes the status of the bot.
-    @param {String} status The status to set the bot to.
-    */
+    /**
+     * Changes the status of the bot.
+     * @param {String} status The status to set the bot to.
+     */
     changeStatus(status) {
         this.status = status;
-        this.inactivityTimer = status === Status.PAUSED ?
-            600 :
-            300;
+    }
+
+    inVoice() {
+        return this.status === Status.STOPPED;
+    }
+
+    isPlaying() {
+        return this.status === Status.PLAYING || this.status === Status.PAUSED;
     }
 }
 

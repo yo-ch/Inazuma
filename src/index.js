@@ -1,28 +1,43 @@
 const Inazuma = require('./lib/Bot.js');
 const CoreCommandPlugin = require('./commands/CoreCommandPlugin.js');
 const AnimeCommandPlugin = require('./commands/AnimeCommandPlugin.js');
+const MusicCommandPlugin = require('./commands/MusicCommandPlugin.js');
 const InsideJokeCommandPlugin = require('./commands/InsideJokeCommandPlugins.js');
 
 const util = require('./util/util.js');
 const config = require('./json/config.json');
 
 const mongoose = require('mongoose');
+const inquirer = require('inquirer');
 
 
 const inazuma = new Inazuma();
 inazuma.loadCommandPlugin(new CoreCommandPlugin());
 inazuma.loadCommandPlugin(new AnimeCommandPlugin());
+inazuma.loadCommandPlugin(new MusicCommandPlugin());
 inazuma.loadCommandPlugin(new InsideJokeCommandPlugin());
+
 inazuma.loadMiddleware(ayyLmaoMiddleware);
 inazuma.loadMiddleware(sameMiddleware);
 inazuma.loadMiddleware(mentionReplyMiddleware);
-inazuma.login(config.token);
+inazuma.login(config.token).then(connectDatabase).then(prompt);
 
 
-mongoose.connect(config.mongo_url, { useNewUrlParser: true });
-mongoose.connection.once('open', () => console.log('Connected to database!'));
-mongoose.connection.on('error', console.error.bind(console, 'connection:error:'));
+function connectDatabase() {
+    // const mon = mongoose.connect(config.mongo_url, { useNewUrlParser: true });
+    // mongoose.connection.once('open', () => console.log('Connected to database!'));
+    // mongoose.connection.on('error', console.error.bind(console, 'connection:error:'));
+    // return mon;
+}
 
+function prompt() {
+    inquirer.prompt([{ name: 'command', message: '>', prefix: '' }]).then((answers) => {
+        console.log(answers);
+        if (answers.command.split(/\s+/)[0] === 'unload') {
+            inazuma.unloadCommandPlugin(answers.command.split(/\s+/)[1])
+        }
+    }).then(prompt);
+}
 
 /**
  * Middleware.
@@ -48,3 +63,4 @@ function mentionReplyMiddleware(msg) {
         msg.channel.send(replies[util.randInt(replies.length)]);
     }
 }
+

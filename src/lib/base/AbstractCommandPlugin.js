@@ -20,9 +20,9 @@ class AbstractCommandPlugin {
 
     loadCommands(commands) {
         this.commands = commands.slice().map((command) => new command());
-        this.commands.forEach((c) => {
-            if (c.requiresParent) {
-                c.loadParent(this);
+        this.commands.forEach((command) => {
+            if (command.requiresParent) {
+                command.loadParent(this);
             }
         });
     }

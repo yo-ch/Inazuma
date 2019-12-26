@@ -3,3 +3,4 @@ json/*
 npm-debug.log
 .tern-project
 .vscode/*
+src/.vscode/*
