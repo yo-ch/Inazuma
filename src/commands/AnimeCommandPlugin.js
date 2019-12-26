@@ -43,48 +43,46 @@ class AnimeCommand extends AbstractCommand {
         return ['ani'];
     }
 
-    async handleMessage({ msg, commandStr, options }) {
-        const searchQuery = commandStr;
+    async handleMessage({ msg, commandStr: searchQuery, options }) {
+        if (!searchQuery) {
+            return msg.channel.send(`Give me an anime to search for, ${util.tsunNoun()}!`);
+        }
 
-        if (searchQuery) {
-            try {
-                const searchResults = await anilistUtil.getAnimeInfo(searchQuery);
+        try {
+            const searchResults = await anilistUtil.getAnimeInfo(searchQuery);
 
-                if (searchResults.length === 1 ||
-                    searchResults.length && !(options.choose || options.c)
-                ) {
-                    const animeInfoEmbed = this.getAnimeInfoEmbedByIndex(searchResults, 0);
-                    msg.channel.send(animeInfoEmbed);
-                } else if (searchResults.length) {
-                    // Ask the user to choose from search results.
-                    const choiceString =
-                        'Choose a number onegai!\n\n' + searchResults.reduce(this.choiceReducer, '');
+            if (searchResults.length === 1 ||
+                searchResults.length && !(options.choose || options.c)
+            ) {
+                const animeInfoEmbed = this.getAnimeInfoEmbedByIndex(searchResults, 0);
+                msg.channel.send(animeInfoEmbed);
+            } else if (searchResults.length) {
+                // Ask the user to choose from search results.
+                const choiceString =
+                    'Choose a number onegai!\n\n' + searchResults.reduce(this.choiceReducer, '');
 
-                    msg.channel.send(choiceString).then((m) => m.delete(this.choiceTimeout));
+                msg.channel.send(choiceString).then((m) => m.delete(this.choiceTimeout));
 
-                    // Wait for response.
-                    const collectorFilter =
-                        (msg) => parseInt(msg.content) > 0 && parseInt(msg.content) <= searchResults.length;
-                    const onResponse =
-                        (msg) => {
-                            const animeInfoEmbed =
-                                this.getAnimeInfoEmbedByIndex(searchResults, parseInt(msg.content) - 1);
-                            msg.channel.send(animeInfoEmbed);
-                        };
+                // Wait for response.
+                const collectorFilter =
+                    (msg) => parseInt(msg.content) > 0 && parseInt(msg.content) <= searchResults.length;
+                const onResponse =
+                    (msg) => {
+                        const animeInfoEmbed =
+                            this.getAnimeInfoEmbedByIndex(searchResults, parseInt(msg.content) - 1);
+                        msg.channel.send(animeInfoEmbed);
+                    };
 
-                    msg.channel.createMessageCollector(collectorFilter, {
-                        time: this.choiceTimeout,
-                        maxMatches: 1
-                    }).on('collect', onResponse);
-                } else {
-                    throw new Error('No results.');
-                }
-            } catch (err) {
-                console.log(err);
-                msg.channel.send('Gomen, I couldn\'t find anything!');
+                msg.channel.createMessageCollector(collectorFilter, {
+                    time: this.choiceTimeout,
+                    maxMatches: 1
+                }).on('collect', onResponse);
+            } else {
+                throw new Error('No results.');
             }
-        } else {
-            msg.channel.send(`Give me an anime to search for, ${util.tsunNoun()}!`);
+        } catch (err) {
+            console.log(err);
+            msg.channel.send('Gomen, I couldn\'t find anything!');
         }
     }
 
@@ -361,7 +359,7 @@ class AiringNotificationCommand extends AbstractCommand {
     }
 }
 
-/*
+/**
  * Translates from English to Japanese using Google Translate.
  */
 class WeebifyCommand extends AbstractCommand {

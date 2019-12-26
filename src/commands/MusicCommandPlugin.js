@@ -82,7 +82,7 @@ class PlayCommand extends AbstractCommand {
         }
 
         try {
-            const processed = false;
+            let processed = false;
             for (const processor of plugin.processors) {
                 if (processor.isValidRequest(playRequest)) {
                     const player = plugin.getPlayer();
