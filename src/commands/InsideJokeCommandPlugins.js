@@ -14,10 +14,6 @@ class InsideJokeCommandPlugin extends AbstractCommandPlugin {
     get name() {
         return 'insidejokes';
     }
-
-    get description() {
-        return 'Inside joke commands.';
-    }
 }
 
 

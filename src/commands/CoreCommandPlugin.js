@@ -16,10 +16,6 @@ class CoreCommandPlugin extends AbstractCommandPlugin {
     get name() {
         return 'core';
     }
-
-    get description() {
-        return 'Core Inazuma commands.';
-    }
 }
 
 class HelpCommand extends AbstractCommand {
@@ -33,19 +29,19 @@ class HelpCommand extends AbstractCommand {
 
     handleMessage({ msg, args }) {
         // Reply with help for the plugin or the bot plugin list if the plugin wasn't found.
-        if (args.length) {
-            const plugin = this.parent.client.findCommandPlugin(args[0]);
-            msg.channel.send(plugin ? this.getPluginCommands(plugin) : this.getPluginList());
+        const plugin = this.parent.client.findCommandPlugin(args[0]);
+        if (args.length && plugin) {
+            msg.channel.send(this.getPluginCommands(plugin));
         } else {
             msg.channel.send(this.getPluginList());
         }
     }
 
     getPluginCommands(plugin) {
-        let pluginCommands = util.wrap(`${plugin.name} commands`, '**') + '\n';
+        let pluginCommands = `${util.wrap(`${plugin.name} commands`, '**')} - ${plugin.description}\n`;
         for (const command of plugin.commands) {
             const { name, description } = command;
-            pluginCommands += `${util.wrap(name)}: ${description}\n`;
+            pluginCommands += `${util.wrap(name)} ${description}\n`;
         }
         return pluginCommands;
     }
@@ -54,7 +50,7 @@ class HelpCommand extends AbstractCommand {
         let pluginList = '**Inazuma Command Plugins**\n';
         for (const commandPlugin of Object.values(this.parent.client.commandPlugins)) {
             const { name, description } = commandPlugin;
-            pluginList += `${util.wrap(name)}: ${description}\n`;
+            pluginList += `${util.wrap(name)} ${description}\n`;
         }
         return pluginList;
     }
@@ -73,7 +69,16 @@ class UsageCommand extends AbstractCommand {
         // Reply with usage details for the specified command.
         if (args.length) {
             const command = this.parent.client.findCommand(args[0]);
-            msg.channel.send(command ? command.usage : 'Invalid command given.');
+            const aliasList = command.aliases.length > 0 ?
+                `\n\nAliases: ${command.aliases.reduce((list, alias) => `${alias} ${list}`, '')}` :
+                '';
+
+            msg.channel.send(
+                command ?
+                    `${this.parent.client.prefix + command.name} ${command.usage} ${aliasList}` :
+                    `There's no command called ${args[0]}!`,
+                { code: true }
+            );
         } else {
             msg.channel.send('Give me a command to describe.');
         }

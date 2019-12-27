@@ -1,72 +1,158 @@
 module.exports = {
-   descriptions: {
-      help: `Brings up the help page.`,
+   pluginDescriptions: {
+      core: `Core bot commands.`,
+      anime: `Anime related commands.`,
+      music: `Music streaming commands.`,
+      insidejokes: `Inside jokes.`,
+   },
 
-      andy: `Shut up weeb.`,
-
-      anilist: `Displays an anime's data, pulled from Anilist.`,
-
-      cc: `Changes the mentioned user's voice channel to the given channel.`,
-
+   commands: {
+      // Core commands.
+      help: `Brings up a help page for a command plugin.`,
+      usage: `Brings up a usage page for a specific command.`,
       choose: `Randomly chooses between the provided choices.`,
+      roll: `Rolls a random number.`,
 
+      // Anime commands.
+      anime: `Anime database search.`,
+      airing: `Anime episode airing notifications.`,
+      weebify: `Translates sentences from English to Japanese.`,
+      weeb: `Tags a weeb.`,
+
+      // Music commands.
+      play: `Queue a song up.`,
+      skip: `Skip the current song.`,
+      pause: `Pause the current song.`,
+      resume: `Unpause the current song.`,
+      volume: `Change the volume.`,
+      np: `Now playing information.`,
+      queue: `Display the song queue.`,
+      purge: `Clear the song queue.`,
+      shuffle: `Shuffle the song queue.`,
+      join: `Summons Inazuma to your voice channel.`,
+      leave: `Unsummons Inazuma.`,
+
+      // Inside joke commands.
+      andy: `Shut up weeb.`,
       gavquote: `Returns a random Gavin quote.`,
 
       prune: `Prunes messages in the channel it was used in.`,
-
       role: `Role management functions.`,
-
-      roll: `Rolls a random number.`,
-
-      music: `Music streaming functions.`,
-
       ban: `Bans the mentioned user.`,
-
       kick: `Kicks the mentioned user.`,
-
-      weebify: `Translates a given sentence from English to Japanese.`,
-
       sar: `Self assignable roles interface`,
-
       roleme: `Assign/deassign self assignable roles from yourself.`
    },
 
-   usages: {
-      help: `
-help [command]
-   Brings up the command page. Pass a command for further information.`,
+   commandUsages: {
+      /**
+       * Core commands.
+       */
+      help: `[plugin]
+   Brings up the plugin help page. Pass a plugin for a list of its commands.`,
 
-      andy: `
-andy [mention]
-   Shut up weeb. Mentions user, if included.`,
+      usage: `<command>
+   Brings up the command help page.
 
-      airing: `
-airing [function]
-   Displays your airing list when used with no arguments.
+   [] = optional, <> = required
+   `,
 
-   Functions:
-      sync [anilist name]     : Sync your Anilist to your airing list.
-                                Name is only required the first time.
-                                This only syncs to be aired/airing anime.
+      choose: `<arg1> | [arg2] ...
+   Randomly chooses between the provided choice(s).`,
 
-The airing list shows the time until the next episode airs for each anime in your list.`,
+      roll: `<int1> [int2]
+   Rolls an integer from 1 to int1 inclusive.
+   If int2 is given, rolls an integer between int1 and int2 inclusive.`,
 
-      anilist: `
-anilist | ~ani <anime name>
+
+      /**
+       * Anime commands.
+       */
+      anime: `<query>
    Displays an anime's data, pulled from Anilist.
    If multiple choices are given, simply reply with the number.`,
+
+      airing: `[function]
+   Interface to get airing notifications for current season anime (Japan times). 
+
+   Functions:
+      sync [anilist name]
+         Sync your Anilist to your airing list to get notifications
+         for all current season anime on your list.
+
+         Name is only required the first time.
+
+      subscribe <link> | <name>
+         Subscribe to notifications for the given anime.
+
+      unsubscribe <link> | <name> 
+         Unsubscribe to notifications for the given anime.
+
+      list
+         Lists all the anime you're subscribed to notifications for.`,
+
+      weebify: `<sentence>
+   Translates a sentence from English to Japanese.`,
+
+      weeb: `@mention
+   Tags a weeb with a picture.`,
+
+
+      /**
+       * Music commands.
+       */
+      play: `<url> | yt <query>
+   Adds a song/playlist to the queue.
+   
+   E.g:
+   play https://www.youtube.com/watch?v=cJ6Uakis588
+   play yt Freedom Dive`,
+
+      skip: `
+   Skips the current song.`,
+
+      pause: `
+   Pauses the current song.`,
+
+      resume: `
+   Unpauses the current song.`,
+
+      shuffle: `
+   Shuffles the song queue.`,
+
+      queue: `
+   Displays the song queue.`,
+
+      purge: `
+   Clears the song queue.`,
+
+      np: `
+   Displays information for the current song.`,
+
+      vol: `<0-100>
+   Sets the volume of the music player.`,
+
+      join: `
+   Summons Inazuma to your voice channel.`,
+
+      leave: `
+   Unsummons Inazuma.`,
+
+      /**
+       * Inside joke commands.
+       */
+      andy: `[mention]
+   Shut up weeb. Mentions user, if included.`,
+
+      gavquote: `
+   Returns a random Gavin quote.`,
+
+
+
 
       cc: `
 cc <voice channel> <mention>
    Changes the mentioned user's voice channel to the given channel.`,
-
-      choose: `
-choose <arg1> | [arg2] ...
-   Randomly chooses between the provided choice(s).`,
-
-      gavquote: `
-gavquote
-   Returns a random Gavin quote.`,
 
       prune: `
 prune <amount> [options]
@@ -96,31 +182,9 @@ role modify <role> [options] : Modifies a role.
    [--name <name>]       : Rename role.
    [--color <color>]     : Change role color. (6 digit HEX)`,
 
-      roll: `
-roll <int1> [int2]
-   Rolls an integer from 1 to int1 inclusive.
-   If int2 is given, rolls an integer between int1 and int2 inclusive.`,
 
-      music: `
-[Music Help]
 
-music | m <function>
-   play <url> | <search> : Adds the song/playlist to the queue.
-   skip                  : Skips the current song.
-   pause                 : Pauses the song.
-   resume                : Resumes the song.
-   shuffle               : Shuffles the queue.
 
-   queue                 : Displays the song queue.
-   purge                 : Clears the song queue.
-   np                    : Displays the title of the current song.
-
-   vol <0-100>           : Sets volume.
-
-   join                  : Joins your voice channel.
-   leave                 : Leaves voice channel.
-
-Requires a #music text channel.`,
 
       ban: `
 ban <mention> [options]
@@ -139,9 +203,6 @@ kick <mention> [options]
    Options:
       [--reason <reason>] : Specifies a reason for kicking the user.`,
 
-      weebify: `
-weebify <sentence>
-   Translates a sentence from English to Japanese.`,
 
       sar: `
 sar <function>

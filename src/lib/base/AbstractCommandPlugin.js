@@ -1,4 +1,4 @@
-const util = require('../../util/util.js');
+const { pluginDescriptions } = require('../../util/help.js');
 
 class AbstractCommandPlugin {
     constructor(...commands) {
@@ -15,7 +15,7 @@ class AbstractCommandPlugin {
     }
 
     get description() {
-        return '';
+        return pluginDescriptions[this.name] || '';
     }
 
     loadCommands(commands) {

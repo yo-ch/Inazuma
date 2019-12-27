@@ -24,10 +24,6 @@ class AnimeCommandPlugin extends AbstractCommandPlugin {
     get name() {
         return 'anime';
     }
-
-    get description() {
-        return 'anime related commands';
-    }
 }
 
 class AnimeCommand extends AbstractCommand {

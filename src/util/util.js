@@ -137,7 +137,7 @@ module.exports = {
      * @return {Boolean}
      */
     stringEqualsIgnoreCase(string1, string2) {
-        return string1.toLowerCase() === string2.toLowerCase();
+        return string1 && string2 && string1.toLowerCase() === string2.toLowerCase();
     },
 
     /**

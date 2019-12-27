@@ -114,7 +114,7 @@ class AiringSeasonMonitor {
             airingInfo: anime.airingSchedule.nodes
         };
 
-    this.season[anime.id] = new AiringAnime(formattedData);
+        this.season[anime.id] = new AiringAnime(formattedData);
     }
 
     /**
@@ -150,7 +150,7 @@ class AiringSeasonMonitor {
      */
     getMonitorAnimeByName(name) {
         return Object.values(this.season).find(
-            (anime) => anime.name === name || anime.synonyms.indexOf(name) > -1
+            (anime) => anime.name.indexOf(name) > -1 || anime.synonyms.indexOf(name) > -1
         );
     }
 }

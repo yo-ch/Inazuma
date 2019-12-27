@@ -36,10 +36,6 @@ class MusicCommandPlugin extends AbstractCommandPlugin {
         return 'music';
     }
 
-    get description() {
-        return 'Music commands.';
-    }
-
     handleMessage(params) {
         super.handleMessage({
             ...params,
