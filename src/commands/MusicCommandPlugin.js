@@ -62,7 +62,7 @@ class MusicCommandPlugin extends AbstractCommandPlugin {
     }
 
     destroyGuildPlayer(guildId) {
-        this.timeouts[guildId] = this.setTimeout(() => delete this.guildPlayers[guildId], 300000);
+        this.timeouts[guildId] = setTimeout(() => delete this.guildPlayers[guildId], 300000);
     }
 }
 
@@ -104,6 +104,8 @@ class PlayCommand extends AbstractCommand {
 
                     if (!player.inVoice()) {
                         msg.channel.send(`Summon me with ${util.commandString('join')} to start playing the queue.`);
+                    } else if (!player.isPlaying()) {
+                        player.play();
                     }
 
                     processed = true;
@@ -112,7 +114,7 @@ class PlayCommand extends AbstractCommand {
             }
 
             if (!processed) {
-                // TODO: Help msg.
+                msg.channel.send('Invalid music request.');
             }
         } catch (err) {
             console.log(err);

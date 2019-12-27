@@ -57,7 +57,7 @@ class MusicPlayer {
     /**
      * Recursive function to start playing the queue.
      */
-    async play(msg) {
+    async play() {
         if (this.queue.length === 0) {
             this.musicChannel.send(new RichEmbed({ description: ':stop_button: Queue complete.' }));
             this.changeStatus(Status.STOPPED);
@@ -74,7 +74,7 @@ class MusicPlayer {
                 console.log(error);
                 this.dispatch = null;
                 this.queue.shift();
-                return this.play(msg);
+                return this.play();
             }
 
             this.dispatch.once('start', () => {
@@ -92,14 +92,14 @@ class MusicPlayer {
                 console.log(error);
                 this.dispatch = null;
                 this.queue.shift();
-                setTimeout(() => this.play(msg), 100);
+                setTimeout(() => this.play(), 100);
             });
 
             this.dispatch.once('end', (reason) => {
                 this.dispatch = null;
                 this.queue.shift();
                 if (reason !== 'leave') {
-                    setTimeout(() => this.play(msg), 100);
+                    setTimeout(() => this.play(), 100);
                 }
             });
 
