@@ -2,7 +2,7 @@ const AbstractCommandPlugin = require('../lib/base/AbstractCommandPlugin.js');
 const AbstractCommand = require('../lib/base/AbstractCommand.js');
 
 const rp = require('request-promise');
-const { RichEmbed, Attachment } = require('discord.js');
+const { RichEmbed } = require('discord.js');
 
 const anilistUtil = require('../util/anilistUtil.js');
 const util = require('../util/util.js');
@@ -17,7 +17,6 @@ class AnimeCommandPlugin extends AbstractCommandPlugin {
             AnimeCommand,
             AiringNotificationCommand,
             WeebifyCommand,
-            WeebAtWeebCommand
         );
     }
 
@@ -396,50 +395,6 @@ class WeebifyCommand extends AbstractCommand {
             const body = await rp({ url });
             const result = JSON.parse(body);
             msg.channel.send(result[0][0][0] + '\n' + this.kuroshiro.toRomaji(result[0][0][0], { mode: 'spaced' }));
-        } catch (err) {
-            console.log(err.message);
-        }
-    }
-}
-
-/**
- * Tag a weeb as a weeb using a picture.
- */
-class WeebAtWeebCommand extends AbstractCommand {
-    constructor() {
-        super();
-        this.jimp = require('jimp');
-    }
-
-    get name() {
-        return 'weeb';
-    }
-
-    async handleMessage({ msg }) {
-        if (msg.mentions.users.size === 0) {
-            return msg.channel.send('Mention a weeb to use this command!');
-        }
-
-        try {
-            const baseImg = (await this.jimp.read('./resources/images/weeb1.png')).scale(0.5);
-
-            const [weeberImg, weebedImg] = (await Promise.all([
-                this.jimp.read(msg.author.avatarURL),
-                this.jimp.read(msg.mentions.users.first().avatarURL)
-            ])).map((img) => img.resize(70, 70));
-
-            baseImg.composite(weeberImg, 90, 60, {
-                opacitySource: 1,
-                opacityDest: 1
-            });
-
-            baseImg.composite(weebedImg, 310, 120, {
-                opacitySource: 1,
-                opacityDest: 1
-            });
-
-            const imgBuffer = await baseImg.getBufferAsync(baseImg.getMIME());
-            msg.channel.send(new Attachment(imgBuffer));
         } catch (err) {
             console.log(err.message);
         }
