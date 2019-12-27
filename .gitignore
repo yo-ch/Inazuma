@@ -4,7 +4,5 @@ npm-debug.log
 .tern-project
 .vscode/*
 
-src/resources/images/*
-src/resources/json/*
 src/config.json
 src/.vscode/*
