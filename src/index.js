@@ -48,7 +48,7 @@ function mentionReplyMiddleware(msg) {
             `Kimochi warui.`,
             `Baka janaino?`,
             `Doushitano?`,
-            `I-It's not like I want to be in this server or anything, ${util.tsunNoun}...`
+            `I-It's not like I want to be in this server or anything, ${util.tsunNoun()}...`
         ];
         msg.channel.send(replies[util.randInt(replies.length)]);
     }
