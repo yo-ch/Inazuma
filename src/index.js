@@ -8,7 +8,6 @@ const util = require('./util/util.js');
 const config = require('./config.json');
 
 const mongoose = require('mongoose');
-const inquirer = require('inquirer');
 
 
 const inazuma = new Inazuma();
@@ -20,7 +19,7 @@ inazuma.loadCommandPlugin(new InsideJokeCommandPlugin());
 inazuma.loadMiddleware(ayyLmaoMiddleware);
 inazuma.loadMiddleware(sameMiddleware);
 inazuma.loadMiddleware(mentionReplyMiddleware);
-inazuma.login(config.token).then(connectDatabase).then(prompt);
+inazuma.login(config.token).then(connectDatabase);
 
 
 function connectDatabase() {
@@ -28,15 +27,6 @@ function connectDatabase() {
     mongoose.connection.once('open', () => console.log('Connected to database!'));
     mongoose.connection.on('error', console.error.bind(console, 'connection:error:'));
     return mon;
-}
-
-function prompt() {
-    inquirer.prompt([{ name: 'command', message: '>', prefix: '' }]).then((answers) => {
-        console.log(answers);
-        if (answers.command.split(/\s+/)[0] === 'unload') {
-            inazuma.unloadCommandPlugin(answers.command.split(/\s+/)[1])
-        }
-    }).then(prompt);
 }
 
 /**
