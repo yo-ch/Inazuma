@@ -4,5 +4,4 @@ npm-debug.log
 .tern-project
 .vscode/*
 
-src/config.json
 src/.vscode/*
