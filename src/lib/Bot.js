@@ -16,7 +16,7 @@ class Bot extends Discord.Client {
             console.log('Inazuma ready.');
             console.log(`Serving ${this.guilds.size} guilds.`);
 
-            this.user.setStatus('~help');
+            this.user.setActivity('~help');
         });
         this.on('message', this.handleMessage);
         this.on('error', (e) => console.error(e));
