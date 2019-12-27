@@ -1,5 +1,5 @@
 const Discord = require('discord.js');
-const config = require('../json/config.json');
+const config = require('../config.json');
 
 const util = require('../util/util.js');
 

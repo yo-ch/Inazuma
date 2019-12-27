@@ -14,6 +14,7 @@
     "googleapis": "^40.0.1",
     "hoek": "^5.0.4",
     "inquirer": "^7.0.1",
+    "jimp": "^0.9.3",
     "kuroshiro": "^0.2.4",
     "latest": "^0.2.0",
     "libsodium-wrappers": "^0.7.6",

@@ -3,7 +3,7 @@ const AbstractCommand = require('../lib/base/AbstractCommand.js');
 
 const util = require('../util/util.js');
 
-class InsideCommandPlugin extends AbstractCommandPlugin {
+class InsideJokeCommandPlugin extends AbstractCommandPlugin {
     constructor() {
         super(
             AndyCommand,
@@ -40,7 +40,7 @@ class AndyCommand extends AbstractCommand {
 class GavQuoteCommand extends AbstractCommand {
     constructor() {
         super();
-        this.quoteLibrary = require('../json/gavquotes.json');
+        this.quoteLibrary = require('../resources/json/gavquotes.json');
     }
 
     get name() {
@@ -54,4 +54,4 @@ class GavQuoteCommand extends AbstractCommand {
     }
 }
 
-module.exports = InsideCommandPlugin;
+module.exports = InsideJokeCommandPlugin;

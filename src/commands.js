@@ -6,7 +6,7 @@ Regular commands.
 const kuroshiro = require('kuroshiro');
 const rp = require('request-promise');
 
-const config = require('./json/config.json');
+const config = require('./config.json');
 const commandHelp = require('./util/help.js');
 const tool = require('./util/util.js/index.js');
 const ani = require('./anime.js');

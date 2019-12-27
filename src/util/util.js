@@ -1,5 +1,5 @@
 const sprintf = require('sprintf-js').sprintf;
-const config = require('../json/config.json');
+const config = require('../config.json');
 
 module.exports = {
     /**

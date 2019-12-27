@@ -3,7 +3,6 @@ const AbstractCommand = require('../lib/base/AbstractCommand.js');
 
 const util = require('../util/util.js');
 
-const Song = require('../lib/music/Song.js');
 const MusicPlayer = require('../lib/music/MusicPlayer.js');
 const YoutubeProcessor = require('../lib/music/processor/YoutubeProcessor.js');
 const YoutubeSearchProcessor = require('../lib/music/processor/YoutubeSearchProcessor.js');

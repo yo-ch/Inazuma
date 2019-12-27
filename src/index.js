@@ -5,7 +5,7 @@ const MusicCommandPlugin = require('./commands/MusicCommandPlugin.js');
 const InsideJokeCommandPlugin = require('./commands/InsideJokeCommandPlugins.js');
 
 const util = require('./util/util.js');
-const config = require('./json/config.json');
+const config = require('./config.json');
 
 const mongoose = require('mongoose');
 const inquirer = require('inquirer');

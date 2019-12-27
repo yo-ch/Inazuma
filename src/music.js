@@ -2,7 +2,7 @@
 Processes music commands. Constructs Songs and manages MusicPlayers.
 */
 'use strict';
-const config = require('./json/config.json');
+const config = require('./config.json');
 const tool = require('./util/tool.js');
 
 const Song = require('./lib/music/Song.js');
