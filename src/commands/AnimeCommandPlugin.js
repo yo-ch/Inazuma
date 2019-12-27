@@ -227,27 +227,37 @@ class AiringNotificationCommand extends AbstractCommand {
 
     handleSubscribe({ msg, query }) {
         try {
-            if (!query) { throw new Error('Invalid arguments.'); }
+            if (!query) { throw new ArgError(); }
 
             const anime = this.findMonitorAnimeByQuery(query);
             this.subscribeUser(anime.id, msg.author.id)
                 .then(() => msg.author.send(`Successfully subscribed to ${util.wrap(anime.name, '**')}.`))
                 .catch(() => msg.author.send(`Failed to save subscription to ${util.wrap(anime.name, '**')}. Please try again.`));
         } catch (err) {
-            msg.author.send(err.name === 'ArgError' ? err.message : `Failed to subscribe.`);
+            console.log(err.message);
+            if (err.name === 'ArgError') {
+                msg.channel.send('Invalid arguments.');
+            } else {
+                msg.channel.send('Failed to subscribe, please try again.');
+            }
         }
     }
 
     handleUnsubscribe({ msg, query }) {
         try {
-            if (!query) { throw new Error('Invalid arguments.'); }
+            if (!query) { throw new ArgError(); }
 
             const anime = this.findMonitorAnimeByQuery(query);
             this.unsubscribeUser(anime.id, msg.author.id)
                 .then(() => msg.author.send(`Successfully unsubscribed from ${util.wrap(anime.name, '**')}.`))
                 .catch(() => msg.author.send(`Failed to cancel subscription to ${util.wrap(anime.name, '**')}. Please try again.`));
         } catch (err) {
-            msg.author.send(err.name === 'ArgError' ? err.message : 'Failed to cancel subscription.');
+            console.log(err.message);
+            if (err.name === 'ArgError') {
+                msg.channel.send('Invalid arguments.');
+            } else {
+                msg.channel.send('Failed to subscribe, please try again.');
+            }
         }
     }
 
@@ -330,7 +340,7 @@ class AiringNotificationCommand extends AbstractCommand {
         return this.subscriberDatabase.findOne(
             { animeId: animeId },
             { discordUsers: true }
-        ).lean().then((result) => result.discordUsers);
+        ).lean().then((result) => result && result.discordUsers);
     }
 
     /**

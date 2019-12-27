@@ -1,7 +1,6 @@
 const AbstractSongProcessor = require('../../base/AbstractSongProcessor.js');
 const Song = require('../Song.js');
 const config = require('../../../json/config.json');
-const util = require('../../../util/util.js');
 
 const { google } = require('googleapis');
 const youtube = google.youtube('v3');

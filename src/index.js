@@ -24,10 +24,10 @@ inazuma.login(config.token).then(connectDatabase).then(prompt);
 
 
 function connectDatabase() {
-    // const mon = mongoose.connect(config.mongo_url, { useNewUrlParser: true });
-    // mongoose.connection.once('open', () => console.log('Connected to database!'));
-    // mongoose.connection.on('error', console.error.bind(console, 'connection:error:'));
-    // return mon;
+    const mon = mongoose.connect(config.mongo_url, { useNewUrlParser: true });
+    mongoose.connection.once('open', () => console.log('Connected to database!'));
+    mongoose.connection.on('error', console.error.bind(console, 'connection:error:'));
+    return mon;
 }
 
 function prompt() {

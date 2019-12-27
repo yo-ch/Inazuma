@@ -92,15 +92,19 @@ class YoutubeProcessor extends AbstractSongProcessor {
         if (song.hasAllMetadata()) {
             return ytdl(song.url);
         } else {
-            const info = (await ytdl.getInfo(song.url));
-            const songInfo = info.player_response.videoDetails;
-            song.duration = util.formatTime(songInfo.lengthSeconds);
-            song.thumbnail = `https://img.youtube.com/vi/${songInfo.videoId}/mqdefault.jpg`;
-
-            return ytdl.downloadFromInfo(info, {
-                retries: 7,
-                highWaterMark: 32768
-            });
+            try {
+                const info = await ytdl.getInfo(song.url);
+                const songInfo = info.player_response.videoDetails;
+                song.duration = util.formatTime(songInfo.lengthSeconds);
+                song.thumbnail = `https://img.youtube.com/vi/${songInfo.videoId}/mqdefault.jpg`;
+    
+                return ytdl.downloadFromInfo(info, {
+                    retries: 7,
+                    highWaterMark: 32768
+                });
+            } catch (err) {
+                console.log(err);
+            }
         }
     }
 }
