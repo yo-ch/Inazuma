@@ -198,7 +198,7 @@ class AiringNotificationCommand extends AbstractCommand {
      */
     async notifyAired(anime) {
         try {
-            const discordUsers = await this.getAnimeSubscribers(anime.id);
+            const discordUsers = await this.getAnimeSubscribers(anime.id) || [];
             for (const userId of discordUsers) {
                 try {
                     const discordUser = await this.parent.client.fetchUser(userId);
@@ -259,7 +259,7 @@ class AiringNotificationCommand extends AbstractCommand {
 
     async handleListSubscriptions({ msg }) {
         try {
-            const subscriptionList = await this.getUserSubscriptions(msg.author.id);
+            const subscriptionList = await this.getUserSubscriptions(msg.author.id) || [];
             const listHeading = util.wrap('Airing Notification Subscriptions:', '**') + '\n';
             const subscriptionsMsg = subscriptionList.map((subscription) => this.monitor.getMonitorAnimeById(subscription.animeId))
                 .filter((anime) => !!anime)

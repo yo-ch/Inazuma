@@ -6,7 +6,7 @@ module.exports = {
       insidejokes: `Inside jokes.`,
    },
 
-   commands: {
+   commandDescriptions: {
       // Core commands.
       help: `Brings up a help page for a command plugin.`,
       usage: `Brings up a usage page for a specific command.`,

@@ -21,6 +21,9 @@ class MusicPlayer {
         this.dispatch = null;
         this.volume = 0.2;
         this.status = Status.OFFLINE;
+
+        this.leaveTimeout = null;
+        this.inactiveTimer = 300000;
     }
 
     getTextChannel(msg) {
@@ -255,6 +258,12 @@ class MusicPlayer {
      */
     changeStatus(status) {
         this.status = status;
+
+        if (status === Status.STOPPED) {
+            this.leaveTimeout = setTimeout(() => this.leave(), this.inactiveTimer);
+        } else if (status === Status.PLAYING) {
+            clearTimeout(this.leaveTimeout);
+        }
     }
 
     inVoice() {

@@ -30,7 +30,7 @@ class HelpCommand extends AbstractCommand {
     handleMessage({ msg, args }) {
         // Reply with help for the plugin or the bot plugin list if the plugin wasn't found.
         const plugin = this.parent.client.findCommandPlugin(args[0]);
-        if (args.length && plugin) {
+        if (plugin) {
             msg.channel.send(this.getPluginCommands(plugin));
         } else {
             msg.channel.send(this.getPluginList());

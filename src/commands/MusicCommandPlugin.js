@@ -72,6 +72,14 @@ class PlayCommand extends AbstractCommand {
     }
 
     async handleMessage({ msg, commandStr: playRequest, plugin }) {
+        function autoplay(player) {
+            if (!player.inVoice()) {
+                msg.channel.send(`Summon me with ${util.commandString('join')} to start playing the queue.`);
+            } else if (!player.isPlaying()) {
+                player.play();
+            }
+        }
+
         if (!playRequest) {
             return;
         }
@@ -85,23 +93,17 @@ class PlayCommand extends AbstractCommand {
                     if (processor.isValidSong(playRequest)) {
                         const song = await processor.processSong(playRequest);
                         player.queueSong(song);
-
+                        autoplay(player);
                         msg.channel.send(new RichEmbed({
                             description: `Enqueued ${util.wrap(song.title.trim())} to position **${player.getQueue().length}**`
                         }));
                     } else if (processor.isValidPlaylist(playRequest)) {
                         const { playlistName, songs } = await processor.processPlaylist(playRequest);
                         player.queueSongs(songs);
-
+                        autoplay(player);
                         msg.channel.send(new RichEmbed({
                             description: `Enqueued ${util.wrap(songs.length)} songs from ${util.wrap(playlistName)}`
                         }));
-                    }
-
-                    if (!player.inVoice()) {
-                        msg.channel.send(`Summon me with ${util.commandString('join')} to start playing the queue.`);
-                    } else if (!player.isPlaying()) {
-                        player.play();
                     }
 
                     processed = true;
