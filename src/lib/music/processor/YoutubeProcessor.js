@@ -26,7 +26,7 @@ class YoutubeProcessor extends AbstractSongProcessor {
 
     static async processSong(url) {
         const { title, lengthSeconds, videoId } = (await ytdl.getInfo(url)).player_response.videoDetails;
-        
+
         return new Song({
             title,
             url,
@@ -47,7 +47,7 @@ class YoutubeProcessor extends AbstractSongProcessor {
                 id: playlistId,
                 part: 'snippet'
             };
-            
+
             const playlistTitle = (await youtube.playlists.list(options)).data.items[0].snippet.title;
             return playlistTitle;
         }
@@ -90,14 +90,17 @@ class YoutubeProcessor extends AbstractSongProcessor {
 
     static async getStream(song) {
         if (song.hasAllMetadata()) {
-            return ytdl(song.url);
+            return ytdl(song.url, {
+                retries: 7,
+                highWaterMark: 32768
+            });
         } else {
             try {
                 const info = await ytdl.getInfo(song.url);
                 const songInfo = info.player_response.videoDetails;
                 song.duration = util.formatTime(songInfo.lengthSeconds);
                 song.thumbnail = `https://img.youtube.com/vi/${songInfo.videoId}/mqdefault.jpg`;
-    
+
                 return ytdl.downloadFromInfo(info, {
                     retries: 7,
                     highWaterMark: 32768
