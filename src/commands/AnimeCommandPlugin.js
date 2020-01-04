@@ -281,7 +281,10 @@ class AiringNotificationCommand extends AbstractCommand {
 
             // Get all anime that the user is watching and currently airing.
             const userAiringAnimeIds = userWatchingLists.reduce((acc, list) => [...acc, ...list.entries], [])
-                .filter((anime) => anime.media.status === MediaStatus.RELEASING)
+                .filter((anime) =>
+                    (anime.media.status === MediaStatus.RELEASING ||
+                        anime.media.status === MediaStatus.NOT_YET_RELEASED) &&
+                    this.monitor.isMonitoringAnime(anime.media.id))
                 .map((anime) => anime.media.id);
 
             const subscribePromises = userAiringAnimeIds.map((animeId) => this.subscribeUser(animeId, msg.author.id));
