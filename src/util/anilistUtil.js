@@ -31,7 +31,7 @@ function getCurrentSeason() {
     };
 }
 
-function queryAnilist(query, variables) {
+function queryAnilist(query, variables = {}) {
     const options = {
         method: 'POST',
         url: 'https://graphql.anilist.co/',
@@ -155,7 +155,7 @@ function getAnimeAiringInfo(id) {
     return queryAnilist(queryString, { id }).then((json) => json.Media);
 }
 
-function getSeasonAiringInfo() {
+function getSeasonInfo() {
     const queryString = stripIndent(
         `
         query ($season: MediaSeason, $seasonYear: Int) {
@@ -185,11 +185,53 @@ function getSeasonAiringInfo() {
     return queryAnilist(queryString, seasonInfo).then((json) => json.Page.media);
 }
 
+async function getReleasingInfo() {
+    const queryString = stripIndent(
+        `      
+        query {
+            Page (page: $page, perPage: 50) {
+                media (type: ANIME, format: TV, status:RELEASING) {
+                    id
+                    status
+                    title {
+                        romaji
+                        english
+                        native
+                    }
+                    synonyms
+                    airingSchedule(notYetAired: true) {
+                        nodes {
+                            airingAt
+                            episode
+                        }
+                    }
+                }
+            }
+            pageInfo {
+                hasNextPage
+            }
+        }
+        `
+    );
+
+    let page, pageNumber = 1, hasNextPage = true;
+    let releasingInfo = {};
+    while (hasNextPage) {
+        page = (await queryAnilist(queryString, { pageNumber })).Page;
+        releasingInfo = { ...releasingInfo, ...page.media };
+        hasNextPage = page.pageInfo.hasNextPage;
+        pageNumber++;
+    }
+
+    return releasingInfo;
+}
+
 module.exports = {
     getUserId,
     getUserInfo,
     getUserWatchingLists,
     getAnimeInfo,
     getAnimeAiringInfo,
-    getSeasonAiringInfo
+    getSeasonInfo,
+    getReleasingInfo
 };

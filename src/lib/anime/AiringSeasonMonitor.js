@@ -36,8 +36,13 @@ class AiringSeasonMonitor {
      */
     async initSeason() {
         try {
-            const seasonAiringInfo = await anilistUtil.getSeasonAiringInfo();
-            for (const anime of seasonAiringInfo) {
+            // Get all info for releasing anime and the current season.
+            const [seasonInfo, releasingInfo] = await Promise.all([
+                anilistUtil.getSeasonInfo(), anilistUtil.getReleasingInfo()
+            ]);
+
+            const animeInfo = [...seasonInfo, ...releasingInfo];
+            for (const anime of animeInfo) {
                 this.startMonitoringAnime(anime);
             }
         } catch (err) {
@@ -50,7 +55,7 @@ class AiringSeasonMonitor {
      */
     async updateSeason() {
         try {
-            const seasonAiringInfo = await anilistUtil.getSeasonAiringInfo();
+            const seasonAiringInfo = await anilistUtil.getSeasonInfo();
             for (const anime of seasonAiringInfo) {
                 if (anime.status !== MediaStatus.RELEASING) {
                     // Stop monitoring since anime is done.
@@ -103,7 +108,7 @@ class AiringSeasonMonitor {
      * @param {Object} anime The data retrieved from Anilist for this anime.
      */
     startMonitoringAnime(anime) {
-        if (!anime.airingSchedule.nodes.length) {
+        if (!anime.airingSchedule.nodes.length || this.isMonitoringAnime(anime.id)) {
             return;
         }
 
