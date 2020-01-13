@@ -41,9 +41,7 @@ function queryAnilist(query, variables = {}) {
         },
         body: JSON.stringify({ query, variables })
     };
-    return rp(options)
-        .then((body) => JSON.parse(body).data)
-        .catch((err) => JSON.parse(err));
+    return rp(options).then((body) => JSON.parse(body).data);
 }
 
 function getUserId(username) {
@@ -188,8 +186,8 @@ function getSeasonInfo() {
 async function getReleasingInfo() {
     const queryString = stripIndent(
         `      
-        query {
-            Page (page: $page, perPage: 50) {
+        query ($pageNumber: Int) {
+            Page (page: $pageNumber, perPage: 50) {
                 media (type: ANIME, format: TV, status:RELEASING) {
                     id
                     status
@@ -206,19 +204,19 @@ async function getReleasingInfo() {
                         }
                     }
                 }
-            }
-            pageInfo {
-                hasNextPage
+                pageInfo {
+                    hasNextPage
+                }
             }
         }
         `
     );
 
     let page, pageNumber = 1, hasNextPage = true;
-    let releasingInfo = {};
+    let releasingInfo = [];
     while (hasNextPage) {
         page = (await queryAnilist(queryString, { pageNumber })).Page;
-        releasingInfo = { ...releasingInfo, ...page.media };
+        releasingInfo = [...releasingInfo, ...page.media];
         hasNextPage = page.pageInfo.hasNextPage;
         pageNumber++;
     }

@@ -36,7 +36,7 @@ class AiringSeasonMonitor {
      */
     async initSeason() {
         try {
-            // Get all info for releasing anime and the current season.
+            // Get info for all releasing anime and the current season.
             const [seasonInfo, releasingInfo] = await Promise.all([
                 anilistUtil.getSeasonInfo(), anilistUtil.getReleasingInfo()
             ]);
